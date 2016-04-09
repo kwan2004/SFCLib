@@ -1,3 +1,4 @@
+#pragma once
 #ifndef POINT_H_
 #define POINT_H_
 
@@ -10,7 +11,8 @@ class Point
 {
 private:
 	std::array< T, nDimensions > elements_;
-
+	int dimension;
+	int bitLength=64; //length means the input m or the output n
 public:
 	typedef T ValueType;
 
@@ -56,6 +58,21 @@ public:
 		return ret;
 	}
 
+	int returnSize()
+	{
+		return elements_.size();
+	}
+
+	//set the input  m or the output n 
+	void getBitLength(int bitLength)
+	{
+		this->bitLength = bitLength;
+	}
+
+	int returnBitLength()
+	{
+		return this->bitLength;
+	}
 	Point() : elements_() {}
 
 	Point(int x, int y)
@@ -72,6 +89,16 @@ public:
 		elements_[1] = y;
 		elements_[2] = z;
 	}
+
+
+	//Point(int dimension, T *coordinates)
+	//{
+	//	this->dimension = dimension;
+	//	for (int i = 0; i < dimension; i++)
+	//	{
+	//		elements_[i] = *(coordinates + i);
+	//	}
+	//}
 };
 
 typedef Point< int, 2 > Point2D;

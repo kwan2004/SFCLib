@@ -28,7 +28,10 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SFCConversion.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OutputTransform.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -36,6 +39,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SFCLib.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OutputTransform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

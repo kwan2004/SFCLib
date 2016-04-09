@@ -1,3 +1,4 @@
+#pragma once
 #ifndef SFCCONERSION_H_
 #define SFCCONERSION_H_
 
@@ -7,8 +8,8 @@ template< int nDims,  int nBits>
 class SFCConversion
 {
 public:
-	Point<long, nDims) ptInput; //n*m
-	Point<long, nBits) ptOutput; //m*n
+	Point<long, nDims> ptInput; //n*m
+	Point<long, nBits> ptOutput; //m*n
 
 	void MortonEncode(void) // from n*m to m*n
 	{
@@ -22,6 +23,8 @@ public:
 					ptOutput[i] |= 1 << (nDims - j);// dim iteration
 			}//
 		}//m group
+		//set the ouput point n;
+		ptOutput.getBitLength(nDims);
 	}
 	void MortonDecode(void)
 	{
