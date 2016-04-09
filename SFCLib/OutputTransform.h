@@ -13,6 +13,8 @@ typedef enum
 } StringType;
 
 static const char* const BASE64_TABLE_E2 = "+/0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz=";
+
+template<size,bitLength>
 class OutputTransform
 {
 
@@ -31,8 +33,9 @@ public:
 		long result = 0;
 		for (int i = 0; i < size; i++)
 		{
-			move = size*(bitLength - i);
+			move = bitLength*(size-i);
 			result |= (ptOutput[i] << move);
+
 		}
 		return result;
 	}
@@ -84,7 +87,27 @@ public:
 		string resultStr(resultChar);
 		return resultStr;
 	}
-	
+
+	 Point<long> Value2itSequence(long value)
+	{
+		 Point<long, size> ptOutput;
+		 int totalBits = size* bitLength;
+		 for (int i = 0; i < size; i++)
+		 {   
+			 temp_value = value;
+			 for (int j = 0; j < bitLength; j++)
+			 {
+				 move = bitLength*(size-i);
+				 long mask = ((long)1 << move-1);
+				 temp_value = temp_value & mask;
+				 move = bitLength*(size - i-1);
+				 temp_value >> move;
+				 ptOutput[i] = temp;
+			 }
+			 
+		 }
+		 return ptOutput;
+	}
 
 };
 

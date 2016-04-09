@@ -6,7 +6,7 @@
 
 #define STATIC_ASSERT( e ) static_assert( e, "!(" #e ")" )
 
-template< typename T, int nDimensions = 2 >
+template< typename T, int nDimensions=2>
 class Point
 {
 private:
