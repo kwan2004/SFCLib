@@ -17,6 +17,7 @@ public:
 		{
 			ptOutput[i] = 0;
 			long mask = 1 << ( mBits - i);
+			
 			for (int j = 0; j < nDims; j++) //get one bit from each dim
 			{
 				if (ptInput[j] & mask) // both 1
@@ -26,12 +27,14 @@ public:
 		//set the ouput point n;
 		ptOutput.getBitLength(nDims);
 	}
+
 	void MortonDecode(void)
 	{
 		for (int i = 0; i <  mBits; i++)//m n-bits
 		{			
 			long ntemp = ptOutput[i]; // each row in  m n-bits
 			long mask = 1 << ( mBits - i);
+			
 			for (int j = 0; j < nDims; j++) 
 			{
 				if (ntemp & 1) //get the last bit from  each bits row 

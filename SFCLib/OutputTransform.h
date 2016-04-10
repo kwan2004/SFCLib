@@ -1,6 +1,7 @@
 #pragma once
 #ifndef OUTPUTTRANSFORM_H_
 #define OUTPUTTRANSFORM_H_
+
 #include "Point.h"
 #include <iostream>
 #include <bitset>
