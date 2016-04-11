@@ -20,11 +20,10 @@ void print_bits(unsigned int x)
 	//printf("\n");
 }
 
-
 int _tmain(int argc, _TCHAR* argv[])
 {
 	Point<long, 2> ptCoord; //SFC coordinates n=2
-	Point<long, 3> ptMortonBits; //SFC bit sequence m=3
+	Point<long, 3> ptBits; //SFC bit sequence m=3
 
 	SFCConversion<2, 3> sfc;
 	OutputTransform<2, 3> trans;
@@ -33,22 +32,23 @@ int _tmain(int argc, _TCHAR* argv[])
 	{
 		for (int j = 0; j < 8; j++)
 		{
-			ptCoord[0] = i;
-			ptCoord[1] = j;
+			ptCoord[0] = j;//i
+			ptCoord[1] = i;//j
 
 			sfc.ptCoord = ptCoord;
-			sfc.MortonEncode();
-			ptMortonBits = sfc.ptBits;
+			//sfc.MortonEncode();
+			sfc.HilbertEncode();
+			ptBits = sfc.ptBits;
 
-			cout << i << ", " << j << "---";
+			/*cout << i << ", " << j << "---";
 			print_bits(i); cout << " ";
 			print_bits(j); cout << " ---";
-			print_bits(ptMortonBits[0]); cout << " ";
-			print_bits(ptMortonBits[1]); cout << " ";
-			print_bits(ptMortonBits[2]);
-			cout << endl;
+			print_bits(ptBits[0]); cout << " ";
+			print_bits(ptBits[1]); cout << " ";
+			print_bits(ptBits[2]);
+			cout << endl;*/
 			
-			long outval = trans.bitSequence2Value(ptMortonBits);
+			long outval = trans.bitSequence2Value(ptBits);
 
 			cout << i << ", " << j << "====" << outval <<endl;
 		}

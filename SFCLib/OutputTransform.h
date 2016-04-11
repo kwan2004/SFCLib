@@ -1,4 +1,4 @@
-#pragma once
+//#pragma once
 #ifndef OUTPUTTRANSFORM_H_
 #define OUTPUTTRANSFORM_H_
 
@@ -41,12 +41,35 @@ public:
 		return result;
 	}
 
-	string bitSequence2String(Point<long> ptOutput,StringType str_type)
+	Point<long, mBits> Value2itSequence(long value)
+	{
+		Point<long, mBits> ptOutput;
+
+		int totalBits = size* bitLength;
+		for (int i = 0; i < size; i++)
+		{
+			temp_value = value;
+			for (int j = 0; j < bitLength; j++)
+			{
+				move = bitLength*(size - i);
+				long mask = ((long)1 << move - 1);
+				temp_value = temp_value & mask;
+				move = bitLength*(size - i - 1);
+				temp_value >> move;
+				ptOutput[i] = temp;
+			}
+
+		}
+		return ptOutput;
+	}
+
+
+	string bitSequence2String(Point<long, mBits> ptBits, StringType str_type)
 	{
 		//size=m;bitLength=n;
-		int size = ptOutput.returnSize();
+		int size = ptBits.returnSize();
 		//int bitLength = 0;
-		int bitLength = ptOutput.returnBitLength();
+		int bitLength = ptBits.returnBitLength();
 		int totalBits=size*bitLength;
 		long *temp_result = new long[1];
 		int loopTimes = totalBits / 64;
@@ -89,26 +112,7 @@ public:
 		return resultStr;
 	}
 
-	 Point<long> Value2itSequence(long value)
-	{
-		 Point<long, size> ptOutput;
-		 int totalBits = size* bitLength;
-		 for (int i = 0; i < size; i++)
-		 {   
-			 temp_value = value;
-			 for (int j = 0; j < bitLength; j++)
-			 {
-				 move = bitLength*(size-i);
-				 long mask = ((long)1 << move-1);
-				 temp_value = temp_value & mask;
-				 move = bitLength*(size - i-1);
-				 temp_value >> move;
-				 ptOutput[i] = temp;
-			 }
-			 
-		 }
-		 return ptOutput;
-	}
+	
 
 };
 
