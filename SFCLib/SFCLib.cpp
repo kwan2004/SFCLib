@@ -13,7 +13,7 @@ using namespace std;
 void print_bits(unsigned int x)
 {
 	int i;
-	for (i =3 ; i >= 0; i--) // 8 * sizeof(x) - 1
+	for (i = 8 * sizeof(x) - 1; i >= 0; i--) // 8 * sizeof(x) - 1
 	{
 		(x & (1 << i)) ? putchar('1') : putchar('0');
 	}
@@ -22,12 +22,14 @@ void print_bits(unsigned int x)
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	/////////////////////////////////////
+	//2D case 8*8, i.e n=2, m=3
 	Point<long, 2> ptCoord; //SFC coordinates n=2
 	Point<long, 3> ptBits; //SFC bit sequence m=3
 
 	SFCConversion<2, 3> sfc;
 	OutputTransform<2, 3> trans;
-
+		
 	for (int i = 0; i < 8; i++)
 	{
 		for (int j = 0; j < 8; j++)
@@ -53,6 +55,29 @@ int _tmain(int argc, _TCHAR* argv[])
 			cout << i << ", " << j << "====" << outval <<endl;
 		}
 	}
+
+	
+	////////////////////////////////
+	///Butz's sample, n=5; m=4;
+	Point<long, 5> pt1;
+	pt1[0] = 10;//1010
+	pt1[1] = 11;//1011
+	pt1[2] = 3; //0011
+	pt1[3] = 13;//1101
+	pt1[4] = 5; //0101
+
+	Point<long, 4> pt2; //SFC bit sequence m=3
+
+	SFCConversion<5, 4> sfc2;
+	OutputTransform<5, 4> trans2;
+
+	sfc2.ptCoord = pt1;
+	sfc2.HilbertEncode();
+	pt2 = sfc2.ptBits;
+
+	long val = trans2.bitSequence2Value(pt2);
+
+	print_bits(val);
 
 	return 0;
 }
