@@ -73,6 +73,7 @@ public:
 	{
 		return this->bitLength;
 	}
+
 	Point() : elements_() {}
 
 	Point(int x, int y)

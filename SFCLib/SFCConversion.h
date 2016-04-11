@@ -7,48 +7,23 @@
 template< int nDims,  int  mBits>
 class SFCConversion
 {
+
+private:
+	unsigned int calc_P3(int i, Point<long, mBits> H);
+	unsigned int calc_P2(unsigned int S);
+	unsigned int calc_J(unsigned int P);
+	unsigned int calc_T(unsigned int P);
+	unsigned int calc_tS_tT(unsigned int xJ, unsigned int val);
+	unsigned int calc_tS_tT2(unsigned int xJ, unsigned int val);
+
 public:
-	Point<long, nDims> ptInput; //n*m
-	Point<long,  mBits> ptOutput; //m*n
+	Point<long, nDims> ptCoord; //n*m
+	Point<long,  mBits> ptBits; //m*n
 
-	void MortonEncode(void) // from n*m to m*n
-	{
-		for (int i = 0; i <  mBits; i++)//m
-		{
-			ptOutput[i] = 0;
-			long mask = 1 << ( mBits - i);
-			
-			for (int j = 0; j < nDims; j++) //get one bit from each dim
-			{
-				if (ptInput[j] & mask) // both 1
-					ptOutput[i] |= 1 << (nDims - j);// dim iteration
-			}//
-		}//m group
-		//set the ouput point n;
-		ptOutput.getBitLength(nDims);
-	}
-
-	void MortonDecode(void)
-	{
-		for (int i = 0; i <  mBits; i++)//m n-bits
-		{			
-			long ntemp = ptOutput[i]; // each row in  m n-bits
-			long mask = 1 << ( mBits - i);
-			
-			for (int j = 0; j < nDims; j++) 
-			{
-				if (ntemp & 1) //get the last bit from  each bits row 
-					ptInput[nDims-j-1] |= mask;
-				
-				ntemp >>= 1; //move forward one bit
-			}//
-		}//n dim
-	}
-
-	void HilbertEncode(void);
-	void HilbertDecode(void);
+	void MortonEncode(void); // from n*m coords to m*n bitsequence
+	void MortonDecode(void); // from m*n bitsequence to n*m coords
+	 
+	void HilbertEncode(void); // from n*m coords to m*n bitsequence
+	void HilbertDecode(void); // from m*n bitsequence to n*m coords
 };
-
-
-
 #endif
