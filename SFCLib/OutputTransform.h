@@ -15,28 +15,28 @@ typedef enum
 
 static const char* const BASE64_TABLE_E2 = "+/0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz=";
 
-template<size,bitLength>
+template<int nDims, int  mBits>
 class OutputTransform
 {
 
 public:
-	OutputTransform();
-	~OutputTransform();
+	OutputTransform()
+	{
+		;
+	}
+	~OutputTransform()
+	{
+		;
+	}
 	
 
 public:
-	long bitSequence2Value(Point<long> ptOutput)
+	long bitSequence2Value(Point<long, mBits> ptBits)
 	{ 
-		//size=m;bitLength=n;
-		int size = ptOutput.returnSize();
-		int bitLength = ptOutput.returnBitLength();
-		int move = 0;
 		long result = 0;
-		for (int i = 0; i < size; i++)
+		for (int i = 0; i < mBits; i++)
 		{
-			move = bitLength*(size-i);
-			result |= (ptOutput[i] << move);
-
+			result |= (ptBits[i] << (mBits - i - 1)*nDims);
 		}
 		return result;
 	}

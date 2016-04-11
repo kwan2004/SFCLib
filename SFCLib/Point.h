@@ -11,8 +11,10 @@ class Point
 {
 private:
 	std::array< T, nDimensions > elements_;
+
 	int dimension;
 	int bitLength=64; //length means the input m or the output n
+
 public:
 	typedef T ValueType;
 

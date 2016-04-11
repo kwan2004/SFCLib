@@ -31,7 +31,23 @@ public:
 		}
 	}
 
-	void MortonEncode(void); // from n*m coords to m*n bitsequence
+	void MortonEncode(void)// from n*m coords to m*n bitsequence
+	{
+		for (int i = 0; i < mBits; i++)//m
+		{
+			ptBits[i] = 0;
+			long mask = 1 << (mBits - i - 1); //move to the ith bit
+
+			for (int j = 0; j < nDims; j++) //get one bit from each nDims
+			{
+				if (ptCoord[j] & mask) // both 1
+					ptBits[i] |= 1 << (nDims - j -1);// push this bit to dim position(xyz...) nDims -----(nDims - j)
+			}//
+		}//m group
+
+		//set the ouput point n;
+		//ptBits.getBitLength(nDims);
+	}
 	void MortonDecode(void); // from m*n bitsequence to n*m coords
 	 
 	void HilbertEncode(void); // from n*m coords to m*n bitsequence

@@ -1,24 +1,24 @@
 #include "stdafx.h"
 #include "SFCConversion.h"
 
-template< int nDims, int  mBits>
-void SFCConversion<nDims, mBits>::MortonEncode(void) // from n*m to m*n
-{
-	for (int i = 0; i < mBits; i++)//m
-	{
-		ptBits[i] = 0;
-		long mask = 1 << (mBits - i);
-
-		for (int j = 0; j < nDims; j++) //get one bit from each nDims
-		{
-			if (ptCoord[j] & mask) // both 1
-				ptBits[i] |= 1 << (nDims - j);// nDims iteration
-		}//
-	}//m group
-
-	//set the ouput point n;
-	ptBits.getBitLength(nDims);
-}
+//template< int nDims, int  mBits>
+//void SFCConversion<nDims, mBits>::MortonEncode(void) // from n*m to m*n
+//{
+//	for (int i = 0; i < mBits; i++)//m
+//	{
+//		ptBits[i] = 0;
+//		long mask = 1 << (mBits - i);
+//
+//		for (int j = 0; j < nDims; j++) //get one bit from each nDims
+//		{
+//			if (ptCoord[j] & mask) // both 1
+//				ptBits[i] |= 1 << (nDims - j);// nDims iteration
+//		}//
+//	}//m group
+//
+//	//set the ouput point n;
+//	ptBits.getBitLength(nDims);
+//}
 
 template< int nDims, int  mBits>
 void SFCConversion<nDims, mBits>::MortonDecode(void)
