@@ -2,10 +2,14 @@
 //
 
 #include "stdafx.h"
-#include "Rectangle.h"
+
 #include "Point.h"
+<<<<<<< HEAD
+#include "Rectangle.h"
+=======
 #include "SFCConversion.h"
 #include "OutputTransform.h"
+>>>>>>> a3a456926d4ecc68863e261ea192005fd324fefc
 
 #include <iostream>
 using namespace std;
@@ -77,7 +81,14 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	long val = trans2.bitSequence2Value(pt2);
 
-	print_bits(val);
+<<<<<<< HEAD
+	int c = a[0];
+	long points[5] = { 1, 2, 3, 4, 5 };
+	Point<long, 5> point5D(points);
+	for (int i = 0; i < 5; i++)
+	{
+		printf("%d", point5D[i]);
+	}
 
 	long Point1[3] = { 1, 2 ,3};
 	long Point2[3] = { 4,5,6 };
@@ -87,6 +98,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	rec.generateComplateRec(MinPoint, MaxPoint);
 
 	system("pause");
+=======
+	print_bits(val);
+
+>>>>>>> a3a456926d4ecc68863e261ea192005fd324fefc
 	return 0;
 }
 

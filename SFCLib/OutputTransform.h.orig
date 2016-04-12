@@ -15,7 +15,11 @@ typedef enum
 
 static const char* const BASE64_TABLE_E2 = "+/0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz=";
 
+<<<<<<< HEAD
+template< typename T>
+=======
 template<int nDims, int  mBits>
+>>>>>>> a3a456926d4ecc68863e261ea192005fd324fefc
 class OutputTransform
 {
 
@@ -31,6 +35,15 @@ public:
 	
 
 public:
+<<<<<<< HEAD
+	T bitSequence2Value(Point<T> ptOutput)
+	{ 
+		//size=m;bitLength=n;
+		int size = ptOutput.returnSize();
+		int bitLength = ptOutput.returnBitLength();
+		int move = 0;
+		T result = 0;
+=======
 	long bitSequence2Value(Point<long, mBits> ptBits)
 	{ 
 		long result = 0;
@@ -46,6 +59,7 @@ public:
 		Point<long, mBits> ptOutput;
 
 		int totalBits = size* bitLength;
+>>>>>>> a3a456926d4ecc68863e261ea192005fd324fefc
 		for (int i = 0; i < size; i++)
 		{
 			temp_value = value;
@@ -63,15 +77,19 @@ public:
 		return ptOutput;
 	}
 
+<<<<<<< HEAD
+	string bitSequence2String(Point<T> ptOutput,StringType str_type)
+=======
 
 	string bitSequence2String(Point<long, mBits> ptBits, StringType str_type)
+>>>>>>> a3a456926d4ecc68863e261ea192005fd324fefc
 	{
 		//size=m;bitLength=n;
 		int size = ptBits.returnSize();
 		//int bitLength = 0;
 		int bitLength = ptBits.returnBitLength();
 		int totalBits=size*bitLength;
-		long *temp_result = new long[1];
+		T *temp_result = new T[1];
 		int loopTimes = totalBits / 64;
 		int move = 0;
 		char *resultChar=NULL;
@@ -101,18 +119,18 @@ public:
 		for (int i = 0; i < loopTimes; i++)
 		{   
 			//int result=0;
-			long each_Result = *(temp_result + i);
+			T each_Result = *(temp_result + i);
 			int times = totalBit_eachResult / baseNumber;
 			mod = total%baseNumber;
 			move = move + mod;
-			long temp = *(temp_result + i);
-			long *next_start = new long[1];
+			T temp = *(temp_result + i);
+			T *next_start = new T[1];
 			for (int j = 0; j < times; j++)
 			{
 				if (j == 0 )
 				{
-					long result = temp;
-					long mask = 1 << mod;
+					T result = temp;
+					T mask = 1 << mod;
 					mask = mask - 1;
 				    *(next_start+i )= result&temp;
 					*(next_start + i) = *(next_start + i) << (baseNumber - mod);
@@ -121,8 +139,8 @@ public:
 				}
 				else
 				{
-					long result = temp;
-					long mask = 1 << Base;
+					T result = temp;
+					T mask = 1 << Base;
 					mask = mask - 1;
 					result = result & mask;
 					*(resultChar + i * 6 + times - j) = BASE64_TABLE_E2[result];
@@ -154,9 +172,10 @@ public:
 		return resultStr;
 	}
 
-	Point<long, mBits> value2BitSequence(long value)
+<<<<<<< HEAD
+	 Point<T> value2BitSequence(T value)
 	{
-		 Point<long, size> ptOutput;
+		 Point<T, size> ptOutput;
 		 int totalBits = size* bitLength;
 		 for (int i = 0; i < size; i++)
 		 {   
@@ -164,8 +183,7 @@ public:
 			 for (int j = 0; j < bitLength; j++)
 			 {
 				 move = bitLength*(size-i);
-				 long mask = ((long)1 << move - 1);
-	
+				 T mask = ((T)1 << move-1);
 				 temp_value = temp_value & mask;
 				 move = bitLength*(size - i-1);
 				 temp_value >> move;
@@ -175,6 +193,9 @@ public:
 		 }
 		 return ptOutput;
 	}
+=======
+	
+>>>>>>> a3a456926d4ecc68863e261ea192005fd324fefc
 
 };
 
