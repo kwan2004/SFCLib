@@ -84,7 +84,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	Point<long, 3> MinPoint(Point1);
 	Point<long, 3> MaxPoint(Point1);
 	Rectangle<long, 3> rec(MinPoint, MaxPoint);
-	rec.generateComplateRec(MinPoint, MaxPoint);
+	rec.GetAllCornerPts(MinPoint, MaxPoint);
 
 	system("pause");
 	return 0;
