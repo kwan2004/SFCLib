@@ -1,4 +1,4 @@
-#pragma once
+//#pragma once
 #ifndef POINT_H_
 #define POINT_H_
 
@@ -13,6 +13,7 @@ private:
 	std::array< T, nDimensions > elements_;
 	int dimension=nDimensions;
 	int bitLength=64; //length means the input m or the output n
+
 public:
 	typedef T ValueType;
 

@@ -1,6 +1,7 @@
-#pragma once
+//#pragma once
 #ifndef OUTPUTTRANSFORM_H_
 #define OUTPUTTRANSFORM_H_
+
 #include "Point.h"
 #include <iostream>
 #include <bitset>
@@ -14,38 +15,61 @@ typedef enum
 
 static const char* const BASE64_TABLE_E2 = "+/0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz=";
 
-template< typename T>
+template<int nDims, int  mBits>
 class OutputTransform
 {
 
 public:
-	OutputTransform();
-	~OutputTransform();
+	OutputTransform()
+	{
+		;
+	}
+	~OutputTransform()
+	{
+		;
+	}
 	
 
 public:
-	T bitSequence2Value(Point<T> ptOutput)
+	long bitSequence2Value(Point<long, mBits> ptBits)
 	{ 
-		//size=m;bitLength=n;
-		int size = ptOutput.returnSize();
-		int bitLength = ptOutput.returnBitLength();
-		int move = 0;
 		T result = 0;
-		for (int i = 0; i < size; i++)
+		for (int i = 0; i < mBits; i++)
 		{
-			move = bitLength*(size-i);
-			result |= (ptOutput[i] << move);
-
+			result |= (ptBits[i] << (mBits - i - 1)*nDims);
 		}
 		return result;
 	}
 
-	string bitSequence2String(Point<T> ptOutput,StringType str_type)
+	Point<long, mBits> Value2itSequence(long value)
+	{
+		Point<long, mBits> ptOutput;
+
+		int totalBits = size* bitLength;
+		for (int i = 0; i < size; i++)
+		{
+			temp_value = value;
+			for (int j = 0; j < bitLength; j++)
+			{
+				move = bitLength*(size - i);
+				long mask = ((long)1 << move - 1);
+				temp_value = temp_value & mask;
+				move = bitLength*(size - i - 1);
+				temp_value >> move;
+				ptOutput[i] = temp;
+			}
+
+		}
+		return ptOutput;
+	}
+
+
+	string bitSequence2String(Point<long, mBits> ptBits, StringType str_type)
 	{
 		//size=m;bitLength=n;
-		int size = ptOutput.returnSize();
+		int size = ptBits.returnSize();
 		//int bitLength = 0;
-		int bitLength = ptOutput.returnBitLength();
+		int bitLength = ptBits.returnBitLength();
 		int totalBits=size*bitLength;
 		T *temp_result = new T[1];
 		int loopTimes = totalBits / 64;
@@ -141,6 +165,7 @@ public:
 			 {
 				 move = bitLength*(size-i);
 				 T mask = ((T)1 << move-1);
+	
 				 temp_value = temp_value & mask;
 				 move = bitLength*(size - i-1);
 				 temp_value >> move;
