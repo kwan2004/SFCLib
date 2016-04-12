@@ -32,6 +32,7 @@ public:
 		{			
 			long ntemp = ptOutput[i]; // each row in  m n-bits
 			long mask = 1 << ( mBits - i);
+			mask = mask - 1;
 			for (int j = 0; j < nDims; j++) 
 			{
 				if (ntemp & 1) //get the last bit from  each bits row 

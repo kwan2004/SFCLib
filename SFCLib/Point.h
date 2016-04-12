@@ -11,7 +11,7 @@ class Point
 {
 private:
 	std::array< T, nDimensions > elements_;
-	int dimension;
+	int dimension=nDimensions;
 	int bitLength=64; //length means the input m or the output n
 public:
 	typedef T ValueType;
@@ -31,6 +31,15 @@ public:
 		for (int i = 0; i < nDimensions; ++i)
 		{
 			elements_[i] += other.elements_[i];
+		}
+	}
+
+
+	void operator=(Point const& other)
+	{
+		for (int i = 0; i < nDimensions; ++i)
+		{
+			elements_[i] = other.elements_[i];
 		}
 	}
 
@@ -73,6 +82,7 @@ public:
 	{
 		return this->bitLength;
 	}
+
 	Point() : elements_() {}
 
 	Point(int x, int y)
@@ -91,14 +101,20 @@ public:
 	}
 
 
-	//Point(int dimension, T *coordinates)
-	//{
-	//	this->dimension = dimension;
-	//	for (int i = 0; i < dimension; i++)
-	//	{
-	//		elements_[i] = *(coordinates + i);
-	//	}
-	//}
+	Point(T *coordinates)
+	{
+		for (int i = 0; i < this->dimension; i++)
+		{
+			elements_[i] = *(coordinates+i);
+		}
+	}
+
+	T getElements(int i)
+	{ 
+		return elements_[i];
+	}
+
+	
 };
 
 typedef Point< int, 2 > Point2D;
