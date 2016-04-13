@@ -50,6 +50,7 @@ public:
 		tmp.push_back(minVector[i]);
 		DFS(minVector, maxVector, i + 1, tmp, result);
 		tmp.pop_back();
+
 		tmp.push_back(maxVector[i]);
 		DFS(minVector, maxVector, i + 1, tmp, result);
 		tmp.pop_back();

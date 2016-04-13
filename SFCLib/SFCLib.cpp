@@ -6,6 +6,7 @@
 #include "Point.h"
 #include "SFCConversion.h"
 #include "OutputTransform.h"
+#include "QueryBySFC.h"
 
 #include <iostream>
 using namespace std;
@@ -85,7 +86,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	Point<long, 3> MaxPoint(Point1);
 	Rectangle<long, 3> rec(MinPoint, MaxPoint);
 	rec.generateComplateRec(MinPoint, MaxPoint);
-
+	QueryBySFC qsfc;
+	qsfc.test();
 	system("pause");
 	return 0;
 }
