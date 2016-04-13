@@ -61,17 +61,15 @@ void SFCConversion<nDims, mBits>::MortonEncode() // from n*m to m*n
 template< int nDims, int  mBits>
 void SFCConversion<nDims, mBits>::MortonDecode(void)
 {
-	for (int i = 0; i < mBits; i++)//m n-bits
+	for (int i = 0; i < nDims; i++)//m n-bits
 	{
-		long ntemp = ptBits[i]; // each row in  m n-bits
-		long mask = 1 << (mBits - i);
+		ptCoord[i] = 0;
+		long mask = 1 << (nDims - i - 1);
 
-		for (int j = 0; j < nDims; j++)
+		for (int j = 0; j < mBits; j++)
 		{
-			if (ntemp & 1) //get the last bit from  each bits row 
-				ptCoord[nDims - j - 1] |= mask;
-
-			ntemp >>= 1; //move forward one bit
+			if (ptBits[j] & mask) //both 1 
+				ptCoord[i] |= 1 << (mBits - j - 1); //get the i-th bit from  j-th bits
 		}//
 	}//n nDims
 }
