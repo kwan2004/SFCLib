@@ -110,6 +110,15 @@ public:
 		}
 	}
 
+	//Point(const Point &points)
+	//{
+	//	this->dimension = points->returnSize();
+	//	for (int i = 0; i < points->returnSize(); i++)
+	//	{
+	//		elements_[i] = points[i];
+	//	}
+	//}
+
 	T getElements(int i)
 	{ 
 		return elements_[i];

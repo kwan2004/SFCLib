@@ -45,16 +45,16 @@ public:
 	{
 		Point<long, mBits> ptOutput;
 
-		int totalBits = size* bitLength;
-		for (int i = 0; i < size; i++)
+		int totalBits = nDims* mBits;
+		for (int i = 0; i < mBits; i++)
 		{
 			temp_value = value;
-			for (int j = 0; j < bitLength; j++)
+			for (int j = 0; j <nDims; j++)
 			{
-				move = bitLength*(size - i);
+				move = nDims*(mBits - i);
 				long mask = ((long)1 << move - 1);
 				temp_value = temp_value & mask;
-				move = bitLength*(size - i - 1);
+				move = nDims*(mBits - i - 1);
 				temp_value >> move;
 				ptOutput[i] = temp;
 			}
