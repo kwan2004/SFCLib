@@ -80,28 +80,18 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	print_bits(val);
 
-	
-
-
-	sfc2.ptCoord = pt1;
-	sfc2.MortonEncode();
-	pt2 = sfc2.ptBits;
-
-	val = trans2.bitSequence2Value(pt2);
-	printf("result:  \n %d \n", val);
-	print_bits(val);
 
 	///////////////////
-	long Point1[3] = { 1, 2, 3 };
-	long Point2[3] = { 4, 5, 6 };
+	long Point1[3] = { 3, 4, 2};
+	long Point2[3] = { 6, 5, 4};
 	Point<long, 3> MinPoint(Point1);
 	Point<long, 3> MaxPoint(Point2);
 	Rectangle<long, 3> rec(MinPoint, MaxPoint);
 	rec.GetAllCornerPts(MinPoint, MaxPoint);
 
-	QueryBySFC<long,3,4 > querytest;
-	vector<long>result=querytest.RangeQueryByMorton_Bruteforce(rec);
-	
+	QueryBySFC<long,3,7> querytest;
+	querytest.RangeQueryByMorton_Bruteforce(rec);
+	querytest.RangeQueryByHilbert_Bruteforce(rec);
 
 
 	system("pause");

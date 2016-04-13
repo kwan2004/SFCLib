@@ -35,7 +35,6 @@ private:
 				}
 				for (int i = 0; i<tmp_vector.size(); ++i)
 				{
-
 					//one_result.push_back(tmp.at(i));
 					one_result.push_back(tmp_vector.at(count - i - 1));
 					tmp.push(tmp_vector.at(count - i - 1));
@@ -59,18 +58,10 @@ public:
 
 	QueryBySFC()
 	{
-		int i = 0;
-	}
-
-	void test()
-	{
-		vector<int> v1 = { 1, 2, 3 };
-		vector<int> v2 = { 2, 3, 4 };
-		vector<int> v3 = { 7, 8 };
-		vector<vector<int>> input = { v1, v2, v3 };
-		vector<vector<int>> result = getAllCombination(input);
 
 	}
+
+
 
 	vector<Point<T,nDims>> getAllPointsInQueryRec(Rectangle<T, nDims> queryRect)
 	{
@@ -102,12 +93,13 @@ public:
 		return points;
 	}
 
-	vector<long>  RangeQueryByMorton_Bruteforce(Rectangle<T, nDims> queryRect)
+	vector<vector<long>>  RangeQueryByMorton_Bruteforce(Rectangle<T, nDims> queryRect)
 	{
 		vector<Point<T, nDims>> points = getAllPointsInQueryRec(queryRect);
 		vector<long> result;
 		Point<long, mBits> pt;
 		long val = 0;
+
 		for (int i = 0; i < points.size(); i++)
 		{
 			SFCConversion<nDims, mBits> sfc;
@@ -117,9 +109,157 @@ public:
 			pt = sfc.ptBits;
 			val = trans.bitSequence2Value(pt);
 			result.push_back(val);
-			printf(" %d", val);
 		}
-		return result;
+		std::sort(result.begin(),result.end());
+
+		/////the test code.it can be deleted
+		////////////////////////////////////////
+		printf("\n morton sort result: \n");
+		for (int i = 0; i < result.size(); i++)
+		{
+			printf("%d\t", result[i]);
+		}
+		printf("\n");
+		/////////////////////////////////////////
+		long tmp = result[0];
+		vector<long> tmpVector;
+		tmpVector.push_back(tmp);
+		vector<vector<long>> resultVector;
+		for (int i = 0; i < result.size()-1; i++)
+		{
+			if (result[i+1] == (result[i]+1))
+			{
+				tmpVector.push_back(result[i + 1]);
+				if ((i + 1) == result.size() - 1)
+				{
+					vector<long> eachRange;
+					eachRange.push_back(tmpVector[0]);
+					eachRange.push_back(result[i + 1]);
+					resultVector.push_back(eachRange);
+				}
+			}
+			if (result[i + 1] != (result[i] + 1))
+			{
+				vector<long> eachRange;
+				if (tmpVector.size()>1)
+				{
+					eachRange.push_back(tmpVector[0]);
+					eachRange.push_back(tmpVector[tmpVector.size()-1]);
+				}
+				else
+				{
+					eachRange.push_back(tmpVector[0]);
+				}
+				resultVector.push_back(eachRange);
+				tmpVector.clear();
+				tmpVector.push_back(result[i + 1]);
+				if ((i+1) == result.size()-1)
+				{
+					resultVector.push_back(tmpVector);
+				}
+
+			}
+		}
+		/////the test code.it can be deleted
+	    //////////////////////////////////////////
+		printf("\n morton final result: \n");
+		for (int i = 0; i < resultVector.size(); i++)
+		{
+			printf("\n");
+			for (int j = 0; j < resultVector[i].size(); j++)
+			{
+				printf("%d\t", resultVector[i][j]);
+			}
+
+		}
+		printf("\n");
+		///////////////////////////////////////////////
+		return resultVector;
+	}
+
+	vector<vector<long>>  RangeQueryByHilbert_Bruteforce(Rectangle<T, nDims> queryRect)
+	{
+		vector<Point<T, nDims>> points = getAllPointsInQueryRec(queryRect);
+		vector<long> result;
+		Point<long, mBits> pt;
+		long val = 0;
+
+		for (int i = 0; i < points.size(); i++)
+		{
+			SFCConversion<nDims, mBits> sfc;
+			sfc.ptCoord = points[i];
+			sfc.HilbertEncode();
+			OutputTransform<nDims, mBits> trans;
+			pt = sfc.ptBits;
+			val = trans.bitSequence2Value(pt);
+			result.push_back(val);
+		}
+		std::sort(result.begin(), result.end());
+
+		/////the test code.it can be deleted
+		////////////////////////////////////////
+		printf("\n hilbert sort result: \n");
+		for (int i = 0; i < result.size(); i++)
+		{
+			printf("%d\t", result[i]);
+		}
+		printf("\n");
+		/////////////////////////////////////////
+		long tmp = result[0];
+		vector<long> tmpVector;
+		tmpVector.push_back(tmp);
+		vector<vector<long>> resultVector;
+		for (int i = 0; i < result.size() - 1; i++)
+		{
+			if (result[i + 1] == (result[i] + 1))
+			{
+				tmpVector.push_back(result[i + 1]);
+				if ((i + 1) == result.size() - 1)
+				{
+					vector<long> eachRange;
+					eachRange.push_back(tmpVector[0]);
+					eachRange.push_back(result[i + 1]);
+					resultVector.push_back(eachRange);
+				}
+			}
+			if (result[i + 1] != (result[i] + 1))
+			{
+				vector<long> eachRange;
+				if (tmpVector.size()>1)
+				{
+					eachRange.push_back(tmpVector[0]);
+					eachRange.push_back(tmpVector[tmpVector.size() - 1]);
+				}
+				else
+				{
+					eachRange.push_back(tmpVector[0]);
+				}
+				resultVector.push_back(eachRange);
+				tmpVector.clear();
+				tmpVector.push_back(result[i + 1]);
+				if ((i + 1) == result.size() - 1)
+				{
+					resultVector.push_back(tmpVector);
+				}
+
+			}
+		}
+
+		/////the test code.it can be deleted
+		//////////////////////////////////////////
+		printf("\n hilbert final result: \n");
+		for (int i = 0; i < resultVector.size(); i++)
+		{
+			printf("\n");
+			for (int j = 0; j < resultVector[i].size(); j++)
+			{
+				printf("%d\t", resultVector[i][j]);
+			}
+
+		}
+		printf("\n");
+		///////////////////////////////////////////////
+		return resultVector;
 	}
 
 };
