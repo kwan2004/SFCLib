@@ -87,6 +87,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	Rectangle<long, 3> rec(MinPoint, MaxPoint);
 	rec.GetAllCornerPts(MinPoint, MaxPoint);
 
+
+	QueryBySFC querytest;
+	querytest.test();
+
 	system("pause");
 	return 0;
 }
