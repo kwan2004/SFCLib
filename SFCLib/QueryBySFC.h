@@ -28,13 +28,14 @@ public:
 				{
 					tmp_vector.push_back(tmp.top());
 					tmp.pop();
+					count++;
 				}
-				for (int i = 0; i<tmp.size(); ++i)
+				for (int i = 0; i<tmp_vector.size(); ++i)
 				{
 
 					//one_result.push_back(tmp.at(i));
-					one_result.push_back(tmp_vector[count - i]);
-					tmp.push(tmp_vector[count - i]);
+					one_result.push_back(tmp_vector.at(count-i-1));
+					tmp.push(tmp_vector.at(count-i-1));
 				}
 				tmp_result.push_back(one_result);
 			}
@@ -53,10 +54,11 @@ public:
 	
 	void test()
 	{
-		vector<int> v1 = { 1, 3 };
-		vector<int> v2 = { 2, 4 };
-		vector<vector<int>> result = { v1, v2 };
-		get_all_combination(result);
+		vector<int> v1 = { 1,2,3 };
+		vector<int> v2 = { 2,3,4 };
+		vector<int> v3 = { 7, 8 };
+		vector<vector<int>> input = { v1, v2 ,v3};
+		vector<vector<int>> result=get_all_combination(input);
 		std::cout << "result"<<"\n";
 		for (int i = 0; i < result.size(); ++i) {
 			for (int j = 0; j < result[i].size(); ++j) {
