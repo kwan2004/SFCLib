@@ -88,7 +88,6 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="QueryBySFC.cpp" />
     <ClCompile Include="SFCConversion.cpp" />
     <ClCompile Include="SFCLib.cpp" />
     <ClCompile Include="stdafx.cpp">
