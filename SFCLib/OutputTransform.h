@@ -153,29 +153,7 @@ public:
 		string resultStr(resultChar);
 		return resultStr;
 	}
-
-	Point<long, mBits> value2BitSequence(long value)
-	{
-		 Point<long, size> ptOutput;
-		 int totalBits = size* bitLength;
-		 for (int i = 0; i < size; i++)
-		 {   
-			 temp_value = value;
-			 for (int j = 0; j < bitLength; j++)
-			 {
-				 move = bitLength*(size-i);
-				 long mask = ((long)1 << move - 1);
 	
-				 temp_value = temp_value & mask;
-				 move = bitLength*(size - i-1);
-				 temp_value >> move;
-				 ptOutput[i] = temp;
-			 }
-			 
-		 }
-		 return ptOutput;
-	}
-
 };
 
 #endif

@@ -3,6 +3,7 @@
 #define RECTANGLE_H_
 #include"Point.h"
 #include<vector>
+
 using std::vector;
 
 #define STATIC_ASSERT( e ) static_assert( e, "!(" #e ")" )
@@ -22,21 +23,25 @@ public:
 		this->dimensions = nDimensions;
 	}
 
-	int returnDimensions()
+	int GetDimensions()
 	{
 		return this->dimensions;
 	}
 
-	Point<T, nDimensions> returnMinPoint()
+	Point<T, nDimensions> GetMinPoint()
 	{
 		return this->minPoint;
 	}
 
-	Point<T, nDimensions> returnMaxPoint()
+	Point<T, nDimensions> GetMaxPoint()
 	{
 		return this->maxPoint;
 	}
 
+	long GetDimWidth(int idx)
+	{
+		return this->maxPoint[idx] - this->minPoint[idx];
+	}
 
 	void DFS(vector<T> minVector, vector<T> maxVector, 
 		int i, vector<T > tmp, vector<vector<T >>& result)
@@ -62,7 +67,7 @@ public:
 	generate 8 points.
 	*/
 	vector<Point<T, nDimensions>>
-    generateComplateRec(Point<T, nDimensions> minPoint, Point<T, nDimensions> maxPoint)
+    GetAllCornerPts(Point<T, nDimensions> minPoint, Point<T, nDimensions> maxPoint)
 	{
 		vector<T>minVector;
 		vector<T>maxVector;
