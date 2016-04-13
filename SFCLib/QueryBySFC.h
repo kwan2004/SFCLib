@@ -1,11 +1,14 @@
 #pragma once
 #include "stdafx.h"
-#include"Point.h"
-#include"OutputTransform.h"
+
+#include "Point.h"
+#include "OutputTransform.h"
 #include "SFCConversion.h"
-#include<iostream>
+
+#include <iostream>
 #include <vector>
-#include<stack>
+#include <stack>
+
 using namespace std;
 
 template< typename T, int nDims = 2, int mBits=4>
@@ -60,8 +63,6 @@ public:
 	{
 
 	}
-
-
 
 	vector<Point<T,nDims>> getAllPointsInQueryRec(Rectangle<T, nDims> queryRect)
 	{
@@ -121,6 +122,7 @@ public:
 		}
 		printf("\n");
 		/////////////////////////////////////////
+
 		long tmp = result[0];
 		vector<long> tmpVector;
 		tmpVector.push_back(tmp);
@@ -160,6 +162,7 @@ public:
 
 			}
 		}
+
 		/////the test code.it can be deleted
 	    //////////////////////////////////////////
 		printf("\n morton final result: \n");
@@ -205,6 +208,7 @@ public:
 		}
 		printf("\n");
 		/////////////////////////////////////////
+
 		long tmp = result[0];
 		vector<long> tmpVector;
 		tmpVector.push_back(tmp);

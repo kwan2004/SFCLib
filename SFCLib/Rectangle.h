@@ -1,8 +1,8 @@
 #pragma once
 #ifndef RECTANGLE_H_
 #define RECTANGLE_H_
-#include"Point.h"
-#include<vector>
+#include "Point.h"
+#include <vector>
 
 using std::vector;
 
