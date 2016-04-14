@@ -413,6 +413,8 @@ int QueryBySFC::query_approximate(TreeNode nd, Rectangle<T, nDims> queryrect)
 
 	int ncount = 1;
 	rtcut[0] = qrt;
+
+	Point<T, nDims> pttmp;
 	for (int i = 0; i < nDims; i++) //dimension iteration
 	{
 		int newadd = 0;
@@ -425,9 +427,14 @@ int QueryBySFC::query_approximate(TreeNode nd, Rectangle<T, nDims> queryrect)
 				/////add one rectangle, the new rect is in the bigger area
 				rect rtnew = rtcut[j];
 
-				//cut this rectangle along the middle line			
-				rtnew.GetMinPoint()[i] = mid[i]; //bigger
-				rtcut.GetMaxPoint()[i] = mid[i];//smaller
+				//cut this rectangle along the middle line
+				pttmp = rtnew.GetMinPoint();//bigger
+				pttmp[i] = mid[i]; 
+				rtnew.SetMinPoint(pttmp);
+
+				pttmp = rtcut.GetMaxPoint();//smaller
+				pttmp[i] = mid[i];
+				rtcut.SetMaxPoint(pttmp);
 
 				rtpos[ncount + newadd] = (1 << i) + rtpos[j]; //--put 1 on the dimension bit
 				rtcut[ncount + newadd] = rtnew;

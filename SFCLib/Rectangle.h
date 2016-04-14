@@ -38,6 +38,16 @@ public:
 		return this->maxPoint;
 	}
 
+	void SetMinPoint(Point<T, nDimensions> minpt)
+	{
+		this->minPoint = minpt;
+	}
+
+	void SetMaxPoint(Point<T, nDimensions> maxpt)
+	{
+		this->maxPoint = maxpt;
+	}
+
 	long GetDimWidth(int idx)
 	{
 		return this->maxPoint[idx] - this->minPoint[idx];
