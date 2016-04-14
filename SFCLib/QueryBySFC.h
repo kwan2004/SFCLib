@@ -368,7 +368,7 @@ int QueryBySFC::query_approximate(TreeNode nd, Rectangle<T, nDims> queryrect)
 
 	for (int i = 0; i < 2 ^ nDims; i++)
 	{
-		nchild[i] = nd.getchildnode(i);
+		nchild[i] = nd.GetChildNode(i);
 	}
 
 	for (int i = 0; i < 2 ^ nDims; i++)
@@ -435,7 +435,7 @@ int QueryBySFC::query_approximate(TreeNode nd, Rectangle<T, nDims> queryrect)
 				newadd++;
 			}
 
-			if (coord[i][0] >= mid[i]) //all bigger than the middle line
+			if (rtcut[j].GetMinPoint()[i] >= mid[i]) //all bigger than the middle line
 			{
 				rtpos[j] |= 1 << i; //just update its position---put 1 on the dimension bit
 			}
