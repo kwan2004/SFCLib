@@ -7,20 +7,20 @@
 using std::vector;
 
 #define STATIC_ASSERT( e ) static_assert( e, "!(" #e ")" )
-template< typename T, int nDimensions=2>
+template< typename T, int nDims=2>
 class Rectangle
 {
 private:
-	Point<T,nDimensions> minPoint;
-	Point<T,nDimensions> maxPoint;
-	int dimensions = nDimensions;
+	Point<T,nDims> minPoint;
+	Point<T,nDims> maxPoint;
+	int dimensions = nDims;
 public:
 
-	Rectangle(Point<T, nDimensions> minPoint, Point<T,nDimensions> maxPoint)
+	Rectangle(Point<T, nDims> minPoint, Point<T,nDims> maxPoint)
 	{
 		this->minPoint = minPoint;
 		this->maxPoint = maxPoint;
-		this->dimensions = nDimensions;
+		this->dimensions = nDims;
 	}
 
 	int GetDimensions()
@@ -28,22 +28,22 @@ public:
 		return this->dimensions;
 	}
 
-	Point<T, nDimensions> GetMinPoint()
+	Point<T, nDims> GetMinPoint()
 	{
 		return this->minPoint;
 	}
 
-	Point<T, nDimensions> GetMaxPoint()
+	Point<T, nDims> GetMaxPoint()
 	{
 		return this->maxPoint;
 	}
 
-	void SetMinPoint(Point<T, nDimensions> minpt)
+	void SetMinPoint(Point<T, nDims> minpt)
 	{
 		this->minPoint = minpt;
 	}
 
-	void SetMaxPoint(Point<T, nDimensions> maxpt)
+	void SetMaxPoint(Point<T, nDims> maxpt)
 	{
 		this->maxPoint = maxpt;
 	}
@@ -76,12 +76,12 @@ public:
 	the 2d Rectangle will generate 4 points while the 3d Rectangle will
 	generate 8 points.
 	*/
-	vector<Point<T, nDimensions>>
-    GetAllCornerPts(Point<T, nDimensions> minPoint, Point<T, nDimensions> maxPoint)
+	vector<Point<T, nDims>>
+    GetAllCornerPts(Point<T, nDims> minPoint, Point<T, nDims> maxPoint)
 	{
 		vector<T>minVector;
 		vector<T>maxVector;
-		for (int i = 0; i < nDimensions; i++)
+		for (int i = 0; i < nDims; i++)
 		{
 			minVector.push_back(minPoint.getElements(i));
 			maxVector.push_back(maxPoint.getElements(i));
@@ -89,8 +89,8 @@ public:
 		vector<vector<T>> result;
 		vector<T> tmp;
 		DFS(minVector, maxVector, 0, vector<T>(), result);
-		vector<Point<T, nDimensions>> Rec_Vector;
-		Point<T, nDimensions> points;
+		vector<Point<T, nDims>> Rec_Vector;
+		Point<T, nDims> points;
 		for (int i = 0; i < result.size(); ++i) {
 			for (int j = 0; j < result[i].size(); ++j) {
 				points[j]=result[i][j];
