@@ -10,7 +10,7 @@ using std::vector;
 template< typename T, int nDimensions=2>
 class Rectangle
 {
-public:
+private:
 	Point<T,nDimensions> minPoint;
 	Point<T,nDimensions> maxPoint;
 	int dimensions = nDimensions;
