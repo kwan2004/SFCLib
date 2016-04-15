@@ -8,6 +8,8 @@
 
 #include <iostream>
 #include <vector>
+#include<stack>
+#include<time.h>
 
 using namespace std;
 
@@ -16,6 +18,12 @@ class QueryBySFC
 {
 private:
 
+
+<<<<<<< HEAD
+	int query_approximate(TreeNode nd, Rectangle<T, nDims> qrect);
+
+public:
+
 	vector<Point<T, nDims>> getAllPoints(Rectangle<T, nDims> queryRect)
 	{
 		Point<T, nDims> minPoint = queryRect.GetMinPoint();
@@ -23,16 +31,16 @@ private:
 		long *difference = new long[nDims];
 		for (int i = 0; i < nDims; i++)
 		{
-			difference[i] = maxPoint[i] - minPoint[i] + 1;
+			difference[i]= maxPoint[i]-minPoint[i]+1;
 		}
-		long *para = new long[nDims + 1];
+		long *para = new long[nDims+1];
 		para[0] = 1;
 		for (int i = 1; i <= nDims; i++)
 		{
 			long tmp = difference[i - 1];
-			para[i] = para[i - 1] * tmp;
-
+			para[i] = para[i - 1]*tmp;
 		}
+
 		vector<vector<T>> queryVector;
 		for (int i = 0; i < nDims; i++)
 		{
@@ -60,12 +68,11 @@ private:
 			}
 			result.push_back(point);
 		}
-		delete[]para;
-		delete[]difference;
+		delete []para;
+		delete []difference;
 		return result;
 	}
 
-	int query_approximate(TreeNode nd, Rectangle<T, nDims> qrect);
 
 public:
 
@@ -80,7 +87,7 @@ public:
 		//get all the points in the query range
 		vector<Point<T, nDims>> points = getAllPoints(queryRect);
 		int size = points.size();
-		long* result = new long[size];
+		long* result =new long[size];
 		Point<long, mBits> pt;
 		long val = 0;
 
@@ -93,7 +100,7 @@ public:
 			OutputTransform<nDims, mBits> trans;
 			pt = sfc.ptBits;
 			val = trans.bitSequence2Value(pt);
-			result[i] = val;
+			result[i]=val;
 		}
 
 		//sort the morton values
@@ -106,14 +113,12 @@ public:
 			printf("%d\t", result[i]);
 		}
 		printf("\n");
-		///////////////////////////////////////
 
-		// get the final result 
 		vector<vector<long>> resultVector;
 		int flag = 0;
-		for (int i = 0; i < size - 1; i++)
+		for (int i = 0; i < size-1; i++)
 		{
-			if (result[i + 1] == (result[i] + 1))
+			if (result[i+1] == (result[i]+1))
 			{
 				if ((i + 1) == size - 1)
 				{
@@ -127,7 +132,7 @@ public:
 			if (result[i + 1] != (result[i] + 1))
 			{
 				vector<long> eachRange;
-				if (i - flag>0)
+				if (i-flag>0)
 				{
 					eachRange.push_back(result[flag]);
 					eachRange.push_back(result[i]);
@@ -137,14 +142,15 @@ public:
 					eachRange.push_back(result[flag]);
 				}
 				resultVector.push_back(eachRange);
-				flag = i + 1;
-				if (i + 1 == size - 1)
+				flag = i+1;
+				if (i + 1== size - 1)
 				{
 					vector<long>  last = { result[flag] };
 					resultVector.push_back(last);
 				}
 			}
 		}
+
 		printf("\n morton final result: \n");
 		for (int i = 0; i < resultVector.size(); i++)
 		{
@@ -194,9 +200,7 @@ public:
 			printf("%d\t", result[i]);
 		}
 		printf("\n");
-		///////////////////////////////////////
-
-		//get the final result 
+        //get the final result
 		vector<vector<long>> resultVector;
 		int flag = 0;
 		for (int i = 0; i < size - 1; i++)
