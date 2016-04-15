@@ -47,7 +47,6 @@ private:
 			}
 			queryVector.push_back(tempVector);
 		}
-
 		Point<T, nDims> point;
 		vector <Point<T, nDims>> result;
 		long tmp = para[nDims] - 1;
@@ -63,10 +62,8 @@ private:
 			}
 			result.push_back(point);
 		}
-
 		delete []para;
 		delete []difference;
-
 		return result;
 	}
 
@@ -160,6 +157,8 @@ public:
 
 		}
 		printf("\n");
+
+		delete[]result;
 		return resultVector;
 	}
 
@@ -252,6 +251,7 @@ public:
 		printf("\n");
 		//////////////////////////////////////
 
+		delete[]result;
 		return resultVector;
 	}
 
