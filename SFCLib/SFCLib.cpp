@@ -7,6 +7,7 @@
 #include "SFCConversion.h"
 #include "OutputTransform.h"
 #include "QueryBySFC.h"
+#include <time.h>
 
 #include <iostream>
 using namespace std;
@@ -82,14 +83,19 @@ int _tmain(int argc, _TCHAR* argv[])
 
 
 	///////////////////
-	long Point1[3] = { 3, 4, 2};
-	long Point2[3] = { 6, 5, 4};
+	long Point1[3] = { 4, 2,5};
+	long Point2[3] = {5, 4,7};
 	Point<long, 3> MinPoint(Point1);
 	Point<long, 3> MaxPoint(Point2);
 	Rectangle<long, 3> rec(MinPoint, MaxPoint);
 	rec.GetAllCornerPts(MinPoint, MaxPoint);
 
+	QueryBySFC<long,3,10> querytest;
+	
+	querytest.RangeQueryByMorton_Bruteforce(rec);
+
+	querytest.RangeQueryByHilbert_Bruteforce(rec);
+	//querytest.getAllPoints(rec);
 	system("pause");
 	return 0;
 }
-
