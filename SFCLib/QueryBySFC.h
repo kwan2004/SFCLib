@@ -6,6 +6,8 @@
 #include<iostream>
 #include <vector>
 #include<stack>
+#include<time.h>
+
 using namespace std;
 
 template< typename T, int nDims = 2, int mBits=4>
@@ -13,46 +15,61 @@ class QueryBySFC
 {
 
 private:
-	void getResultInVector(vector<vector<T>> vec, int N, stack<T> tmp, vector<vector<T>>& tmp_result)
+
+
+
+	vector<Point<T, nDims>> getAllPoints(Rectangle<T, nDims> queryRect)
 	{
-		for (int i = 0; i< vec[N].size(); ++i)
+		Point<T, nDims> minPoint = queryRect.GetMinPoint();
+		Point<T, nDims> maxPoint = queryRect.GetMaxPoint();
+		long *difference = new long[nDims];
+		for (int i = 0; i < nDims; i++)
 		{
-			tmp.push(vec.at(N).at(i));
-			if (N<vec.size() - 1)
-			{
-				getResultInVector(vec, N + 1, tmp, tmp_result);
-			}
-			else
-			{
-				vector<T> one_result;
-				vector<T> tmp_vector;
-				int count = 0;
-				while (!tmp.empty())
-				{
-					tmp_vector.push_back(tmp.top());
-					tmp.pop();
-					count++;
-				}
-				for (int i = 0; i<tmp_vector.size(); ++i)
-				{
-					//one_result.push_back(tmp.at(i));
-					one_result.push_back(tmp_vector.at(count - i - 1));
-					tmp.push(tmp_vector.at(count - i - 1));
-				}
-				tmp_result.push_back(one_result);
-			}
-			if (!tmp.empty())tmp.pop();
-			//tmp.pop();
+			difference[i]= maxPoint[i]-minPoint[i]+1;
 		}
+		long *para = new long[nDims+1];
+		para[0] = 1;
+		for (int i = 1; i <= nDims; i++)
+		{
+			long tmp = difference[i - 1];
+			para[i] = para[i - 1]*tmp;
+
+		}
+		vector<vector<T>> queryVector;
+		for (int i = 0; i < nDims; i++)
+		{
+			vector<T> tempVector;
+			int difference = maxPoint[i] - minPoint[i];
+			T temp = minPoint[i];
+			for (int j = 0; j <= difference; j++)
+			{
+				tempVector.push_back(temp + j);
+			}
+			queryVector.push_back(tempVector);
+		}
+
+		Point<T, nDims> point;
+		vector <Point<T, nDims>> result;
+		long tmp = para[nDims] - 1;
+		for (int count = tmp; count >= 0; count--)
+		{
+			long offset = count;
+			for (int j = nDims - 1; j >= 0; j--)
+			{
+				long div = para[j];
+				int n = offset / div;
+				offset = offset % div;
+				point[j] = queryVector[j][n];
+			}
+			result.push_back(point);
+		}
+
+		delete []para;
+		delete []difference;
+
+		return result;
 	}
 
-	vector<vector<T>> getAllCombination(vector<vector<T>>& vec)
-	{
-		stack<T> tmp_vec;
-		vector<vector<T>> tmp_result;
-		getResultInVector(vec, 0, tmp_vec, tmp_result);
-		return tmp_result;
-	}
 
 public:
 
@@ -62,45 +79,17 @@ public:
 	}
 
 
-
-	vector<Point<T,nDims>> getAllPointsInQueryRec(Rectangle<T, nDims> queryRect)
-	{
-		Point<T, nDims> minPoint=queryRect.GetMinPoint();
-		Point<T, nDims> maxPoint=queryRect.GetMaxPoint();
-		vector<vector<T>> queryVector;
-		for (int i = 0; i < nDims; i++)
-		{
-			vector<T> tempVector;
-			int difference = maxPoint[i] - minPoint[i];
-			T temp = minPoint[i];
-			for(int j = 0; j <= difference; j++)
-			{
-				tempVector.push_back(temp + j);
-			}
-			queryVector.push_back(tempVector);
-		}
-		vector<vector<T>> result = getAllCombination(queryVector);
-		vector<Point<T, nDims>> points;
-		for (int i = 0; i < result.size(); ++i)
-		{
-			Point<T, nDims> tmp_point;
-			for (int j = 0; j < result[i].size(); ++j)
-			{
-				tmp_point[j] = result[i][j];
-			}
-			points.push_back(tmp_point);
-		}
-		return points;
-	}
-
 	vector<vector<long>>  RangeQueryByMorton_Bruteforce(Rectangle<T, nDims> queryRect)
 	{
-		vector<Point<T, nDims>> points = getAllPointsInQueryRec(queryRect);
-		vector<long> result;
+		//get all the points in the query range
+		vector<Point<T, nDims>> points = getAllPoints(queryRect);
+		int size = points.size();
+		long* result =new long[size];
 		Point<long, mBits> pt;
 		long val = 0;
 
-		for (int i = 0; i < points.size(); i++)
+		//get all the morton codes in  the query range from the points just generated
+		for (int i = 0; i <size; i++)
 		{
 			SFCConversion<nDims, mBits> sfc;
 			sfc.ptCoord = points[i];
@@ -108,60 +97,58 @@ public:
 			OutputTransform<nDims, mBits> trans;
 			pt = sfc.ptBits;
 			val = trans.bitSequence2Value(pt);
-			result.push_back(val);
+			result[i]=val;
 		}
-		std::sort(result.begin(),result.end());
 
-		/////the test code.it can be deleted
-		////////////////////////////////////////
+		//sort the morton values
+		std::sort(result, result + size);
+		///the test code.it can be deleted
+		//////////////////////////////////////
 		printf("\n morton sort result: \n");
-		for (int i = 0; i < result.size(); i++)
+		for (int i = 0; i < size; i++)
 		{
 			printf("%d\t", result[i]);
 		}
 		printf("\n");
-		/////////////////////////////////////////
-		long tmp = result[0];
-		vector<long> tmpVector;
-		tmpVector.push_back(tmp);
+		///////////////////////////////////////
+
+		// get the final result 
 		vector<vector<long>> resultVector;
-		for (int i = 0; i < result.size()-1; i++)
+		int flag = 0;
+		for (int i = 0; i < size-1; i++)
 		{
 			if (result[i+1] == (result[i]+1))
 			{
-				tmpVector.push_back(result[i + 1]);
-				if ((i + 1) == result.size() - 1)
+				if ((i + 1) == size - 1)
 				{
 					vector<long> eachRange;
-					eachRange.push_back(tmpVector[0]);
+					eachRange.push_back(result[flag]);
 					eachRange.push_back(result[i + 1]);
 					resultVector.push_back(eachRange);
 				}
+				continue;
 			}
 			if (result[i + 1] != (result[i] + 1))
 			{
 				vector<long> eachRange;
-				if (tmpVector.size()>1)
+				if (i-flag>0)
 				{
-					eachRange.push_back(tmpVector[0]);
-					eachRange.push_back(tmpVector[tmpVector.size()-1]);
+					eachRange.push_back(result[flag]);
+					eachRange.push_back(result[i]);
 				}
 				else
 				{
-					eachRange.push_back(tmpVector[0]);
+					eachRange.push_back(result[flag]);
 				}
 				resultVector.push_back(eachRange);
-				tmpVector.clear();
-				tmpVector.push_back(result[i + 1]);
-				if ((i+1) == result.size()-1)
+				flag = i+1;
+				if (i + 1== size - 1)
 				{
-					resultVector.push_back(tmpVector);
+					vector<long>  last = { result[flag] };
+					resultVector.push_back(last);
 				}
-
 			}
 		}
-		/////the test code.it can be deleted
-	    //////////////////////////////////////////
 		printf("\n morton final result: \n");
 		for (int i = 0; i < resultVector.size(); i++)
 		{
@@ -173,18 +160,21 @@ public:
 
 		}
 		printf("\n");
-		///////////////////////////////////////////////
 		return resultVector;
 	}
 
 	vector<vector<long>>  RangeQueryByHilbert_Bruteforce(Rectangle<T, nDims> queryRect)
 	{
-		vector<Point<T, nDims>> points = getAllPointsInQueryRec(queryRect);
-		vector<long> result;
+
+		//get all the points in the query range
+		vector<Point<T, nDims>> points = getAllPoints(queryRect);
+		int size = points.size();
+		long* result = new long[size];
 		Point<long, mBits> pt;
 		long val = 0;
 
-		for (int i = 0; i < points.size(); i++)
+		//get all the hilbert codes in  the query range from the points just generated
+		for (int i = 0; i <size; i++)
 		{
 			SFCConversion<nDims, mBits> sfc;
 			sfc.ptCoord = points[i];
@@ -192,61 +182,63 @@ public:
 			OutputTransform<nDims, mBits> trans;
 			pt = sfc.ptBits;
 			val = trans.bitSequence2Value(pt);
-			result.push_back(val);
+			result[i] = val;
 		}
-		std::sort(result.begin(), result.end());
 
-		/////the test code.it can be deleted
-		////////////////////////////////////////
+		//sort the hilbert values
+		std::sort(result, result + size);
+
+		///the test code.it can be deleted
+		//////////////////////////////////////
 		printf("\n hilbert sort result: \n");
-		for (int i = 0; i < result.size(); i++)
+		for (int i = 0; i < size; i++)
 		{
 			printf("%d\t", result[i]);
 		}
 		printf("\n");
-		/////////////////////////////////////////
-		long tmp = result[0];
-		vector<long> tmpVector;
-		tmpVector.push_back(tmp);
+		///////////////////////////////////////
+
+        //get the final result 
 		vector<vector<long>> resultVector;
-		for (int i = 0; i < result.size() - 1; i++)
+		int flag = 0;
+		for (int i = 0; i < size - 1; i++)
 		{
 			if (result[i + 1] == (result[i] + 1))
 			{
-				tmpVector.push_back(result[i + 1]);
-				if ((i + 1) == result.size() - 1)
+				if ((i + 1) == size - 1)
 				{
 					vector<long> eachRange;
-					eachRange.push_back(tmpVector[0]);
+					eachRange.push_back(result[flag]);
 					eachRange.push_back(result[i + 1]);
 					resultVector.push_back(eachRange);
 				}
+				continue;
 			}
 			if (result[i + 1] != (result[i] + 1))
 			{
 				vector<long> eachRange;
-				if (tmpVector.size()>1)
+				if (i - flag>0)
 				{
-					eachRange.push_back(tmpVector[0]);
-					eachRange.push_back(tmpVector[tmpVector.size() - 1]);
+					eachRange.push_back(result[flag]);
+					eachRange.push_back(result[i]);
 				}
 				else
 				{
-					eachRange.push_back(tmpVector[0]);
+					eachRange.push_back(result[flag]);
 				}
 				resultVector.push_back(eachRange);
-				tmpVector.clear();
-				tmpVector.push_back(result[i + 1]);
-				if ((i + 1) == result.size() - 1)
+				flag = i + 1;
+				if (i + 1 == size - 1)
 				{
-					resultVector.push_back(tmpVector);
+					vector<long>  last = { result[flag] };
+					resultVector.push_back(last);
 				}
-
 			}
 		}
 
-		/////the test code.it can be deleted
-		//////////////////////////////////////////
+
+		///the test code.it can be deleted
+		//////////////////////////////////////
 		printf("\n hilbert final result: \n");
 		for (int i = 0; i < resultVector.size(); i++)
 		{
@@ -258,9 +250,15 @@ public:
 
 		}
 		printf("\n");
-		///////////////////////////////////////////////
+		//////////////////////////////////////
+
 		return resultVector;
 	}
+
+
+	
+
+
 
 };
 
