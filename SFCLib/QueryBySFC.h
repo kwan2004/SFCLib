@@ -13,13 +13,88 @@
 
 using namespace std;
 
+
+template< typename T, int nDims = 2>
+class TreeNode : public Rectangle<T, nDims>
+{
+public:
+	//int ndim;
+	int level;
+
+	//one dim, less than middle is 0, bigger than middle is 1
+	//0~3 for 2d; upper 2|3----10|11;-----So: YX for 2D, ZYX for 3D, TZYX for 4D
+	//            lower 0|1----00|01 ---------put next dimension before current dimension
+
+	TreeNode GetChildNode(int idx)
+	{
+		TreeNode nchild(this);
+
+		for (int i = 0; i < nDims; i++)
+		{
+			if ((idx >> i) & 1) // bit on each ith dimension 1: bigger
+			{
+				nchild.minPoint[i] = (this->minPoint[i] + this->maxPoint[i]) / 2;
+			}
+			else  //0 smaller in this dimension
+			{
+				nchild.maxPoint[i] = (this->minPoint[i] + this->maxPoint[i]) / 2;
+			}
+		}
+
+		nchild.level = this->level + 1;
+
+		return nchild;
+	}
+
+	int Spatialrelationship(Rectangle<T, nDims> qrt)//0 = equal; 1=contain;2=intersect; default = -1  not overlap ;
+	{
+		//rect nrt(this->x0, this->y0, this->x0 + this->width, this->y0 + this->width);
+		///equal
+		/*if (nrt.x0 == qrt.x0 && nrt.y0 == qrt.y0 && \
+		nrt.x1 == qrt.x1 && nrt.y1 == qrt.y1)
+		return 0;*/
+		int ncmp = 1;
+		for (int i = 0; i < nDims; i++)
+		{
+			ncmp &= this->minPoint[i] == qrt.GetMinPoint()[i] && this->maxPoint[i] == qrt.GetMaxPoint()[i];
+		}
+		if (ncmp) return 0;
+
+		//fully contain(how about edge touch?)
+		/*if (nrt.x0 <= qrt.x0 && nrt.y0 <= qrt.y0 && \
+		nrt.x1 >= qrt.x1 && nrt.y1 >= qrt.y1)
+		return 1*/
+		ncmp = 1;
+		for (int i = 0; i < nDims; i++)
+		{
+			ncmp &= this->minPoint[i] <= qrt.GetMinPoint()[i] && this->maxPoint[i] >= qrt.GetMaxPoint()[i];
+		}
+		if (ncmp) return 1;
+
+		//intersect
+		///http://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other
+		///RectA.Left < RectB.Right && RectA.Right > RectB.Left && RectA.Top > RectB.Bottom && RectA.Bottom < RectB.Top
+		// this can be extended more dimensions
+		//http://stackoverflow.com/questions/5009526/overlapping-cubes
+		/*if (nrt.x0 < qrt.x1 && nrt.x1 > qrt.x0 && \
+		nrt.y0 < qrt.y1 && nrt.y1 > qrt.y0)
+		return 2;*/
+		ncmp = 1;
+		for (int i = 0; i < nDims; i++)
+		{
+			ncmp &= this->minPoint[i] < qrt.GetMaxPoint()[i] && this->maxPoint[i] > qrt.GetMinPoint()[i];
+		}
+		if (ncmp) return 2;
+
+		return -1; //not overlap
+	}
+};
+
+
 template< typename T, int nDims = 2, int mBits=4>
 class QueryBySFC
 {
 private:
-
-
-<<<<<<< HEAD
 	int query_approximate(TreeNode nd, Rectangle<T, nDims> qrect);
 
 public:
@@ -28,31 +103,31 @@ public:
 	{
 		Point<T, nDims> minPoint = queryRect.GetMinPoint();
 		Point<T, nDims> maxPoint = queryRect.GetMaxPoint();
+
 		long *difference = new long[nDims];
+		long *para = new long[nDims + 1];
+
+		para[0] = 1;
 		for (int i = 0; i < nDims; i++)
 		{
 			difference[i]= maxPoint[i]-minPoint[i]+1;
+			para[i + 1] = para[i] * difference[i];
 		}
-		long *para = new long[nDims+1];
-		para[0] = 1;
-		for (int i = 1; i <= nDims; i++)
-		{
-			long tmp = difference[i - 1];
-			para[i] = para[i - 1]*tmp;
-		}
+		
 
 		vector<vector<T>> queryVector;
 		for (int i = 0; i < nDims; i++)
 		{
 			vector<T> tempVector;
-			int difference = maxPoint[i] - minPoint[i];
+			//int difference = maxPoint[i] - minPoint[i];
 			T temp = minPoint[i];
-			for (int j = 0; j <= difference; j++)
+			for (int j = 0; j <= difference[i]; j++)
 			{
 				tempVector.push_back(temp + j);
 			}
 			queryVector.push_back(tempVector);
 		}
+
 		Point<T, nDims> point;
 		vector <Point<T, nDims>> result;
 		long tmp = para[nDims] - 1;
@@ -68,8 +143,10 @@ public:
 			}
 			result.push_back(point);
 		}
+
 		delete []para;
 		delete []difference;
+
 		return result;
 	}
 
@@ -258,83 +335,7 @@ public:
 		return resultVector;
 	}
 
-	RangeQueryByRecursive(Rectangle<T, nDims> queryrect);
-};
-
-template< typename T, int nDims = 2>
-class TreeNode : public Rectangle<T, nDims>
-{
-public:
-	//int ndim;
-	int level;
-
-	//one dim, less than middle is 0, bigger than middle is 1
-	//0~3 for 2d; upper 2|3----10|11;-----So: YX for 2D, ZYX for 3D, TZYX for 4D
-	//            lower 0|1----00|01 ---------put next dimension before current dimension
-
-	TreeNode GetChildNode(int idx)
-	{
-		TreeNode nchild(this);
-
-		for (int i = 0; i < nDims; i++)
-		{
-			if ((idx >> i) & 1) // bit on each ith dimension 1: bigger
-			{
-				nchild.minPoint[i] = (this->minPoint[i] + this->maxPoint[i])/2;
-			}
-			else  //0 smaller in this dimension
-			{
-				nchild.maxPoint[i] = (this->minPoint[i] + this->maxPoint[i]) / 2;
-			}
-		}
-		
-		nchild.level = this->level + 1;
-
-		return nchild;
-	}
-
-	int Spatialrelationship(Rectangle<T, nDims> qrt)//0 = equal; 1=contain;2=intersect; default = -1  not overlap ;
-	{
-		//rect nrt(this->x0, this->y0, this->x0 + this->width, this->y0 + this->width);
-		///equal
-		/*if (nrt.x0 == qrt.x0 && nrt.y0 == qrt.y0 && \
-			nrt.x1 == qrt.x1 && nrt.y1 == qrt.y1)
-			return 0;*/
-		int ncmp = 1;
-		for (int i = 0; i < nDims; i++)
-		{
-			ncmp &= this->minPoint[i] == qrt.GetMinPoint()[i] && this->maxPoint[i] == qrt.GetMaxPoint()[i];
-		}
-		if (ncmp) return 0;
-
-		//fully contain(how about edge touch?)
-		/*if (nrt.x0 <= qrt.x0 && nrt.y0 <= qrt.y0 && \
-			nrt.x1 >= qrt.x1 && nrt.y1 >= qrt.y1)
-			return 1*/
-		ncmp = 1;
-		for (int i = 0; i < nDims; i++)
-		{
-			ncmp &= this->minPoint[i] <= qrt.GetMinPoint()[i] && this->maxPoint[i] >= qrt.GetMaxPoint()[i];
-		}
-		if (ncmp) return 1;
-
-		//intersect
-		///http://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other
-		///RectA.Left < RectB.Right && RectA.Right > RectB.Left && RectA.Top > RectB.Bottom && RectA.Bottom < RectB.Top
-		// this can be extended more dimensions
-		//http://stackoverflow.com/questions/5009526/overlapping-cubes
-		/*if (nrt.x0 < qrt.x1 && nrt.x1 > qrt.x0 && \
-			nrt.y0 < qrt.y1 && nrt.y1 > qrt.y0)
-			return 2;*/
-		ncmp = 1;
-		for (int i = 0; i < nDims; i++)
-		{
-			ncmp &= this->minPoint[i] < qrt.GetMaxPoint()[i] && this->maxPoint[i] > qrt.GetMinPoint()[i];
-		}
-		if (ncmp) return 2;
-
-		return -1; //not overlap
-	}
+	void RangeQueryByRecursive(Rectangle<T, nDims> queryrect);
 };
 
 /////////////////////////////////////////////////////////////
@@ -354,14 +355,15 @@ int QueryBySFC::query_approximate(TreeNode nd, Rectangle<T, nDims> queryrect)
 	}
 
 	////check the spatial relationship between this query rectangle and four children
-	TreeNode nchild[2 ^ nDims];
+	int nary_num = 1 << nDims;
+	TreeNode nchild[nary_num];
 
-	for (int i = 0; i < 2 ^ nDims; i++)
+	for (int i = 0; i < nary_num; i++)
 	{
 		nchild[i] = nd.GetChildNode(i);
 	}
 
-	for (int i = 0; i < 2 ^ nDims; i++)
+	for (int i = 0; i < nary_num; i++)
 	{
 		int nrt = nchild[i].Spatialrelationship(qrt);
 
@@ -392,8 +394,8 @@ int QueryBySFC::query_approximate(TreeNode nd, Rectangle<T, nDims> queryrect)
 	//0~3 for 2d; upper 2|3----10|11;----- YX for 2D, ZYX for 3D, TZYX for 4D--each dim one bit
 	//            lower 0|1----00|01 ------one dim: less = 0; greater = 1
 
-	array<Rectangle<T, nDims>, 2 ^ nDims> rtcut; //maximum results 2*dim
-	int rtpos[2 ^ nDims] = { 0 };
+	array<Rectangle<T, nDims>, nary_num> rtcut; //maximum results 2*dim
+	int rtpos[nary_num] = { 0 };
 
 	int mid[nDims]; // middle cut line--dim number
 	for (int i = 0; i < nDims; i++)
@@ -451,7 +453,7 @@ int QueryBySFC::query_approximate(TreeNode nd, Rectangle<T, nDims> queryrect)
 
 
 template< typename T, int nDims, int mBits>
-QueryBySFC::RangeQueryByRecursive(Rectangle<T, nDims> queryrect)
+void QueryBySFC::RangeQueryByRecursive(Rectangle<T, nDims> queryrect)
 {
 	TreeNode<T, nDims> root;
 	root.level = 0;
