@@ -23,6 +23,11 @@ public:
 		this->dimensions = nDimensions;
 	}
 
+	Rectangle()
+	{
+
+	}
+
 	int GetDimensions()
 	{
 		return this->dimensions;
@@ -36,6 +41,16 @@ public:
 	Point<T, nDimensions> GetMaxPoint()
 	{
 		return this->maxPoint;
+	}
+
+	void SetMinPoint(Point<T, nDimensions> minpt)
+	{
+		this->minPoint = minpt;
+	}
+
+	void SetMaxPoint(Point<T, nDimensions> maxpt)
+	{
+		this->maxPoint = maxpt;
 	}
 
 	long GetDimWidth(int idx)
@@ -55,6 +70,7 @@ public:
 		tmp.push_back(minVector[i]);
 		DFS(minVector, maxVector, i + 1, tmp, result);
 		tmp.pop_back();
+
 		tmp.push_back(maxVector[i]);
 		DFS(minVector, maxVector, i + 1, tmp, result);
 		tmp.pop_back();

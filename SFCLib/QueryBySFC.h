@@ -1,352 +1,585 @@
 #ifndef QUERYBYSFC_H_
 #define QUERYBYSFC_H_
-
-#include <stdlib.h>
+#include "stdafx.h"
 #include "Point.h"
 #include "Rectangle.h"
-
+#include "OutputTransform.h"
 #include "SFCConversion.h"
-
+#include <iostream>
 #include <vector>
+#include<stack>
+#include<time.h>
+
 using namespace std;
 
-template< typename T, int nDims>
-class node
+template<typename T, int nDims = 2>
+class TreeNode
 {
 public:
-	//int ndim;
+	int level;  //which level: i-th level
+	Point<T, nDims> minPoint;
+	Point<T, nDims> maxPoint;
+	int dimensions = nDims;
 
-	T x0;
-	T y0;
-
-	int width;
-	int level;
-
-	//one dim, less than middle is 0, bigger than middle is 1
-	//0~3 for 2d; upper 2|3----10|11;-----S0: YX for 2D, ZYX for 3D, TZYX for 4D
-	//            lower 0|1----00|01
-
-	node Getchildnode(int idx)
+	void operator=(TreeNode const& other)
 	{
-		node nchild;
+		level = other.level;
+		minPoint = other.minPoint;
+		maxPoint = other.maxPoint;
+		dimensions = other.dimensions;
+	}
+	
+	TreeNode<T, nDims>::TreeNode()
+	{
+	}
 
-		//if (idx == 0 || idx == 2)
-		//	nchild.x0 = this->x0;
-		//else
-		//	nchild.x0 = this->x0 + this->width / 2;
+	/*
+	return the idx-th childnode
+	one dim, less than middle is 0, bigger than middle is 1
+	0~3 for 2d; upper 2|3----10|11;-----So: YX for 2D, ZYX for 3D, TZYX for 4D
+	            lower 0|1----00|01 ---------put next dimension before current dimension
+	*/
+	TreeNode<T, nDims> GetChildNode(int idx)
+	{
+		TreeNode<T, nDims> nchild;
+		nchild.minPoint = this->minPoint;
+		nchild.maxPoint = this->maxPoint;
 
-		//if (idx == 0 || idx == 1)
-		//	nchild.y0 = this->y0;
-		//else
-		//	nchild.y0 = this->y0 + this->width / 2;
+		for (int i = 0; i < nDims; i++)
+		{
+			if ((idx >> i) & 1)  //the bit on the i-th dimension is 1: bigger
+			{
+				nchild.minPoint[i] = (this->minPoint[i] + this->maxPoint[i]) / 2;
+			}
+			else  //the bit on the i-th dimension is 0: smaller
+			{
+				nchild.maxPoint[i] = (this->minPoint[i] + this->maxPoint[i]) / 2;
+			}
+		}
 
-		nchild.width = this->width / 2;
 		nchild.level = this->level + 1;
 
 		return nchild;
 	}
 
-	int SpatialRelationship(Rectangle<T, nDims> queryrect)//0 = equal; 1=contain;2=intersect; default = -1  not overlap ;
+	/*
+	return the relationship between treenode and queryRectangle
+	0: treenode is equal to queryRectangle
+	1: treenode contains queryRectangle
+	2: treenode intersects queryRectangle
+	-1(default): not overlap
+	*/
+	int Spatialrelationship(Rectangle<T, nDims> qrt)
 	{
-		rect nrt(this->x0, this->y0, this->x0 + this->width, this->y0 + this->width);
-		///equal
-		if (nrt.x0 == qrt.x0 && nrt.y0 == qrt.y0 && \
-			nrt.x1 == qrt.x1 && nrt.y1 == qrt.y1)
-			return 0;
+		/*
+		equal: 
+		if (nrt.x0 == qrt.x0 && nrt.y0 == qrt.y0 &&
+		nrt.x1 == qrt.x1 && nrt.y1 == qrt.y1)
+		return 0;
+		*/
+		int ncmp = 1;
+		for (int i = 0; i < nDims; i++)
+		{
+			ncmp &= this->minPoint[i] == qrt.minPoint[i] && this->maxPoint[i] == qrt.maxPoint[i];
+		}
+		if (ncmp) return 0;
 
-		//fully contain(how about edge touch?)
-		if (nrt.x0 <= qrt.x0 && nrt.y0 <= qrt.y0 && \
-			nrt.x1 >= qrt.x1 && nrt.y1 >= qrt.y1)
-			return 1;
+		/*
+		fully contain:
+		if (nrt.x0 <= qrt.x0 && nrt.y0 <= qrt.y0 &&
+		nrt.x1 >= qrt.x1 && nrt.y1 >= qrt.y1)
+		return 1;
+		*/
+		ncmp = 1;
+		for (int i = 0; i < nDims; i++)
+		{
+			ncmp &= this->minPoint[i] <= qrt.minPoint[i] && this->maxPoint[i] >= qrt.maxPoint[i];
+		}
+		if (ncmp) return 1;
 
-		//intersect
-		///http://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other
-		///RectA.Left < RectB.Right && RectA.Right > RectB.Left && RectA.Top > RectB.Bottom && RectA.Bottom < RectB.Top
-		// this can be extended more dimensions
+		/*
+		intersect:
+		//http://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other
+		RectA.Left < RectB.Right && RectA.Right > RectB.Left && RectA.Top > RectB.Bottom && RectA.Bottom < RectB.Top
+		this can be extended more dimensions
 		//http://stackoverflow.com/questions/5009526/overlapping-cubes
-		if (nrt.x0 < qrt.x1 && nrt.x1 > qrt.x0 && \
-			nrt.y1 > qrt.y0 && nrt.y0 < qrt.y1)
-			return 2;
+		if (nrt.x0 < qrt.x1 && nrt.x1 > qrt.x0 &&
+		nrt.y0 < qrt.y1 && nrt.y1 > qrt.y0)
+		return 2;
+		*/
+		ncmp = 1;
+		for (int i = 0; i < nDims; i++)
+		{
+			ncmp &= this->minPoint[i] < qrt.maxPoint[i] && this->maxPoint[i] > qrt.minPoint[i];
+		}
+		if (ncmp) return 2;
 
-		return -1; //not overlap
+		//not overlap
+		return -1;
 	}
 };
 
-template< typename T, int nDims, int mBits>
-class SFCQuery
+template<typename T, int nDims = 2, int mBits = 4>
+class QueryBySFC
 {
-public:
-	RangeQueryByBruteforce(Rectangle<T, nDims> queryrect);
-	RangeQueryByRecursive(Rectangle<T, nDims> queryrect);
-
 private:
-	int query_approximate(node nd, Rectangle<T, nDims> qrect);
+	vector<Point<T, nDims>> getAllPoints(Rectangle<T, nDims> queryRect);
+	
+	int query_approximate(TreeNode<T, nDims> nd, Rectangle<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode);
+public:
+	vector<vector<long>>  RangeQueryByMorton_Bruteforce(Rectangle<T, nDims> queryRect);
+	vector<vector<long>>  RangeQueryByHilbert_Bruteforce(Rectangle<T, nDims> queryRect);
+	void RangeQueryByRecursive(Rectangle<T, nDims> queryrect);
 
 };
 
-template< typename T, int nDims, int mBits>
-SFCQuery::RangeQueryByBruteforce(Rectangle<T, nDims> queryrect)
+template<typename T, int nDims, int mBits>
+vector<Point<T, nDims>> QueryBySFC<T, nDims, mBits>::getAllPoints(Rectangle<T, nDims> queryRect)
 {
-	/*int x0, x1;
-	int y0, y1;
+	Point<T, nDims> minPoint = queryRect.GetMinPoint();
+	Point<T, nDims> maxPoint = queryRect.GetMaxPoint();
 
-	x0 = 3; x1 = 5;
-	y0 = 2; y1 = 5;
+	long *difference = new long[nDims];
+	long *para = new long[nDims + 1];
 
-	x0 = 2; x1 = 4;
-	y0 = 1; y1 = 2;
-
-	int rows = x1 - x0 + 1;
-	int cols = y1 - y0 + 1;
-
-	int* pcodelist = new int(rows*cols);
-	memset(pcodelist, 0, sizeof(int)*rows*cols);*/
-	long totalcells = 1;
-	std::array< long, nDims> dimwidth;
+	para[0] = 1;
 	for (int i = 0; i < nDims; i++)
 	{
-		dimwidth[i] = queryrect.GetDimWidth(i) + 1;
-		totalcells *= dimwidth[i];
+		difference[i] = maxPoint[i] - minPoint[i] + 1;
+		para[i + 1] = para[i] * difference[i];
 	}
 
-	//#pragma omp for schedule(dynamic)
-	std::array< long, nDims> dimpos;
-	Point<long, nDims> pt;
-	Point<long, mBits> pt2;
 
-	SFCConversion<nDims, mBits> sfc;
-	OutputTransform<nDims, mBits> trans;
-
-	for (int i = 0; i < totalcells; i++)
+	vector<vector<T>> queryVector;
+	for (int i = 0; i < nDims; i++)
 	{
-		for (int j = 0; j < nDims; j++)
+		vector<T> tempVector;
+		//int difference = maxPoint[i] - minPoint[i];
+		T temp = minPoint[i];
+		for (int j = 0; j <= difference[i]; j++)
 		{
-			pt[j] = dimpos[j];
+			tempVector.push_back(temp + j);
 		}
-		////////////
-		
-		sfc2.ptCoord = pt;
-		sfc2.HilbertEncode();
-		pt2 = sfc2.ptBits;
-
-		long val = trans2.bitSequence2Value(pt2);
-
-		printf("query cell: %d, %d, %d ---   %d \n", row, col, (row - x0)*cols + (col - y0), nidx2);
+		queryVector.push_back(tempVector);
 	}
 
-
-	/*for (int i = 0; i < rows*cols; i++)
+	Point<T, nDims> point;
+	vector <Point<T, nDims>> result;
+	long tmp = para[nDims] - 1;
+	for (int count = tmp; count >= 0; count--)
 	{
-		printf("before sort: %d, %d \n", i, pcodelist[i]);
-	}*/
-
-
-	qsort(pcodelist, rows*cols, sizeof(int), compare);
-
-	//for (int i = 0; i < rows*cols; i++)
-	//{
-	//	printf("after sort: %d, %d \n", i, pcodelist[i]);
-	//}
-
-	int nstart = 0;
-	int ncur = nstart;
-	while (ncur < cols*rows)
-	{
-		ncur++;
-		if (pcodelist[ncur] - pcodelist[ncur - 1] != 1) // not continuous
+		long offset = count;
+		for (int j = nDims - 1; j >= 0; j--)
 		{
-			printf_s("%d, %d\n", pcodelist[nstart], pcodelist[ncur - 1]);
-
-			nstart = ncur;
+			long div = para[j];
+			int n = offset / div;
+			offset = offset % div;
+			point[j] = queryVector[j][n];
 		}
+		result.push_back(point);
 	}
+
+	delete[]para;
+	delete[]difference;
+
+	return result;
 }
 
-
-int compare(const void * a, const void * b)
+template<typename T, int nDims, int mBits>
+int QueryBySFC<T, nDims, mBits>::query_approximate(TreeNode<T, nDims> nd, Rectangle<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode)
 {
-	return (*(int*)a - *(int*)b);
-}
-
-//vector<int> g_sfcinterval;
-void treenode2sfcinterval(node nd)
-{
-	if (nd.width == 1) //leaf node
+	/*
+	divide current tree node
+	*/
+	int nary_num = 1 << nDims;  //max count: 2^nDims
+	vector<TreeNode<T, nDims>> nchild(nary_num);
+	/*
+	find the currentnode exactly contains queryrectangle; and its child node intersects queryrectangle
+	*/
+	TreeNode<T, nDims> currentNode = nd;
+	int res = 1;
+	do
 	{
-		//int code = point2hilbertcode(nd.x0, nd.y0);
-		//g_sfcinterval.push_back(code);
-		//g_sfcinterval.push_back(code);
-
-		printf("sfc interval: %d --- %d\n", code, code);
-	}
-	else //middle node
-	{
-		//get four corners, then get min and max sfc code
-		int x0, y0, x1, y1;
-		x0 = nd.x0; y0 = nd.y0;
-		x1 = nd.x0 + nd.width - 1; //point to cell center
-		y1 = nd.y0 + nd.width - 1; //point to cell center
-
-		int sfccode[4];
-		/*sfccode[0] = point2hilbertcode(x0, y0);
-		sfccode[1] = point2hilbertcode(x0, y1);
-		sfccode[2] = point2hilbertcode(x1, y0);
-		sfccode[3] = point2hilbertcode(x1, y1);*/
-
-		qsort(sfccode, 4, sizeof(int), compare);
-
-		//g_sfcinterval.push_back(sfccode[0]);
-		//g_sfcinterval.push_back(sfccode[3]);
-
-		//printf("sfc interval: %d --- %d\n", sfccode[0], sfccode[3]);
-	}
-}
-
-
-/////////////////////////////////////////////////////////////
-///comparison between the tree node and the query rectangle
-template< typename T, int nDims, int mBits>
-int SFCQuery::query_approximate(node nd, Rectangle<T, nDims> queryrect)
-{
-	////this tree node now fully contains the input query rectangle
-	////firstly to check this node is the leaf node: yes, stop here
-	if (nd.level == mBits)
-	{
-		printf("node level : %d, width %d, orig (%d, %d), dest (%d, %d)\n", \
-			nd.level, nd.width, nd.x0, nd.y0, nd.x0 + nd.width, nd.y0 + nd.width);
-
-		treenode2sfcinterval(nd);
-		return 0;
-	}
-
-	////check the spatial relationship between this query rectangle and four children
-	node nchild[2 ^ nDims];
-
-	for (int i = 0; i < 2 ^ nDims; i++)
-	{
-		nchild[i] = nd.getchildnode(i);
-	}
-
-	for (int i = 0; i < 2 ^ nDims; i++)
-	{
-		int nrt = nchild[i].spatialrelationship(qrt);
-
-		if (nrt == 0)//equal to one child, that's enough, stop here
+		for (int i = 0; i < nary_num; i++)
 		{
-			printf("node level : %d, width %d, orig (%d, %d), dest (%d, %d)\n", \
-				nchild[i].level, nchild[i].width, nchild[i].x0, nchild[i].y0, \
-				nchild[i].x0 + nchild[i].width, nchild[i].y0 + nchild[i].width);
+			nchild[i] = currentNode.GetChildNode(i);
+			if (nchild[i].Spatialrelationship(queryrect) == 0)  //equal: stop
+			{
+				resultTNode.push_back(nchild[i]);
+				return 0;
+			}
+			else if (nchild[i].Spatialrelationship(queryrect) == 2)  //intersect: divide queryrectangle
+			{
+				res = 0;
+				break;
+			}
+			else  if (nchild[i].Spatialrelationship(queryrect) == 1)//contain: divide the tree node
+			{
+				currentNode = nchild[i];
+				break;
+			}
+		}
+	} while (res);
 
-			treenode2sfcinterval(nchild[i]);
-			return 0;
-		}
-		if (nrt == 1)//fully contained by one child,then go down directly
-		{
-			query_approximate(nchild[i], qrt);
-			return 0;
-		}
-
-		//intersect one child (i.e. smaller than this node and bigger than one child), this means further division
-		if (nrt == 2)
-		{
-			break;
-		}
+	
+	/*
+	divide the input query rectangle into even parts, e.g. 2 or 4 parts
+	0~3 for 2d; upper 2|3----10|11;----- YX for 2D, ZYX for 3D, TZYX for 4D--each dim one bit
+	            lower 0|1----00|01 ------one dim: less = 0; greater = 1
+	*/
+	
+	vector<Rectangle<T, nDims>> qrtcut(nary_num);  //2^nDims parts
+	vector<int> qrtpos(nary_num);  //the qrtcut corresponds to treenode
+	for (int i = 0; i < nary_num; i++)
+	{
+		qrtpos[i] = 0;
 	}
-
-	/////this tree node is divided to get the 4 child nodes
-	/////also to divide the input query rectangle into 2 or 4 parts(ONLY 2 or 4 here!!!)
-	//0~3 for 2d; upper 2|3----10|11;----- YX for 2D, ZYX for 3D, TZYX for 4D--each dim one bit
-	//            lower 0|1----00|01 ------one dim: less = 0; greater = 1
-
-	rect rtcut[2 * 2]; //maximum results 2*dim
-	int rtpos[2 * 2] = { 0 };
-
-	int mid[2]; // middle cut line--dim number
-	mid[0] = nd.x0 + nd.width / 2;
-	mid[1] = nd.y0 + nd.width / 2;
+	vector<int> mid(nDims);  //middle cut line--dim number
+	for (int i = 0; i < nDims; i++)
+	{
+		mid[i] = (currentNode.minPoint[i] + currentNode.maxPoint[i]) / 2;
+	}
 
 	int ncount = 1;
-	rtcut[0] = qrt;
-	for (int i = 0; i < 2; i++) //dimension iteration
+	qrtcut[0] = queryrect;
+	
+	Point<T, nDims> pttmp;  //temporary point or corner
+	for (int i = 0; i < nDims; i++)  //dimension iteration
 	{
 		int newadd = 0;
 		for (int j = 0; j < ncount; j++)
 		{
-			int coord[2][2]; //2D and 2 points
-			coord[0][0] = rtcut[j].x0;  //0 is less, 1 is bigger
-			coord[0][1] = rtcut[j].x1;
-			coord[1][0] = rtcut[j].y0;
-			coord[1][1] = rtcut[j].y1;
-
-			if (coord[i][0] < mid[i] && coord[i][1] > mid[i]) //true in the middle of this dimension
+			if (qrtcut[j].minPoint[i] < mid[i] && qrtcut[j].maxPoint[i] > mid[i])
 			{
-				/////add one rectangle, the new rect is in the bigger area
-				rect rtnew = rtcut[j];
+				Rectangle<T, nDims> rtnew = qrtcut[j];
+				pttmp = rtnew.minPoint;
+				pttmp[i] = mid[i];
+				rtnew.SetMinPoint(pttmp);
 
-				//cut this rectangle along the middle line
-				if (i == 0) //X
-				{
-					rtnew.x0 = mid[i]; //right
-					rtcut[j].x1 = mid[i];//left
-				}
-				if (i == 1) //Y
-				{
-					rtnew.y0 = mid[i]; //upper
-					rtcut[j].y1 = mid[i];//lower
-				}
+				pttmp = qrtcut[j].maxPoint;
+				pttmp[i] = mid[i];
+				qrtcut[j].SetMaxPoint(pttmp);
 
-				rtpos[ncount + newadd] = (1 << i) + rtpos[j]; //--put 1 on the dimension bit
-				rtcut[ncount + newadd] = rtnew;
+				qrtpos[ncount + newadd] = (1 << i) + qrtpos[j];
+				qrtcut[ncount + newadd] = rtnew;
+
 				newadd++;
 			}
 
-			if (coord[i][0] >= mid[i]) //all bigger than the middle line
+			if (qrtcut[j].minPoint[i] >= mid[i])  //all bigger than the middle line
 			{
-				rtpos[j] |= 1 << i; //just update its position---put 1 on the dimension bit
+				qrtpos[j] |= 1 << i;  //just update its position---put 1 on the dimension bit
 			}
-		}//end for rect count
+		}  //end for rect count
 
-		ncount += newadd; //update all rectangle count
-	}//end for dimension
-
-	for (int j = 0; j < ncount; j++) //final rect number 
+		ncount += newadd;  //update all rectangle count
+	}  //end for dimension
+	
+	for (int i = 0; i < ncount; i++)   //final rect number 
 	{
-		query_approximate(nchild[rtpos[j]], rtcut[j]);
+		TreeNode<T, nDims> cNode = currentNode.GetChildNode(qrtpos[i]);
+		int rec = cNode.Spatialrelationship(qrtcut[i]);
+		if (rec == 0)
+		{
+			resultTNode.push_back(cNode);  //equal
+		}
+		else if (rec == -1)
+		{
+		}
+		else
+		{
+			query_approximate(cNode, qrtcut[i], resultTNode);  //recursive query
+		}		
+	}
+}
+
+template< typename T, int nDims, int mBits>
+void QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive(Rectangle<T, nDims> queryrect)
+{
+	vector<TreeNode<T, nDims>> resultTNode;  //tree nodes correspond to queryRectangle
+	TreeNode<T, nDims> root;  //root node
+	root.level = 0;
+	for (int i = 0; i < nDims; i++)
+	{
+		root.minPoint[i] = 0;
+		root.maxPoint[i] = 1 << mBits;
+	}
+	
+	int res = root.Spatialrelationship(queryrect);
+	if (res == 0)  //equal
+	{
+		resultTNode.push_back(root);
+	}
+	if (res == 1)  //contain
+	{
+		query_approximate(root, queryrect, resultTNode);
 	}
 
-	return 0;
+	vector<vector<Point<T, nDims>>> resultPoints;  //all cell points
+	for (int i = 0; i < resultTNode.size(); i++)
+	{
+		int ncount = 1;
+		vector<Point<T, nDims>> nodePoints;  //cell points on i-th treeNode
+		nodePoints.push_back(resultTNode[i].minPoint);
+		for (int j = 0; j < nDims; j++)
+		{
+			int newadd = 0;
+			for (int k = 0; k < ncount; k++)
+			{
+				Point<T, nDims> newPoint = nodePoints[k];
+				newPoint[j] = resultTNode[i].maxPoint[j] - 1;  //cell point = maxPoint - 1
+				if (newPoint[j] != nodePoints[k][j])  //if newPoint equals to current points or not
+				{
+					nodePoints.push_back(newPoint);
+					newadd++;
+				}
+			}
+			ncount += newadd;
+		}
+		resultPoints.push_back(nodePoints);
+		cout << "level: " << resultTNode[i].level << "\t" << endl;
+	}
+
+	vector<vector<long>> resultCode;
+	long val = 0;
+	Point<long, mBits> pt;
+	for (int i = 0; i < resultPoints.size(); i++)
+	{
+		vector<long> temCode;
+		for (int j = 0; j < resultPoints[i].size(); j++)
+		{
+			for (int k = 0; k < nDims; k++)
+			{
+				cout << resultPoints[i][j][k] << "\t";
+			}
+			SFCConversion<nDims, mBits> sfc;
+			sfc.ptCoord = resultPoints[i][j];
+			sfc.MortonEncode();
+			OutputTransform<nDims, mBits> trans;
+			pt = sfc.ptBits;
+			val = trans.bitSequence2Value(pt);
+			temCode.push_back(val);
+			cout << val << endl;
+		}
+		resultCode.push_back(temCode);
+	}
+
+	vector<vector<long>> results(resultCode.size());
+	long min, max;
+	for (int i = 0; i < resultCode.size(); i++)
+	{
+		min = resultCode[i][0];
+		max = resultCode[i][0];
+		for (int j = 0; j < resultCode[i].size(); j++)
+		{
+			if (resultCode[i][j] < min)
+			{
+				min = resultCode[i][j];
+			}
+			if (resultCode[i][j] > max)
+			{
+				max = resultCode[i][j];
+			}
+		}
+		if (min != max)
+		{
+			results[i].push_back(min);
+			results[i].push_back(max);
+		}
+		else
+		{
+			results[i].push_back(min);
+		}
+	}
+
+	for (int i = 0; i < results.size(); i++)
+	{
+		for (int j = 0; j < results[i].size(); j++)
+		{
+			cout << results[i][j];
+			cout << "\t";
+		}
+		cout << endl;
+	}
 }
 
 
 template< typename T, int nDims, int mBits>
-SFCQuery::RangeQueryByRecursive(Rectangle<T, nDims> queryrect)
+vector<vector<long>>  QueryBySFC<T, nDims, mBits>::RangeQueryByMorton_Bruteforce(Rectangle<T, nDims> queryRect)
 {
-	node root;
-	root.level = 0;
-	root.x0 = 0;
-	root.y0 = 0;
-	root.width = 2 ^ mBits;
+	//get all the points in the query range
+	vector<Point<T, nDims>> points = getAllPoints(queryRect);
+	int size = points.size();
+	long* result = new long[size];
+	Point<long, mBits> pt;
+	long val = 0;
 
-	//rect qrt;
-	//qrt.x0 = 3; qrt.x1 = 6; //here,point coordidate is located on lef-bottom of the correspoind cell
-	//qrt.y0 = 2; qrt.y1 = 6; //so the right-top coordidate equals cell center + 1
-
-	/*qrt.x0 = 2; qrt.x1 = 5;
-	qrt.y0 = 1; qrt.y1 = 3;*/
-
-	///check if the root node contains or eqauls the query rectangle
-	int res = root.spatialrelationship(qrt);
-	if (res == 0) ///equals
+	//get all the morton codes in  the query range from the points just generated
+	for (int i = 0; i <size; i++)
 	{
-		;
-		/*printf("node level : %d, width %d, orig (%d, %d), dest (%d, %d)\n", \
-			root.level, root.width, root.x0, root.y0, root.x0 + root.width, root.y0 + root.width);*/
+		SFCConversion<nDims, mBits> sfc;
+		sfc.ptCoord = points[i];
+		sfc.MortonEncode();
+		OutputTransform<nDims, mBits> trans;
+		pt = sfc.ptBits;
+		val = trans.bitSequence2Value(pt);
+		result[i] = val;
 	}
 
-	if (res == 1) //fully contain 
+	//sort the morton values
+	std::sort(result, result + size);
+	///the test code.it can be deleted
+	//////////////////////////////////////
+	printf("\n morton sort result: \n");
+	for (int i = 0; i < size; i++)
 	{
-		query_approximate(root, qrt);
+		printf("%d\t", result[i]);
 	}
+	printf("\n");
+
+	vector<vector<long>> resultVector;
+	int flag = 0;
+	for (int i = 0; i < size - 1; i++)
+	{
+		if (result[i + 1] == (result[i] + 1))
+		{
+			if ((i + 1) == size - 1)
+			{
+				vector<long> eachRange;
+				eachRange.push_back(result[flag]);
+				eachRange.push_back(result[i + 1]);
+				resultVector.push_back(eachRange);
+			}
+			continue;
+		}
+		if (result[i + 1] != (result[i] + 1))
+		{
+			vector<long> eachRange;
+			if (i - flag>0)
+			{
+				eachRange.push_back(result[flag]);
+				eachRange.push_back(result[i]);
+			}
+			else
+			{
+				eachRange.push_back(result[flag]);
+			}
+			resultVector.push_back(eachRange);
+			flag = i + 1;
+			if (i + 1 == size - 1)
+			{
+				vector<long>  last = { result[flag] };
+				resultVector.push_back(last);
+			}
+		}
+	}
+
+	printf("\n morton final result: \n");
+	for (int i = 0; i < resultVector.size(); i++)
+	{
+		printf("\n");
+		for (int j = 0; j < resultVector[i].size(); j++)
+		{
+			printf("%d\t", resultVector[i][j]);
+		}
+
+	}
+	printf("\n");
+
+	delete[]result;
+	return resultVector;
+}
+
+template< typename T, int nDims, int mBits>
+vector<vector<long>>  QueryBySFC<T, nDims, mBits>::RangeQueryByHilbert_Bruteforce(Rectangle<T, nDims> queryRect)
+{
+
+	//get all the points in the query range
+	vector<Point<T, nDims>> points = getAllPoints(queryRect);
+	int size = points.size();
+	long* result = new long[size];
+	Point<long, mBits> pt;
+	long val = 0;
+
+	//get all the hilbert codes in  the query range from the points just generated
+	for (int i = 0; i <size; i++)
+	{
+		SFCConversion<nDims, mBits> sfc;
+		sfc.ptCoord = points[i];
+		sfc.HilbertEncode();
+		OutputTransform<nDims, mBits> trans;
+		pt = sfc.ptBits;
+		val = trans.bitSequence2Value(pt);
+		result[i] = val;
+	}
+
+	//sort the hilbert values
+	std::sort(result, result + size);
+
+	///the test code.it can be deleted
+	//////////////////////////////////////
+	printf("\n hilbert sort result: \n");
+	for (int i = 0; i < size; i++)
+	{
+		printf("%d\t", result[i]);
+	}
+	printf("\n");
+	//get the final result
+	vector<vector<long>> resultVector;
+	int flag = 0;
+	for (int i = 0; i < size - 1; i++)
+	{
+		if (result[i + 1] == (result[i] + 1))
+		{
+			if ((i + 1) == size - 1)
+			{
+				vector<long> eachRange;
+				eachRange.push_back(result[flag]);
+				eachRange.push_back(result[i + 1]);
+				resultVector.push_back(eachRange);
+			}
+			continue;
+		}
+		if (result[i + 1] != (result[i] + 1))
+		{
+			vector<long> eachRange;
+			if (i - flag>0)
+			{
+				eachRange.push_back(result[flag]);
+				eachRange.push_back(result[i]);
+			}
+			else
+			{
+				eachRange.push_back(result[flag]);
+			}
+			resultVector.push_back(eachRange);
+			flag = i + 1;
+			if (i + 1 == size - 1)
+			{
+				vector<long>  last = { result[flag] };
+				resultVector.push_back(last);
+			}
+		}
+	}
+
+
+	///the test code.it can be deleted
+	//////////////////////////////////////
+	printf("\n hilbert final result: \n");
+	for (int i = 0; i < resultVector.size(); i++)
+	{
+		printf("\n");
+		for (int j = 0; j < resultVector[i].size(); j++)
+		{
+			printf("%d\t", resultVector[i][j]);
+		}
+
+	}
+	printf("\n");
+	//////////////////////////////////////
+
+	delete[]result;
+	return resultVector;
 }
 
 #endif

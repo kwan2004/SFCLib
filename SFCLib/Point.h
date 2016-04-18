@@ -34,7 +34,7 @@ public:
 			elements_[i] += other.elements_[i];
 		}
 	}
-
+	
 
 	void operator=(Point const& other)
 	{

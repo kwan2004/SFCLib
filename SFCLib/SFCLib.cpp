@@ -5,6 +5,7 @@
 #include "Rectangle.h"
 #include "Point.h"
 #include "SFCConversion.h"
+#include "QueryBySFC.h"
 #include "OutputTransform.h"
 
 #include <iostream>
@@ -79,13 +80,31 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	print_bits(val);
 
-	long Point1[3] = { 1, 2 ,3};
-	long Point2[3] = { 4,5,6 };
+	
+	/*
+	long Point1[3] = { 4, 2, 5 };
+	long Point2[3] = { 5, 4, 7 };
 	Point<long, 3> MinPoint(Point1);
-	Point<long, 3> MaxPoint(Point1);
+	Point<long, 3> MaxPoint(Point2);
 	Rectangle<long, 3> rec(MinPoint, MaxPoint);
 	rec.GetAllCornerPts(MinPoint, MaxPoint);
 
+	QueryBySFC<long, 3, 10> querytest;
+
+	querytest.RangeQueryByMorton_Bruteforce(rec);
+	querytest.RangeQueryByRecursive(rec);
+	*/
+	
+	long Point1[2] = { 3, 2 };
+	long Point2[2] = { 6, 6 };
+	Point<long, 2> MinPoint(Point1);
+	Point<long, 2> MaxPoint(Point2);
+	Rectangle<long, 2> rec(MinPoint, MaxPoint);
+
+	QueryBySFC<long, 2, 3> querytest;
+	querytest.RangeQueryByMorton_Bruteforce(rec);
+	querytest.RangeQueryByRecursive(rec);
+	
 	system("pause");
 	return 0;
 }
