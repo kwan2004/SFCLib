@@ -39,6 +39,12 @@
     <ClInclude Include="QueryBySFC.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CoordTransform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SFCPipeline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
