@@ -81,67 +81,113 @@ template< typename T, int nDims>
 /*override*/void* CoordTransFilter::operator()(void* item)
 {
 	Point<double, nDims>*  input = static_cast<Point<double, nDims>* >(item);
-	Point<long, nDims>* output = (Point<long, nDims>*)tbb::tbb_allocator<char>().allocate(_size);
+	Point<long, nDims>* output = (Point<long, nDims>*)tbb::tbb_allocator<Point<long, nDims>>().allocate(_size);
 
-	OutputTransform<double, long, nDims> 
+	CoordTransform<double, long, nDims> cotrans;
 	for (int i = 0; i < _size; i++)
 	{
-
+		output[i] = cotrans.Transform(input[i]);
 	}
 
 	tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)input, _size);
+
+	return output;
 }
 
 ///////////////////////////////////////////////////
 //Input coordinate transfomartion filter
-template< typename T, int nDims>
+template< typename T, int nDims, int mBits>
 class SFCGenFilter : public tbb::filter
 {
 public:
-	SFCGenFilter(int size);
+	SFCGenFilter(int size, int sfctype);
 	/*override*/void* operator()(void* item);
 private:
 	int _size;
+	int _sfctype;
 };
 
-template< typename T, int nDims>
+template< typename T, int nDims, int mBits>
 SFCGenFilter::SFCGenFilter(int size) :
 tbb::filter(parallel),
-_size(size)
+_size(size),
+_sfctype(sfctype),
 {
 }
 
-template< typename T, int nDims>
+template< typename T, int nDims, int mBits>
 /*override*/void* SFCGenFilter::operator()(void* item)
 {
+	Point<long, nDims>*  input = static_cast<Point<long, nDims>*>(item);
+	Point<long, mBits>* output = (Point<long, mBits>*)tbb::tbb_allocator<Point<long, mBits>>().allocate(_size);
+
+	CSFCConversion<nDims, mBits> sfcgen;
+	if (_sfctype == 0) //morton
+	{
+		for (int i = 0; i < _size; i++)
+		{
+			sfcgen.ptCoord = input[i];
+			sfcgen.MortonEncode();
+			output[i] = sfcgen.ptBits;
+		}
+	}
+	if (_sfctype == 1) //hilbert
+	{
+		for (int i = 0; i < _size; i++)
+		{
+			sfcgen.ptCoord = input[i];
+			sfcgen.HilbertEncode();
+			output[i] = sfcgen.ptBits;
+		}
+	}
+
+
+	tbb::tbb_allocator<Point<long, nDims>>().deallocate((Point<long, nDims>*)input, _size);
+
+	return output;
 
 }
 ///////////////////////////////////////////////////
 //Input coordinate transfomartion filter
-template< typename T, int nDims>
+template< typename T, int nDims, int mBits>
 class BitsConvFilter : public tbb::filter
 {
 public:
-	BitsConvFilter(int size);
+	BitsConvFilter(int size, int conv_type);
 	/*override*/void* operator()(void* item);
 private:
 	int _size;
+	int _conv_type;
 };
 
-template< typename T, int nDims>
+template< typename T, int nDims, int mBits>
 BitsConvFilter::BitsConvFilter(int size) :
 tbb::filter(parallel),
-_size(size)
+_size(size),
+_conv_type(conv_type)
 {
 }
 
-template< typename T, int nDims>
+template< typename T, int nDims, int mBits>
 /*override*/void* BitsConvFilter::operator()(void* item)
 {
+	Point<long, mBits>*  input = static_cast<Point<long, mBits>*>(item);
+	long* output = (long*)tbb::tbb_allocator<long>().allocate(_size);
 
+	OutputTransform<nDims, mBits> outtrans;
+	for (int i = 0; i < _size; i++)
+	{
+		output[i] = outtrans.BitSequence2Value(input[i]);
+	}
+
+
+	tbb::tbb_allocator<Point<long, mBits>>().deallocate((Point<long, mBits>*)input, _size);
+
+	return output;
 }
 
 //! Filter that writes each buffer to a file.
+template<int nDims>
 class OutputFilter : public tbb::filter 
 {
 	FILE* my_output_file;
@@ -152,6 +198,7 @@ private:
 	int _size;
 };
 
+template<int nDims>
 OutputFilter::OutputFilter(FILE* output_file, int size) :
 tbb::filter(serial_in_order),
 my_output_file(output_file),
@@ -159,8 +206,18 @@ _size(size)
 {
 }
 
+template<int nDims>
 void* OutputFilter::operator()(void* item)
 {
+	long*  input = static_cast<long* >(item);
+
+	for (int i = 0; i < _size; i++)
+	{
+		for (int j = 0; j < nDims; i++)
+		{
+			fwrite(input[i], sizeof(long), 1, my_output_file);
+		}
+	}
 
 	return NULL;
 }
@@ -200,7 +257,7 @@ int run_pipeline(int nthreads)
 	pipeline.add_filter(bitsconv_filter);
 
 	// Create file-writing stage and add it to the pipeline
-	OutputFilter output_filter(output_file);
+	OutputFilter<> output_filter(output_file);
 	pipeline.add_filter(output_filter);
 
 	// Run the pipeline
@@ -218,8 +275,5 @@ int run_pipeline(int nthreads)
 
 	return 1;
 }
-
-
-
 
 #endif
