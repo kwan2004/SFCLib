@@ -153,11 +153,12 @@ template< typename T, int nDims, int mBits>
 		}
 	}
 
-	tbb::tbb_allocator<Point<long, nDims>>().deallocate((Point<long, nDims>*)input, _size);
+	tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)input, _size);
 
 	return output;
 
 }
+
 ///////////////////////////////////////////////////
 //Input coordinate transfomartion filter
 template< typename T, int nDims, int mBits>
@@ -197,6 +198,74 @@ template< typename T, int nDims, int mBits>
 	return output;
 }
 
+///////////////////////////////////////////////////
+//new whole transfomartion filter
+template< typename T, int nDims, int mBits>
+class NewSFCGenFilter : public tbb::filter
+{
+public:
+	NewSFCGenFilter(int size, int sfctype);
+	/*override*/void* operator()(void* item);
+
+	void SetTransform(double* delta, long* scale);
+private:
+	int _size;
+
+	double* _delta;
+	long* _scale;
+
+	int _sfctype;
+
+	int _conv_type;
+};
+
+template< typename T, int nDims, int mBits>
+NewSFCGenFilter::NewSFCGenFilter(int size, int sfctype) :
+tbb::filter(parallel),
+_size(size),
+_sfctype(sfctype),
+{
+}
+
+template< typename T, int nDims, int mBits>
+/*override*/void* NewSFCGenFilter::operator()(void* item)
+{
+	Point<double, nDims>*  input = static_cast<Point<double, nDims>* >(item);
+	long* output = (long*)tbb::tbb_allocator<long>().allocate(_size);
+
+	CoordTransform<double, long, nDims> cotrans(_delta, _scale);
+	CSFCConversion<nDims, mBits> sfcgen;
+	OutputTransform<nDims, mBits> outtrans;
+
+	//Point<long, nDims> ptSFC;
+	Point<long, mBits> ptBits;
+
+	for (int i = 0; i < _size; i++)
+	{
+		//ptSFC = cotrans.Transform(input[i]);
+		if (_sfctype == 0) //morton
+		{
+			sfcgen.ptCoord = cotrans.Transform(input[i]);
+			sfcgen.MortonEncode();
+			ptBits = sfcgen.ptBits;
+		}
+		
+		if (_sfctype == 1) //hilbert
+		{
+			sfcgen.ptCoord = cotrans.Transform(input[i]);
+			sfcgen.HilbertEncode();
+			ptBits = sfcgen.ptBits;
+		}
+
+		output[i] = outtrans.BitSequence2Value(ptBits);
+	}
+
+	tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)input, _size);
+
+	return output;
+}
+
+//////////////////////////////////////////////////////////
 //! Filter that writes each buffer to a file.
 template<int nDims>
 class OutputFilter : public tbb::filter 
