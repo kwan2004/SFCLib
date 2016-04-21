@@ -11,84 +11,131 @@
 #include <cctype>
 #include "common/utility/utility.h"
 
+#include "Point.h"
+#include "CoordTransform.h"
+#include "SFCConversion.h"
+#include "OutputTransform.h"
+
+template< typename T, int nDims>
 class InputFilter : public tbb::filter 
 {
 public:
-	InputFilter(FILE* input_file_);
+	InputFilter(FILE* input_file_, int size);
 	~InputFilter();
 private:
 	FILE* input_file;
+	int _size;
 	/*override*/ void* operator()(void*);
 };
 
-InputFilter::InputFilter(FILE* input_file_) :
+template< typename T, int nDims>
+InputFilter::InputFilter(FILE* input_file_, int size) :
 filter(serial_in_order),
-input_file(input_file_)
+input_file(input_file_),
+_size(size)
 {
 }
 
+template< typename T, int nDims>
 InputFilter::~InputFilter()
 {
 
 }
 
+template< typename T, int nDims>
 void* InputFilter::operator()(void*)
 {
-	// Read characters into space that is available in the next slice.
+	// Read raw points coornidates
+	Point<double, nDims>* pPtsArray = (Point<double, nDims>*)tbb::tbb_allocator<Point<double, nDims>>().allocate(_size);
+	for (int i = 0; i < _size; i++)
+	{
+		for (int j = 0; j < nDims; j++)
+		{
+			pPtsArray[i][j] = 0;
+		}
+	}
 
+	return pPtsArray;
 }
 
 ///////////////////////////////////////////////////
 //Input coordinate transfomartion filter
-class CoordTransformFilter : public tbb::filter 
+template< typename T, int nDims>
+class CoordTransFilter : public tbb::filter
 {
 public:
-	CoordTransformFilter();
+	CoordTransFilter(int size);
 	/*override*/void* operator()(void* item);
+private:
+	int _size;
 };
 
-CoordTransformFilter::CoordTransformFilter() :
-tbb::filter(parallel)
+template< typename T, int nDims>
+CoordTransFilter::CoordTransFilter(int size) :
+tbb::filter(parallel),
+_size(size)
 {
 }
 
-/*override*/void* CoordTransformFilter::operator()(void* item)
+template< typename T, int nDims>
+/*override*/void* CoordTransFilter::operator()(void* item)
 {
-	
+	Point<double, nDims>*  input = static_cast<Point<double, nDims>* >(item);
+	Point<long, nDims>* output = (Point<long, nDims>*)tbb::tbb_allocator<char>().allocate(_size);
+
+	OutputTransform<double, long, nDims> 
+	for (int i = 0; i < _size; i++)
+	{
+
+	}
+
+	tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)input, _size);
 }
 
 ///////////////////////////////////////////////////
 //Input coordinate transfomartion filter
+template< typename T, int nDims>
 class SFCGenFilter : public tbb::filter
 {
 public:
-	SFCGenFilter();
+	SFCGenFilter(int size);
 	/*override*/void* operator()(void* item);
+private:
+	int _size;
 };
 
-SFCGenFilter::SFCGenFilter() :
-tbb::filter(parallel)
+template< typename T, int nDims>
+SFCGenFilter::SFCGenFilter(int size) :
+tbb::filter(parallel),
+_size(size)
 {
 }
 
+template< typename T, int nDims>
 /*override*/void* SFCGenFilter::operator()(void* item)
 {
 
 }
 ///////////////////////////////////////////////////
 //Input coordinate transfomartion filter
+template< typename T, int nDims>
 class BitsConvFilter : public tbb::filter
 {
 public:
-	BitsConvFilter();
+	BitsConvFilter(int size);
 	/*override*/void* operator()(void* item);
+private:
+	int _size;
 };
 
-BitsConvFilter::BitsConvFilter() :
-tbb::filter(parallel)
+template< typename T, int nDims>
+BitsConvFilter::BitsConvFilter(int size) :
+tbb::filter(parallel),
+_size(size)
 {
 }
 
+template< typename T, int nDims>
 /*override*/void* BitsConvFilter::operator()(void* item)
 {
 
@@ -99,13 +146,16 @@ class OutputFilter : public tbb::filter
 {
 	FILE* my_output_file;
 public:
-	OutputFilter(FILE* output_file);
+	OutputFilter(FILE* output_file, int size);
 	/*override*/void* operator()(void* item);
+private:
+	int _size;
 };
 
-OutputFilter::OutputFilter(FILE* output_file) :
+OutputFilter::OutputFilter(FILE* output_file, int size) :
 tbb::filter(serial_in_order),
-my_output_file(output_file)
+my_output_file(output_file),
+_size(size)
 {
 }
 
@@ -136,17 +186,17 @@ int run_pipeline(int nthreads)
 	tbb::pipeline pipeline;
 
 	// Create file-reading writing stage and add it to the pipeline
-	InputFilter input_filter(input_file);
+	InputFilter<> input_filter(input_file);
 	pipeline.add_filter(input_filter);
 
 	// Create squaring stage and add it to the pipeline
-	CoordTransformFilter coordtrans_filter;
+	CoordTransFilter<> coordtrans_filter;
 	pipeline.add_filter(coordtrans_filter);
 
-	SFCGenFilter sfcgen_filter;
+	SFCGenFilter<> sfcgen_filter;
 	pipeline.add_filter(sfcgen_filter);
 
-	BitsConvFilter bitsconv_filter;
+	BitsConvFilter<> bitsconv_filter;
 	pipeline.add_filter(bitsconv_filter);
 
 	// Create file-writing stage and add it to the pipeline

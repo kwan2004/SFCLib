@@ -4,17 +4,17 @@
 #include "Point.h"
 
 template<typename T1, typename T2, int nDims = 2>
-class OutputTransform
+class CoordTransform
 {
 private:
-	std::array< T, nDims > _delta;
+	std::array< T1, nDims > _delta;
 	std::array< long, nDims > _scale;
 
 	/*Point<T1, nDims> inPt;
 	Point<T2, nDims> outPt;*/
 
 public:
-	OutputTransform()
+	CoordTransform()
 	{
 		for (ini i = 0; i < nDims; i++)
 		{
@@ -24,7 +24,7 @@ public:
 
 	}
 
-	OutputTransform(T1* delta, long* scale) :
+	CoordTransform(T1* delta, long* scale) :
 	{
 		for (ini i = 0; i < nDims; i++)
 		{
