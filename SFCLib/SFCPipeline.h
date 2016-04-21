@@ -66,8 +66,12 @@ class CoordTransFilter : public tbb::filter
 public:
 	CoordTransFilter(int size);
 	/*override*/void* operator()(void* item);
+
+	void SetTransform(double* delta, long* scale);
 private:
 	int _size;
+	double* _delta;
+	long* _scale;
 };
 
 template< typename T, int nDims>
@@ -78,12 +82,20 @@ _size(size)
 }
 
 template< typename T, int nDims>
+void CoordTransFilter::SetTransform(double* delta, long* scale)
+{
+	_delta = delta;
+	_scale = scale;
+}
+
+template< typename T, int nDims>
 /*override*/void* CoordTransFilter::operator()(void* item)
 {
 	Point<double, nDims>*  input = static_cast<Point<double, nDims>* >(item);
 	Point<long, nDims>* output = (Point<long, nDims>*)tbb::tbb_allocator<Point<long, nDims>>().allocate(_size);
-
-	CoordTransform<double, long, nDims> cotrans;
+	
+	CoordTransform<double, long, nDims> cotrans(_delta, _scale);
+	
 	for (int i = 0; i < _size; i++)
 	{
 		output[i] = cotrans.Transform(input[i]);
@@ -140,7 +152,6 @@ template< typename T, int nDims, int mBits>
 			output[i] = sfcgen.ptBits;
 		}
 	}
-
 
 	tbb::tbb_allocator<Point<long, nDims>>().deallocate((Point<long, nDims>*)input, _size);
 

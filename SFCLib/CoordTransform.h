@@ -16,7 +16,7 @@ private:
 public:
 	CoordTransform()
 	{
-		for (ini i = 0; i < nDims; i++)
+		for (int i = 0; i < nDims; i++)
 		{
 			_delta[i] = 0;
 			_scale[i] = 1;
@@ -26,7 +26,7 @@ public:
 
 	CoordTransform(T1* delta, long* scale) :
 	{
-		for (ini i = 0; i < nDims; i++)
+		for (int i = 0; i < nDims; i++)
 		{
 			_delta[i] = delta[i];
 			_scale[i] = scale[i];
@@ -36,7 +36,7 @@ public:
 	Point<T2, nDims> Transform(Point<T1, nDims> inPt)
 	{
 		Point<T2, nDims> outPt;
-		for (ini i = 0; i < nDims; i++)
+		for (int i = 0; i < nDims; i++)
 		{
 			outPt[i] = (inPt[i] - _delta[i])*_scale[i]
 		}
