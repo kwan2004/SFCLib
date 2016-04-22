@@ -14,7 +14,7 @@
 #include "Point.h"
 #include "CoordTransform.h"
 #include "SFCConversion.h"
-#include "OutputTransform.h"
+#include "OutputSchema.h"
 
 template<int nDims>
 class InputFilter : public tbb::filter 

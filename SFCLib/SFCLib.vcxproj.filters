@@ -30,9 +30,6 @@
     <ClInclude Include="SFCConversion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="OutputTransform.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Rectangle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -43,6 +40,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SFCPipeline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OutputSchema.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

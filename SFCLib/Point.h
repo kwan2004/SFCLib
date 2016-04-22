@@ -6,12 +6,12 @@
 
 #define STATIC_ASSERT( e ) static_assert( e, "!(" #e ")" )
 
-template< typename T, int nDimensions=2>
+template< typename T, int nDims=2>
 class Point
 {
 private:
-	std::array< T, nDimensions > elements_;
-	int dimension=nDimensions;
+	std::array< T, nDims > elements_;
+	int dimension = nDims;
 	int bitLength=64; //length means the input m or the output n
 
 public:
@@ -29,16 +29,16 @@ public:
 
 	void operator+=(Point const& other)
 	{
-		for (int i = 0; i < nDimensions; ++i)
+		for (int i = 0; i < nDims; ++i)
 		{
 			elements_[i] += other.elements_[i];
 		}
 	}
-
+	
 
 	void operator=(Point const& other)
 	{
-		for (int i = 0; i < nDimensions; ++i)
+		for (int i = 0; i < nDims; ++i)
 		{
 			elements_[i] = other.elements_[i];
 		}
@@ -46,7 +46,7 @@ public:
 
 	void operator-=(Point const& other)
 	{
-		for (int i = 0; i < nDimensions; ++i)
+		for (int i = 0; i < nDims; ++i)
 		{
 			elements_[i] -= other.elements_[i];
 		}
@@ -88,14 +88,14 @@ public:
 
 	Point(int x, int y)
 	{
-		STATIC_ASSERT(nDimensions == 2);
+		STATIC_ASSERT(nDims == 2);
 		elements_[0] = x;
 		elements_[1] = y;
 	}
 
 	Point(int x, int y, int z)
 	{
-		STATIC_ASSERT(nDimensions == 3);
+		STATIC_ASSERT(nDims == 3);
 		elements_[0] = x;
 		elements_[1] = y;
 		elements_[2] = z;

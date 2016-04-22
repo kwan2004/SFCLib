@@ -1,26 +1,32 @@
 #pragma once
 #ifndef RECTANGLE_H_
 #define RECTANGLE_H_
-#include "Point.h"
-#include <vector>
+#include"Point.h"
+#include<vector>
 
 using std::vector;
 
 #define STATIC_ASSERT( e ) static_assert( e, "!(" #e ")" )
-template< typename T, int nDims=2>
+
+template< typename T, int nDims = 2>
 class Rectangle
 {
-private:
-	Point<T,nDims> minPoint;
-	Point<T,nDims> maxPoint;
+public:
+	Point<T, nDims> minPoint;
+	Point<T, nDims> maxPoint;
 	int dimensions = nDims;
 public:
 
-	Rectangle(Point<T, nDims> minPoint, Point<T,nDims> maxPoint)
+	Rectangle(Point<T, nDims> minPoint, Point<T, nDims> maxPoint)
 	{
 		this->minPoint = minPoint;
 		this->maxPoint = maxPoint;
 		this->dimensions = nDims;
+	}
+
+	Rectangle()
+	{
+
 	}
 
 	int GetDimensions()
@@ -53,7 +59,7 @@ public:
 		return this->maxPoint[idx] - this->minPoint[idx];
 	}
 
-	void DFS(vector<T> minVector, vector<T> maxVector, 
+	void DFS(vector<T> minVector, vector<T> maxVector,
 		int i, vector<T > tmp, vector<vector<T >>& result)
 	{
 		if (i >= minVector.size() || i >= maxVector.size()) {
@@ -77,7 +83,7 @@ public:
 	generate 8 points.
 	*/
 	vector<Point<T, nDims>>
-    GetAllCornerPts(Point<T, nDims> minPoint, Point<T, nDims> maxPoint)
+		GetAllCornerPts(Point<T, nDims> minPoint, Point<T, nDims> maxPoint)
 	{
 		vector<T>minVector;
 		vector<T>maxVector;
@@ -93,9 +99,9 @@ public:
 		Point<T, nDims> points;
 		for (int i = 0; i < result.size(); ++i) {
 			for (int j = 0; j < result[i].size(); ++j) {
-				points[j]=result[i][j];
+				points[j] = result[i][j];
 			}
-			   Rec_Vector.push_back(points);
+			Rec_Vector.push_back(points);
 		}
 		return Rec_Vector;
 	}
