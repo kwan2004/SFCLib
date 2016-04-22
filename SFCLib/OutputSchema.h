@@ -51,102 +51,6 @@ public:
 		return ptOutput;
 	}
 	
-	string BitSequenceString(Point<long, mBits> ptBits, StringType str_type)
-	{
-		int base = 0;
-		if (str_type == Base32) base = 5;
-		if (str_type == Base64) base = 6;
-
-		int ntotalbits = mBits * nDims;
-
-		//allocate the string space -----one more space for residual
-		int nstrlen = (ntotalbits % base) ? (ntotalbits / base + 1) : (ntotalbits / base);
-		char* szstr = new char[nstrlen + 1]; //last char for zero
-		memset(szstr, 0, nstrlen + 1);
-		int valid = strlen(szstr); //should be zero here
-	
-
-		//find the least common multiple of base and  nDims( lcm <= base*n)
-		int nlcm = (base > nDims) ? base : nDims;
-		while (1)                       /* Always true. */
-		{
-			if (nlcm % base == 0 && nlcm % nDims == 0)
-			{
-				break;          /* while loop terminates. */
-			}
-			++nlcm;
-		}
-
-		//////compare m*n with lcm (lcm = t*n), so totalbits(m*n) can be divided into m/t blocks (block=lcm=t*n)
-		int t = nlcm / nDims; //lcm is the bit number in one block; each block has t  nDims = t*n
-		int nblock = (mBits % t) ? (mBits / t + 1) : (mBits / t); // m/t+1 or m/t---one more space for residual
-
-		//array<long, nblock>; //long is 64 bits, base64=6 bits, enough for 10 more dims---to contain t*n (t<=base)		
-		int k = 0;
-		for (int i = 0; i < nblock; i++)
-		{
-			///copy t*n to each block and get the decimal value
-			long nblkvalue = 0;
-			int nloops;
-			if ((mBits % t) && (nblock - 1 == i)) //handle the final block
-				nloops = mBits % t;
-			else
-				nloops = t;
-
-			for (int j = 0; j < nloops; j++)
-			{
-				long ttt = ptBits[i*t + j];
-				//nblkvalue |= ptBits[i*t + j] << (j*nDims);
-				nblkvalue |= ptBits[i*t + j] << ((nloops - 1 -j)*nDims);
-			}
-
-			////change decimal value to character
-			long ncharnum = nloops*nDims / base;
-			if (i == nblock - 1)
-			{
-				if (nloops*nDims % base)
-				{
-					ncharnum += 1;
-				}
-			}
-			unsigned int mask = ((unsigned int)1 << base) - 1;
-			int nidx = 0;
-			for (int j = 0; j < ncharnum; j++)
-			{
-				if (nloops*nDims % base)
-				{
-					nidx = (nblkvalue >> ((ncharnum - j - 2)*base) + nloops*nDims % base) & mask;
-				}
-				else
-				{
-					nidx = (nblkvalue >> ((ncharnum - j - 1)*base)) & mask;
-				}
-				if (str_type == Base64)
-				{
-					*(szstr + k) = BASE64_TABLE_E2[nidx];
-					k++;
-				}
-				if (str_type == Base32)
-				{
-					*(szstr + k) = BASE32_TABLE_E2[nidx];
-					k++;
-				}
-			}
-		}
-		/*
-		for (int i = 0; i < nstrlen + 1; i++)
-		{
-			char tt = szstr[i];
-			cout << tt;
-		}
-		*/
-		string resultStr(szstr);
-		cout << resultStr << endl;
-		delete[] szstr;
-
-		return resultStr;
-	}
-	
 	string BitSequence2String(Point<long, mBits> ptBits, StringType str_type)
 	{
 		int base = 0;
@@ -191,9 +95,7 @@ public:
 
 			for (int j = 0; j < nloops; j++)
 			{
-				long ttt = ptBits[i*t + j];
-				//nblkvalue |= ptBits[i*t + j] << (j*nDims);
-				nblkvalue |= ptBits[i*t + j] << ((nloops - 1 - j)*nDims);
+				nblkvalue |= ptBits[i*t + j] << ((nloops - 1 - j)*nDims);  //from left to right
 			}
 
 			////change decimal value to character
@@ -227,7 +129,7 @@ public:
 						k++;
 					}
 				}
-			}
+			}  //end if
 			else
 			{
 				for (int j = 0; j < ncharnum; j++)
@@ -244,161 +146,15 @@ public:
 						k++;
 					}
 				}
-			}
-			/*
-			for (int j = 0; j < ncharnum; j++)
-			{
-				if (nloops*nDims % base)
-				{
-					nidx = (nblkvalue >> ((ncharnum - j - 2)*base) + nloops*nDims % base) & mask;
-				}
-				else
-				{
-					nidx = (nblkvalue >> ((ncharnum - j - 1)*base)) & mask;
-				}
-				if (str_type == Base64)
-				{
-					*(szstr + k) = BASE64_TABLE_E2[nidx];
-					k++;
-				}
-				if (str_type == Base32)
-				{
-					*(szstr + k) = BASE32_TABLE_E2[nidx];
-					k++;
-				}
-			}
-			*/
-		}
-		/*
-		for (int i = 0; i < nstrlen + 1; i++)
-		{
-		char tt = szstr[i];
-		cout << tt;
-		}
-		*/
+			}  //end else			
+		}  //end for
+		
 		string resultStr(szstr);
 		cout << resultStr << endl;
 		delete[] szstr;
 
 		return resultStr;
 	}
-
-	Point<long, mBits> StringBitSequence(string szCode, StringType str_type)
-	{
-		Point<long, mBits> ptBits;
-
-		int base = 0;
-		if (str_type == Base32) base = 5;
-		if (str_type == Base64) base = 6;
-		
-		int ntotalbits = mBits * nDims;
-		int nstrlen = (ntotalbits % base) ? (ntotalbits / base + 1) : (ntotalbits / base);
-
-		//find the least common multiple of base and  nDims( lcm <= base*n)
-		int nlcm = (base > nDims) ? base : nDims;
-		while (1)                       /* Always true. */
-		{
-			if (nlcm % base == 0 && nlcm % nDims == 0)
-			{
-				break;          /* while loop terminates. */
-			}
-			++nlcm;
-		}
-		
-		int nstride = nlcm / base; //how many characters will be processed once
-		unsigned int mask = ((unsigned int)1 << nDims) - 1;
-		int kkk = 0;
-		for (int i = 0; i < nstrlen; i += nstride)
-		{
-			int nloops = nstride;
-			if (i + nstride > nstrlen)
-				nloops = nstrlen - i;
-
-			//convert nloops character to a long value
-			int nvalue = 0;
-			//for (int j = 0; j < nloops; j++)
-			//{
-			//	char tt = szCode.c_str()[i*nstride + j];
-			//	
-			//	nvalue |= szCode.c_str()[i*nstride + j] << base;
-			//}
-
-			if (str_type == Base32)
-			{
-				for (int j = 0; j < nloops; j++)
-				{
-					char tt = szCode.c_str()[i*nstride + j];
-					for (int k = 0; k < 32; k++)
-					{
-						if (BASE32_TABLE_E2[k] == szCode.c_str()[i*nstride + j])
-						{
-							nvalue |= k;
-							break;
-						}
-					}
-					//nvalue |= szCode.c_str()[i*nstride + j] << base;
-				}
-			}
-			else if (str_type == Base64)
-			{
-				for (int j = 0; j < nloops; j++)
-				{
-					char tt = szCode.c_str()[i*nstride + j];
-					for (int k = 0; k < 64; k++)
-					{
-						if (BASE64_TABLE_E2[k] == szCode.c_str()[i*nstride + j])
-						{
-							nvalue |= k;
-							break;
-						}
-					}
-					//nvalue |= szCode.c_str()[i*nstride + j] << base;
-				}
-			}
-
-			int num = nloops * base / nDims;
-			if (i + nstride > nstrlen)
-			{
-				if (m*n%base)
-				{
-					for (int j = 0; j < num; j++) //nloops character
-					{
-						if (j == num - 1)
-						{
-							mask = ((unsigned int)1 << nDims) - 1;
-							int tttt = (nvalue >> (nDims*(num - 1 - j))) & mask;
-							ptBits[kkk] = (nvalue >> (nDims*(num - 1 - j))) & mask;
-						}
-						int tttt = (nvalue >> (nDims*(num - 1 - j))) & mask;
-						ptBits[kkk] = (nvalue >> (nDims*(num - 1 - j))) & mask;
-						kkk++;
-					}
-				}
-				else
-				{
-					for (int j = 0; j < num; j++) //nloops character
-					{
-						int tttt = (nvalue >> (nDims*(num - 1 - j))) & mask;
-						ptBits[kkk] = (nvalue >> (nDims*(num - 1 - j))) & mask;
-						kkk++;
-					}
-				}
-			}
-			else
-			{
-				for (int j = 0; j < num; j++) //nloops character
-				{
-					int tttt = (nvalue >> (nDims*(num - 1 - j))) & mask;
-					ptBits[kkk] = (nvalue >> (nDims*(num - 1 - j))) & mask;
-					kkk++;
-				}
-			}
-			
-			
-		}
-
-		return ptBits;
-	}	
 
 	Point<long, mBits> String2BitSequence(string szCode, StringType str_type)
 	{

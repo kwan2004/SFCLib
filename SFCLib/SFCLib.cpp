@@ -89,14 +89,14 @@ int _tmain(int argc, _TCHAR* argv[])
 	Rectangle<long, 2> rec(MinPoint, MaxPoint);
 	QueryBySFC<long, 2, 3> querytest;
 	querytest.RangeQueryByBruteforce(rec, Morton);
-	//querytest.RangeQueryByBruteforce(rec);
 	querytest.RangeQueryByRecursive(rec, Morton);
 
 	SFCConversion<2, 3> sfc2D;
 	OutputSchema<2, 3> trans2D;
 	sfc2D.ptCoord = Point1;
 	sfc2D.MortonEncode();	
-	string str32 = trans2D.BitSequence2String(sfc2D.ptBits, Base64);
+	string str2D = trans2D.BitSequence2String(sfc2D.ptBits, Base32);
+	Point<long, 3> bit2D = trans2D.String2BitSequence(str2D, Base32);
 
 	//3D sample
 	long Point31[3] = { 4, 2, 5 };
@@ -113,16 +113,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	sfc3D.ptCoord = Point31;
 	sfc3D.MortonEncode();
 	string str3D = trans3D.BitSequence2String(sfc3D.ptBits, Base64);
-	Point<long, 9> mm = trans3D.String2BitSequence(str3D, Base64);
-	//Point<long, 10> pttt = trans3D.String2BitSequence(str3D, Base64);
-
-	long Point333[3] = { 4, 2, 5 };
-	SFCConversion<3, 4> sfc3D3;
-	OutputSchema<3, 4> trans3D3;
-	sfc3D3.ptCoord = Point333;
-	sfc3D3.MortonEncode();
-	string str3D3 = trans3D3.BitSequence2String(sfc3D3.ptBits, Base32);
-	Point<long, 4> mmm = trans3D3.String2BitSequence(str3D3, Base32);
+	Point<long, 9> bit3D = trans3D.String2BitSequence(str3D, Base64);
 
 	system("pause");
 	return 0;
