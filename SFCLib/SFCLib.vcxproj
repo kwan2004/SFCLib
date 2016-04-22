@@ -79,7 +79,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="OutputTransform.h" />
+    <ClInclude Include="OutputSchema.h" />
     <ClInclude Include="Point.h" />
     <ClInclude Include="QueryBySFC.h" />
     <ClInclude Include="Rectangle.h" />

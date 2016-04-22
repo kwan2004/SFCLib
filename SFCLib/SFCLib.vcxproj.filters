@@ -30,13 +30,13 @@
     <ClInclude Include="SFCConversion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="OutputTransform.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Rectangle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="QueryBySFC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OutputSchema.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
