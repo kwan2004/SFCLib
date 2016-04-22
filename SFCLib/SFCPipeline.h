@@ -16,7 +16,7 @@
 #include "SFCConversion.h"
 #include "OutputTransform.h"
 
-template< typename T, int nDims>
+template<int nDims>
 class InputFilter : public tbb::filter 
 {
 public:
@@ -28,7 +28,7 @@ private:
 	/*override*/ void* operator()(void*);
 };
 
-template< typename T, int nDims>
+template<int nDims>
 InputFilter::InputFilter(FILE* input_file_, int size) :
 filter(serial_in_order),
 input_file(input_file_),
@@ -36,13 +36,13 @@ _size(size)
 {
 }
 
-template< typename T, int nDims>
+template<int nDims>
 InputFilter::~InputFilter()
 {
 
 }
 
-template< typename T, int nDims>
+template<int nDims>
 void* InputFilter::operator()(void*)
 {
 	// Read raw points coornidates
@@ -60,7 +60,7 @@ void* InputFilter::operator()(void*)
 
 ///////////////////////////////////////////////////
 //Input coordinate transfomartion filter
-template< typename T, int nDims>
+template<int nDims>
 class CoordTransFilter : public tbb::filter
 {
 public:
@@ -74,7 +74,7 @@ private:
 	long* _scale;
 };
 
-template< typename T, int nDims>
+template<int nDims>
 CoordTransFilter::CoordTransFilter(int size) :
 tbb::filter(parallel),
 _size(size)
@@ -88,7 +88,7 @@ void CoordTransFilter::SetTransform(double* delta, long* scale)
 	_scale = scale;
 }
 
-template< typename T, int nDims>
+template<int nDims>
 /*override*/void* CoordTransFilter::operator()(void* item)
 {
 	Point<double, nDims>*  input = static_cast<Point<double, nDims>* >(item);
@@ -108,7 +108,7 @@ template< typename T, int nDims>
 
 ///////////////////////////////////////////////////
 //Input coordinate transfomartion filter
-template< typename T, int nDims, int mBits>
+template< int nDims, int mBits>
 class SFCGenFilter : public tbb::filter
 {
 public:
@@ -119,7 +119,7 @@ private:
 	int _sfctype;
 };
 
-template< typename T, int nDims, int mBits>
+template< int nDims, int mBits>
 SFCGenFilter::SFCGenFilter(int size) :
 tbb::filter(parallel),
 _size(size),
@@ -127,13 +127,13 @@ _sfctype(sfctype),
 {
 }
 
-template< typename T, int nDims, int mBits>
+template< int nDims, int mBits>
 /*override*/void* SFCGenFilter::operator()(void* item)
 {
 	Point<long, nDims>*  input = static_cast<Point<long, nDims>*>(item);
 	Point<long, mBits>* output = (Point<long, mBits>*)tbb::tbb_allocator<Point<long, mBits>>().allocate(_size);
 
-	CSFCConversion<nDims, mBits> sfcgen;
+	SFCConversion<nDims, mBits> sfcgen;
 	if (_sfctype == 0) //morton
 	{
 		for (int i = 0; i < _size; i++)
@@ -161,7 +161,7 @@ template< typename T, int nDims, int mBits>
 
 ///////////////////////////////////////////////////
 //Input coordinate transfomartion filter
-template< typename T, int nDims, int mBits>
+template< int nDims, int mBits>
 class BitsConvFilter : public tbb::filter
 {
 public:
@@ -172,7 +172,7 @@ private:
 	int _conv_type;
 };
 
-template< typename T, int nDims, int mBits>
+template< int nDims, int mBits>
 BitsConvFilter::BitsConvFilter(int size) :
 tbb::filter(parallel),
 _size(size),
@@ -180,7 +180,7 @@ _conv_type(conv_type)
 {
 }
 
-template< typename T, int nDims, int mBits>
+template< int nDims, int mBits>
 /*override*/void* BitsConvFilter::operator()(void* item)
 {
 	Point<long, mBits>*  input = static_cast<Point<long, mBits>*>(item);
@@ -200,11 +200,11 @@ template< typename T, int nDims, int mBits>
 
 ///////////////////////////////////////////////////
 //new whole transfomartion filter
-template< typename T, int nDims, int mBits>
+template<int nDims, int mBits>
 class NewSFCGenFilter : public tbb::filter
 {
 public:
-	NewSFCGenFilter(int size, int sfctype);
+	NewSFCGenFilter(int size, int sfctype, int conv_type);
 	/*override*/void* operator()(void* item);
 
 	void SetTransform(double* delta, long* scale);
@@ -215,26 +215,34 @@ private:
 	long* _scale;
 
 	int _sfctype;
-
 	int _conv_type;
 };
 
-template< typename T, int nDims, int mBits>
-NewSFCGenFilter::NewSFCGenFilter(int size, int sfctype) :
+template<int nDims, int mBits>
+NewSFCGenFilter::NewSFCGenFilter(int size, int sfctype, int conv_type) :
 tbb::filter(parallel),
 _size(size),
 _sfctype(sfctype),
+_conv_type(conv_type)
 {
 }
 
-template< typename T, int nDims, int mBits>
+template<int nDims, int mBits>
+void NewSFCGenFilter::SetTransform(double* delta, long* scale)
+{
+	_delta = delta;
+	_scale = scale;
+}
+
+template<int nDims, int mBits>
 /*override*/void* NewSFCGenFilter::operator()(void* item)
 {
 	Point<double, nDims>*  input = static_cast<Point<double, nDims>* >(item);
 	long* output = (long*)tbb::tbb_allocator<long>().allocate(_size);
 
 	CoordTransform<double, long, nDims> cotrans(_delta, _scale);
-	CSFCConversion<nDims, mBits> sfcgen;
+
+	SFCConversion<nDims, mBits> sfcgen;
 	OutputTransform<nDims, mBits> outtrans;
 
 	//Point<long, nDims> ptSFC;
@@ -322,22 +330,25 @@ int run_pipeline(int nthreads)
 	// Create the pipeline
 	tbb::pipeline pipeline;
 
+	const int nDims = 3;
 	// Create file-reading writing stage and add it to the pipeline
-	InputFilter<> input_filter(input_file);
+	InputFilter<nDims> input_filter(input_file, 1000);
 	pipeline.add_filter(input_filter);
 
 	// Create squaring stage and add it to the pipeline
-	CoordTransFilter<> coordtrans_filter;
-	pipeline.add_filter(coordtrans_filter);
+	//CoordTransFilter<> coordtrans_filter;
+	//pipeline.add_filter(coordtrans_filter);
 
-	SFCGenFilter<> sfcgen_filter;
-	pipeline.add_filter(sfcgen_filter);
+	//SFCGenFilter<> sfcgen_filter;
+	//pipeline.add_filter(sfcgen_filter);
 
-	BitsConvFilter<> bitsconv_filter;
-	pipeline.add_filter(bitsconv_filter);
+	//BitsConvFilter<> bitsconv_filter;
+	//pipeline.add_filter(bitsconv_filter);
+	NewSFCGenFilter<nDims, 20> nsfcgen_filter(1000, 1, 1);
+	pipeline.add_filter(nsfcgen_filter);
 
 	// Create file-writing stage and add it to the pipeline
-	OutputFilter<> output_filter(output_file);
+	OutputFilter<nDims> output_filter(output_file, 1000);
 	pipeline.add_filter(output_filter);
 
 	// Run the pipeline
