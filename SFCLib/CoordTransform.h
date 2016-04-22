@@ -24,7 +24,7 @@ public:
 
 	}
 
-	CoordTransform(T1* delta, long* scale) :
+	CoordTransform(T1* delta, long* scale)
 	{
 		for (int i = 0; i < nDims; i++)
 		{
@@ -38,7 +38,7 @@ public:
 		Point<T2, nDims> outPt;
 		for (int i = 0; i < nDims; i++)
 		{
-			outPt[i] = (inPt[i] - _delta[i])*_scale[i]
+			outPt[i] = (inPt[i] - _delta[i])*_scale[i];
 		}
 		return outPt;
 	}

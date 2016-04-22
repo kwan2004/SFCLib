@@ -17,186 +17,177 @@
 #include "OutputSchema.h"
 
 template<int nDims>
-class InputFilter : public tbb::filter 
+class InputFilter : public tbb::filter
 {
 public:
-	InputFilter(FILE* input_file_, int size);
-	~InputFilter();
+	InputFilter(FILE* input_file_, int size) :
+		filter(serial_in_order),
+		input_file(input_file_),
+		_size(size)
+	{
+	}
+
+	~InputFilter()
+	{}
 private:
 	FILE* input_file;
 	int _size;
-	/*override*/ void* operator()(void*);
-};
-
-template<int nDims>
-InputFilter::InputFilter(FILE* input_file_, int size) :
-filter(serial_in_order),
-input_file(input_file_),
-_size(size)
-{
-}
-
-template<int nDims>
-InputFilter::~InputFilter()
-{
-
-}
-
-template<int nDims>
-void* InputFilter::operator()(void*)
-{
-	// Read raw points coornidates
-	Point<double, nDims>* pPtsArray = (Point<double, nDims>*)tbb::tbb_allocator<Point<double, nDims>>().allocate(_size);
-	for (int i = 0; i < _size; i++)
+	/*override*/ void* operator()(void*)
 	{
-		for (int j = 0; j < nDims; j++)
-		{
-			pPtsArray[i][j] = 0;
-		}
-	}
-
-	return pPtsArray;
-}
-
-///////////////////////////////////////////////////
-//Input coordinate transfomartion filter
-template<int nDims>
-class CoordTransFilter : public tbb::filter
-{
-public:
-	CoordTransFilter(int size);
-	/*override*/void* operator()(void* item);
-
-	void SetTransform(double* delta, long* scale);
-private:
-	int _size;
-	double* _delta;
-	long* _scale;
-};
-
-template<int nDims>
-CoordTransFilter::CoordTransFilter(int size) :
-tbb::filter(parallel),
-_size(size)
-{
-}
-
-template< typename T, int nDims>
-void CoordTransFilter::SetTransform(double* delta, long* scale)
-{
-	_delta = delta;
-	_scale = scale;
-}
-
-template<int nDims>
-/*override*/void* CoordTransFilter::operator()(void* item)
-{
-	Point<double, nDims>*  input = static_cast<Point<double, nDims>* >(item);
-	Point<long, nDims>* output = (Point<long, nDims>*)tbb::tbb_allocator<Point<long, nDims>>().allocate(_size);
-	
-	CoordTransform<double, long, nDims> cotrans(_delta, _scale);
-	
-	for (int i = 0; i < _size; i++)
-	{
-		output[i] = cotrans.Transform(input[i]);
-	}
-
-	tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)input, _size);
-
-	return output;
-}
-
-///////////////////////////////////////////////////
-//Input coordinate transfomartion filter
-template< int nDims, int mBits>
-class SFCGenFilter : public tbb::filter
-{
-public:
-	SFCGenFilter(int size, int sfctype);
-	/*override*/void* operator()(void* item);
-private:
-	int _size;
-	int _sfctype;
-};
-
-template< int nDims, int mBits>
-SFCGenFilter::SFCGenFilter(int size) :
-tbb::filter(parallel),
-_size(size),
-_sfctype(sfctype),
-{
-}
-
-template< int nDims, int mBits>
-/*override*/void* SFCGenFilter::operator()(void* item)
-{
-	Point<long, nDims>*  input = static_cast<Point<long, nDims>*>(item);
-	Point<long, mBits>* output = (Point<long, mBits>*)tbb::tbb_allocator<Point<long, mBits>>().allocate(_size);
-
-	SFCConversion<nDims, mBits> sfcgen;
-	if (_sfctype == 0) //morton
-	{
+		// Read raw points coornidates
+		Point<double, nDims>* pPtsArray = (Point<double, nDims>*)tbb::tbb_allocator<Point<double, nDims>>().allocate(_size);
 		for (int i = 0; i < _size; i++)
 		{
-			sfcgen.ptCoord = input[i];
-			sfcgen.MortonEncode();
-			output[i] = sfcgen.ptBits;
+			for (int j = 0; j < nDims; j++)
+			{
+				pPtsArray[i][j] = 0;
+			}
 		}
+
+		return pPtsArray;
 	}
-	if (_sfctype == 1) //hilbert
-	{
-		for (int i = 0; i < _size; i++)
-		{
-			sfcgen.ptCoord = input[i];
-			sfcgen.HilbertEncode();
-			output[i] = sfcgen.ptBits;
-		}
-	}
-
-	tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)input, _size);
-
-	return output;
-
-}
-
-///////////////////////////////////////////////////
-//Input coordinate transfomartion filter
-template< int nDims, int mBits>
-class BitsConvFilter : public tbb::filter
-{
-public:
-	BitsConvFilter(int size, int conv_type);
-	/*override*/void* operator()(void* item);
-private:
-	int _size;
-	int _conv_type;
 };
 
-template< int nDims, int mBits>
-BitsConvFilter::BitsConvFilter(int size) :
-tbb::filter(parallel),
-_size(size),
-_conv_type(conv_type)
-{
-}
-
-template< int nDims, int mBits>
-/*override*/void* BitsConvFilter::operator()(void* item)
-{
-	Point<long, mBits>*  input = static_cast<Point<long, mBits>*>(item);
-	long* output = (long*)tbb::tbb_allocator<long>().allocate(_size);
-
-	OutputTransform<nDims, mBits> outtrans;
-	for (int i = 0; i < _size; i++)
-	{
-		output[i] = outtrans.BitSequence2Value(input[i]);
-	}
-
-
-	tbb::tbb_allocator<Point<long, mBits>>().deallocate((Point<long, mBits>*)input, _size);
-
-	return output;
-}
+//
+/////////////////////////////////////////////////////
+////Input coordinate transfomartion filter
+//template<int nDims>
+//class CoordTransFilter : public tbb::filter
+//{
+//public:
+//	CoordTransFilter(int size);
+//	/*override*/void* operator()(void* item);
+//
+//	void SetTransform(double* delta, long* scale);
+//private:
+//	int _size;
+//	double* _delta;
+//	long* _scale;
+//};
+//
+//template<int nDims>
+//CoordTransFilter::CoordTransFilter(int size) :
+//tbb::filter(parallel),
+//_size(size)
+//{
+//}
+//
+//template< typename T, int nDims>
+//void CoordTransFilter::SetTransform(double* delta, long* scale)
+//{
+//	_delta = delta;
+//	_scale = scale;
+//}
+//
+//template<int nDims>
+///*override*/void* CoordTransFilter::operator()(void* item)
+//{
+//	Point<double, nDims>*  input = static_cast<Point<double, nDims>* >(item);
+//	Point<long, nDims>* output = (Point<long, nDims>*)tbb::tbb_allocator<Point<long, nDims>>().allocate(_size);
+//	
+//	CoordTransform<double, long, nDims> cotrans(_delta, _scale);
+//	
+//	for (int i = 0; i < _size; i++)
+//	{
+//		output[i] = cotrans.Transform(input[i]);
+//	}
+//
+//	tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)input, _size);
+//
+//	return output;
+//}
+//
+/////////////////////////////////////////////////////
+////Input coordinate transfomartion filter
+//template< int nDims, int mBits>
+//class SFCGenFilter : public tbb::filter
+//{
+//public:
+//	SFCGenFilter(int size, int sfctype);
+//	/*override*/void* operator()(void* item);
+//private:
+//	int _size;
+//	int _sfctype;
+//};
+//
+//template< int nDims, int mBits>
+//SFCGenFilter::SFCGenFilter(int size) :
+//tbb::filter(parallel),
+//_size(size),
+//_sfctype(sfctype),
+//{
+//}
+//
+//template< int nDims, int mBits>
+///*override*/void* SFCGenFilter::operator()(void* item)
+//{
+//	Point<long, nDims>*  input = static_cast<Point<long, nDims>*>(item);
+//	Point<long, mBits>* output = (Point<long, mBits>*)tbb::tbb_allocator<Point<long, mBits>>().allocate(_size);
+//
+//	SFCConversion<nDims, mBits> sfcgen;
+//	if (_sfctype == 0) //morton
+//	{
+//		for (int i = 0; i < _size; i++)
+//		{
+//			sfcgen.ptCoord = input[i];
+//			sfcgen.MortonEncode();
+//			output[i] = sfcgen.ptBits;
+//		}
+//	}
+//	if (_sfctype == 1) //hilbert
+//	{
+//		for (int i = 0; i < _size; i++)
+//		{
+//			sfcgen.ptCoord = input[i];
+//			sfcgen.HilbertEncode();
+//			output[i] = sfcgen.ptBits;
+//		}
+//	}
+//
+//	tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)input, _size);
+//
+//	return output;
+//
+//}
+//
+/////////////////////////////////////////////////////
+////Input coordinate transfomartion filter
+//template< int nDims, int mBits>
+//class BitsConvFilter : public tbb::filter
+//{
+//public:
+//	BitsConvFilter(int size, int conv_type);
+//	/*override*/void* operator()(void* item);
+//private:
+//	int _size;
+//	int _conv_type;
+//};
+//
+//template< int nDims, int mBits>
+//BitsConvFilter::BitsConvFilter(int size) :
+//tbb::filter(parallel),
+//_size(size),
+//_conv_type(conv_type)
+//{
+//}
+//
+//template< int nDims, int mBits>
+///*override*/void* BitsConvFilter::operator()(void* item)
+//{
+//	Point<long, mBits>*  input = static_cast<Point<long, mBits>*>(item);
+//	long* output = (long*)tbb::tbb_allocator<long>().allocate(_size);
+//
+//	OutputTransform<nDims, mBits> outtrans;
+//	for (int i = 0; i < _size; i++)
+//	{
+//		output[i] = outtrans.BitSequence2Value(input[i]);
+//	}
+//
+//
+//	tbb::tbb_allocator<Point<long, mBits>>().deallocate((Point<long, mBits>*)input, _size);
+//
+//	return output;
+//}
 
 ///////////////////////////////////////////////////
 //new whole transfomartion filter
@@ -204,10 +195,57 @@ template<int nDims, int mBits>
 class NewSFCGenFilter : public tbb::filter
 {
 public:
-	NewSFCGenFilter(int size, int sfctype, int conv_type);
-	/*override*/void* operator()(void* item);
+	NewSFCGenFilter(int size, int sfctype, int conv_type) :
+		tbb::filter(parallel),
+		_size(size),
+		_sfctype(sfctype),
+		_conv_type(conv_type)
+	{
+	}
 
-	void SetTransform(double* delta, long* scale);
+	/*override*/void* operator()(void* item)
+	{
+		Point<double, nDims>*  input = static_cast<Point<double, nDims>*>(item);
+		long* output = (long*)tbb::tbb_allocator<long>().allocate(_size);
+
+		CoordTransform<double, long, nDims> cotrans(_delta, _scale);
+
+		SFCConversion<nDims, mBits> sfcgen;
+		OutputSchema<nDims, mBits> outtrans;
+
+		////Point<long, nDims> ptSFC;
+		Point<long, mBits> ptBits;
+
+		for (int i = 0; i < _size; i++)
+		{
+			//ptSFC = cotrans.Transform(input[i]);
+			if (_sfctype == 0) //morton
+			{
+				sfcgen.ptCoord = cotrans.Transform(input[i]);
+				sfcgen.MortonEncode();
+				ptBits = sfcgen.ptBits;
+			}
+
+			if (_sfctype == 1) //hilbert
+			{
+				sfcgen.ptCoord = cotrans.Transform(input[i]);
+				sfcgen.HilbertEncode();
+				ptBits = sfcgen.ptBits;
+			}
+
+			output[i] = outtrans.BitSequence2Value(ptBits);
+		}
+
+		tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)input, _size);
+
+		return output;
+	}
+
+	void SetTransform(double* delta, long* scale)
+	{
+		_delta = delta;
+		_scale = scale;
+	}
 private:
 	int _size;
 
@@ -218,110 +256,50 @@ private:
 	int _conv_type;
 };
 
-template<int nDims, int mBits>
-NewSFCGenFilter::NewSFCGenFilter(int size, int sfctype, int conv_type) :
-tbb::filter(parallel),
-_size(size),
-_sfctype(sfctype),
-_conv_type(conv_type)
-{
-}
-
-template<int nDims, int mBits>
-void NewSFCGenFilter::SetTransform(double* delta, long* scale)
-{
-	_delta = delta;
-	_scale = scale;
-}
-
-template<int nDims, int mBits>
-/*override*/void* NewSFCGenFilter::operator()(void* item)
-{
-	Point<double, nDims>*  input = static_cast<Point<double, nDims>* >(item);
-	long* output = (long*)tbb::tbb_allocator<long>().allocate(_size);
-
-	CoordTransform<double, long, nDims> cotrans(_delta, _scale);
-
-	SFCConversion<nDims, mBits> sfcgen;
-	OutputTransform<nDims, mBits> outtrans;
-
-	//Point<long, nDims> ptSFC;
-	Point<long, mBits> ptBits;
-
-	for (int i = 0; i < _size; i++)
-	{
-		//ptSFC = cotrans.Transform(input[i]);
-		if (_sfctype == 0) //morton
-		{
-			sfcgen.ptCoord = cotrans.Transform(input[i]);
-			sfcgen.MortonEncode();
-			ptBits = sfcgen.ptBits;
-		}
-		
-		if (_sfctype == 1) //hilbert
-		{
-			sfcgen.ptCoord = cotrans.Transform(input[i]);
-			sfcgen.HilbertEncode();
-			ptBits = sfcgen.ptBits;
-		}
-
-		output[i] = outtrans.BitSequence2Value(ptBits);
-	}
-
-	tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)input, _size);
-
-	return output;
-}
-
 //////////////////////////////////////////////////////////
 //! Filter that writes each buffer to a file.
 template<int nDims>
-class OutputFilter : public tbb::filter 
+class OutputFilter : public tbb::filter
 {
 	FILE* my_output_file;
 public:
-	OutputFilter(FILE* output_file, int size);
-	/*override*/void* operator()(void* item);
+	OutputFilter(FILE* output_file, int size) :
+		tbb::filter(serial_in_order),
+		my_output_file(output_file),
+		_size(size)
+	{
+	}
+	/*override*/void* operator()(void* item)
+	{
+		long*  input = static_cast<long*>(item);
+
+		for (int i = 0; i < _size; i++)
+		{
+			for (int j = 0; j < nDims; i++)
+			{
+				//fwrite(input[i], sizeof(long), 1, my_output_file);
+			}
+		}
+
+		return NULL;
+	}
 private:
 	int _size;
 };
 
-template<int nDims>
-OutputFilter::OutputFilter(FILE* output_file, int size) :
-tbb::filter(serial_in_order),
-my_output_file(output_file),
-_size(size)
+
+int run_pipeline(int nthreads, string& InputFileName, string& OutputFileName)
 {
-}
-
-template<int nDims>
-void* OutputFilter::operator()(void* item)
-{
-	long*  input = static_cast<long* >(item);
-
-	for (int i = 0; i < _size; i++)
-	{
-		for (int j = 0; j < nDims; i++)
-		{
-			fwrite(input[i], sizeof(long), 1, my_output_file);
-		}
-	}
-
-	return NULL;
-}
-
-bool silent = false;
-
-int run_pipeline(int nthreads)
-{
-	FILE* input_file = fopen(InputFileName.c_str(), "r");
-	if (!input_file) 
+	FILE* input_file = NULL;
+	fopen_s(&input_file, InputFileName.c_str(), "r");
+	if (!input_file)
 	{
 		throw std::invalid_argument(("Invalid input file name: " + InputFileName).c_str());
 		return 0;
 	}
-	FILE* output_file = fopen(OutputFileName.c_str(), "w");
-	if (!output_file) 
+	FILE* output_file = NULL;
+	fopen_s(&output_file, OutputFileName.c_str(), "w");
+	if (!output_file)
 	{
 		throw std::invalid_argument(("Invalid output file name: " + OutputFileName).c_str());
 		return 0;
@@ -361,9 +339,7 @@ int run_pipeline(int nthreads)
 	fclose(output_file);
 	fclose(input_file);
 
-	if (!silent) 
-		printf("time = %g\n", (t1 - t0).seconds());
-
+	
 	return 1;
 }
 
