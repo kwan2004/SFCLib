@@ -28,10 +28,10 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	///////////////////////
 	////pipeline
-	string strinput("asdf");
-	string stroutput("adfsaf");
+	string strinput("a.txt");
+	string stroutput("b.txt");
 	tbb::task_scheduler_init init_serial(1);
-	run_pipeline(1, strinput, stroutput);
+	run_pipeline<3,20>(1, strinput, stroutput, 1000,  1, 2);
 
 	///////////////////////
 

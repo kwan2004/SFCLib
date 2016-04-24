@@ -17,6 +17,46 @@
 #include "OutputSchema.h"
 
 template<int nDims>
+class InputItem
+{
+public:
+	Point<double, nDims>* pPtsArray;
+	int _actual_size;
+	int _alloc_size;
+
+	InputItem()
+	{
+		_alloc_size = 0;
+		_actual_size = 0;
+		pPtsArray = NULL;
+	}
+};
+
+template<int nDims>
+class OutputItem
+{
+public:
+	Point<double, nDims>* pPtsArray;
+
+	long* out_value;
+	string* out_string;
+
+	int _pt_alloc_size;
+	int _actual_size;
+	int _encode_mode;
+
+	OutputItem()
+	{
+		_actual_size = 0;
+		_encode_mode = 0;
+
+		pPtsArray = NULL;
+		out_value = NULL;
+		out_string = NULL;
+	}
+};
+
+template<int nDims>
 class InputFilter : public tbb::filter
 {
 public:
@@ -35,16 +75,51 @@ private:
 	/*override*/ void* operator()(void*)
 	{
 		// Read raw points coornidates
-		Point<double, nDims>* pPtsArray = (Point<double, nDims>*)tbb::tbb_allocator<Point<double, nDims>>().allocate(_size);
-		for (int i = 0; i < _size; i++)
+		InputItem<nDims>* pItem = (InputItem<nDims>*)tbb::tbb_allocator<InputItem<nDims>>().allocate(1);
+		pItem->pPtsArray = (Point<double, nDims>*)tbb::tbb_allocator<Point<double, nDims>>().allocate(_size);
+		pItem->_alloc_size = _size;
+
+		char buf[1024];
+		char * pch, * lastpos;
+		char ele[64];
+
+		int i, j ;
+		//for (int i = 0; i < _size; i++)
+		//{
+		i = 0;
+		while (1) //always true
 		{
-			for (int j = 0; j < nDims; j++)
+			if (i == _size) break; //full, maximum _size;
+
+			j = 0;
+			memset(buf, 0, 1024);
+			fgets(buf,1024, input_file);
+
+			if (strlen(buf) == 0) break; // no more data
+
+			lastpos = buf;
+			pch = strchr(buf, ',');			
+			while (pch != NULL)
 			{
-				pPtsArray[i][j] = 0;
+				memset(ele, 0, 64);
+				strncpy_s(ele, 64, lastpos, pch - lastpos);
+				//printf("found at %d\n", pch - str + 1);
+				pItem->pPtsArray[i][j] = atof(ele);
+				j++;
+
+				lastpos = pch + 1;
+				pch = strchr(pch + 1, ',');
 			}
+			pItem->pPtsArray[i][j] = atof(lastpos); //final part
+
+			i++;
 		}
 
-		return pPtsArray;
+		pItem->_actual_size = i;
+
+		if (i == 0) return NULL; //read nothing here, terminate
+
+		return pItem;
 	}
 };
 
@@ -195,9 +270,8 @@ template<int nDims, int mBits>
 class NewSFCGenFilter : public tbb::filter
 {
 public:
-	NewSFCGenFilter(int size, int sfctype, int conv_type) :
+	NewSFCGenFilter(int sfctype, int conv_type) :
 		tbb::filter(parallel),
-		_size(size),
 		_sfctype(sfctype),
 		_conv_type(conv_type)
 	{
@@ -205,10 +279,22 @@ public:
 
 	/*override*/void* operator()(void* item)
 	{
-		Point<double, nDims>*  input = static_cast<Point<double, nDims>*>(item);
-		long* output = (long*)tbb::tbb_allocator<long>().allocate(_size);
+		InputItem<nDims>*  pin_item = static_cast<InputItem<nDims>*>(item);
+		Point<double, nDims>*  input = pin_item->pPtsArray;
+		
+		//////////////////////////////
+		OutputItem<nDims>* pout_item = (OutputItem<nDims>*)tbb::tbb_allocator<OutputItem<nDims>>().allocate(1);
+		pout_item->pPtsArray = pin_item->pPtsArray;
+		pout_item->_actual_size = pin_item->_actual_size;
+		pout_item->_pt_alloc_size = pin_item->_alloc_size;
+		pout_item->_encode_mode = _conv_type;
+		if (_conv_type == 0)
+			pout_item->out_value = (long*)tbb::tbb_allocator<long>().allocate(pin_item->_actual_size);
+		else
+			pout_item->out_string = (string*)tbb::tbb_allocator<string>().allocate(pin_item->_actual_size);
 
-		CoordTransform<double, long, nDims> cotrans(_delta, _scale);
+		//////////////////////////////////////////////////////
+		CoordTransform<double, long, nDims> cotrans;
 
 		SFCConversion<nDims, mBits> sfcgen;
 		OutputSchema<nDims, mBits> outtrans;
@@ -216,7 +302,7 @@ public:
 		////Point<long, nDims> ptSFC;
 		Point<long, mBits> ptBits;
 
-		for (int i = 0; i < _size; i++)
+		for (int i = 0; i < pin_item->_actual_size; i++)
 		{
 			//ptSFC = cotrans.Transform(input[i]);
 			if (_sfctype == 0) //morton
@@ -233,12 +319,26 @@ public:
 				ptBits = sfcgen.ptBits;
 			}
 
-			output[i] = outtrans.BitSequence2Value(ptBits);
+			if (_conv_type == 0)
+			{
+				pout_item->out_value[i]= outtrans.BitSequence2Value(ptBits);
+			}
+
+			if (_conv_type == 1)
+			{
+				pout_item->out_string[i]= outtrans.BitSequenceString(ptBits, Base32);
+			}
+
+			if (_conv_type == 2)
+			{
+				pout_item->out_string[i] = outtrans.BitSequenceString(ptBits, Base64);
+			}
 		}
 
-		tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)input, _size);
+		////////////////
+		tbb::tbb_allocator<InputItem<nDims>>().deallocate((InputItem<nDims>*)pin_item, 1); //only release the inputitem
 
-		return output;
+		return pout_item;
 	}
 
 	void SetTransform(double* delta, long* scale)
@@ -246,9 +346,8 @@ public:
 		_delta = delta;
 		_scale = scale;
 	}
-private:
-	int _size;
 
+private:
 	double* _delta;
 	long* _scale;
 
@@ -261,56 +360,88 @@ private:
 template<int nDims>
 class OutputFilter : public tbb::filter
 {
-	FILE* my_output_file;
+	FILE* output_file;
 public:
-	OutputFilter(FILE* output_file, int size) :
+	OutputFilter(FILE* output_file) :
 		tbb::filter(serial_in_order),
-		my_output_file(output_file),
-		_size(size)
+		output_file(output_file)
 	{
 	}
 	/*override*/void* operator()(void* item)
 	{
-		long*  input = static_cast<long*>(item);
+		OutputItem<nDims>*  pout_item = static_cast<OutputItem<nDims>*>(item);
 
-		for (int i = 0; i < _size; i++)
+		///////////////////////
+		for (int i = 0; i < pout_item->_actual_size; i++)
 		{
-			for (int j = 0; j < nDims; i++)
+			for (int j = 0; j < nDims; j++) 
 			{
 				//fwrite(input[i], sizeof(long), 1, my_output_file);
+				fprintf_s(output_file, "%.6f", pout_item->pPtsArray[i][j]);
+				fprintf_s(output_file, ",");
 			}
+
+			// one field for SFC code
+			if (pout_item->_encode_mode == 0 ) ///value type
+				fprintf_s(output_file, "%ld", pout_item->out_value[i]);
+			else
+				fprintf_s(output_file, "%s", pout_item->out_string[i].c_str());
+
+			fprintf_s(output_file, "\n");
 		}
+
+		///////////////////////
+		tbb::tbb_allocator<OutputItem<nDims>>().deallocate((OutputItem<nDims>*)pout_item, 1);
+		tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)pout_item->pPtsArray, pout_item->_pt_alloc_size);
+
+		if (pout_item->_encode_mode == 0)
+			tbb::tbb_allocator<long>().deallocate((long*)pout_item->out_value, pout_item->_actual_size);
+		else
+			tbb::tbb_allocator<string>().deallocate((string*)pout_item->out_string, pout_item->_actual_size);
 
 		return NULL;
 	}
-private:
-	int _size;
 };
 
-
-int run_pipeline(int nthreads, string& InputFileName, string& OutputFileName)
+template<int nDims, int mBits>
+int run_pipeline(int nthreads, string& InputFileName, string& OutputFileName, int item_num, int sfc_type, int conv_type)
 {
 	FILE* input_file = NULL;
-	fopen_s(&input_file, InputFileName.c_str(), "r");
-	if (!input_file)
+	if (InputFileName.size() != 0)
 	{
-		throw std::invalid_argument(("Invalid input file name: " + InputFileName).c_str());
-		return 0;
+		fopen_s(&input_file, InputFileName.c_str(), "r");
+		if (!input_file)
+		{
+			throw std::invalid_argument(("Invalid input file name: " + InputFileName).c_str());
+			return 0;
+		}
 	}
+	else
+	{
+		input_file = stdin;
+	}
+	
 	FILE* output_file = NULL;
-	fopen_s(&output_file, OutputFileName.c_str(), "w");
-	if (!output_file)
+	if (OutputFileName.size() != 0)
 	{
-		throw std::invalid_argument(("Invalid output file name: " + OutputFileName).c_str());
-		return 0;
+		fopen_s(&output_file, OutputFileName.c_str(), "w");
+		if (!output_file)
+		{
+			throw std::invalid_argument(("Invalid output file name: " + OutputFileName).c_str());
+			return 0;
+		}
 	}
+	else
+	{
+		output_file = stdout;
+	}
+	
 
 	// Create the pipeline
 	tbb::pipeline pipeline;
 
-	const int nDims = 3;
 	// Create file-reading writing stage and add it to the pipeline
-	InputFilter<nDims> input_filter(input_file, 1000);
+	InputFilter<nDims> input_filter(input_file, item_num);
 	pipeline.add_filter(input_filter);
 
 	// Create squaring stage and add it to the pipeline
@@ -322,11 +453,11 @@ int run_pipeline(int nthreads, string& InputFileName, string& OutputFileName)
 
 	//BitsConvFilter<> bitsconv_filter;
 	//pipeline.add_filter(bitsconv_filter);
-	NewSFCGenFilter<nDims, 20> nsfcgen_filter(1000, 1, 1);
+	NewSFCGenFilter<nDims, mBits> nsfcgen_filter(sfc_type, conv_type);
 	pipeline.add_filter(nsfcgen_filter);
 
 	// Create file-writing stage and add it to the pipeline
-	OutputFilter<nDims> output_filter(output_file, 1000);
+	OutputFilter<nDims> output_filter(output_file);
 	pipeline.add_filter(output_filter);
 
 	// Run the pipeline

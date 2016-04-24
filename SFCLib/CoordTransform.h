@@ -26,10 +26,13 @@ public:
 
 	CoordTransform(T1* delta, long* scale)
 	{
-		for (int i = 0; i < nDims; i++)
+		if (delta != NULL && scale != NULL)
 		{
-			_delta[i] = delta[i];
-			_scale[i] = scale[i];
+			for (int i = 0; i < nDims; i++)
+			{
+				_delta[i] = delta[i];
+				_scale[i] = scale[i];
+			}
 		}
 	}
 
