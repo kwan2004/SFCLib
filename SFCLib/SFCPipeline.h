@@ -464,12 +464,13 @@ int run_pipeline(int nthreads, string& InputFileName, string& OutputFileName, in
 	tbb::tick_count t0 = tbb::tick_count::now();
 	// Need more than one token in flight per thread to keep all threads 
 	// busy; 2-4 works
-	pipeline.run(nthreads * 4);
+	pipeline.run(nthreads );//* 4
 	tbb::tick_count t1 = tbb::tick_count::now();
 
 	fclose(output_file);
 	fclose(input_file);
 
+	printf("time = %g\n", (t1 - t0).seconds());
 	
 	return 1;
 }
