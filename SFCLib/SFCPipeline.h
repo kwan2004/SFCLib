@@ -341,12 +341,12 @@ public:
 
 			if (_conv_type == 1)
 			{
-				pout_item->out_string[i]= outtrans.BitSequenceString(ptBits, Base32);
+				pout_item->out_string[i]= outtrans.BitSequence2String(ptBits, Base32);
 			}
 
 			if (_conv_type == 2)
 			{
-				pout_item->out_string[i] = outtrans.BitSequenceString(ptBits, Base64);
+				pout_item->out_string[i] = outtrans.BitSequence2String(ptBits, Base64);
 			}
 		}
 
