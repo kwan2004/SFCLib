@@ -44,7 +44,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	{
 		printf("parallel run ");
 		tbb::task_scheduler_init init_parallel;
-		run_pipeline<3, 20>(init_parallel.default_num_threads(), strinput, stroutput, 3000, 1, 2, delta, scale);
+		run_pipeline<3, 20>(init_parallel.default_num_threads(), strinput, stroutput, 3000, 1, 0, delta, scale);
 	}
 
 	///////////////////////
