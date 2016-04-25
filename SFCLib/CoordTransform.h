@@ -24,7 +24,7 @@ public:
 
 	}
 
-	CoordTransform(T1* delta, long* scale)
+	void SetTransform(T1* delta, long* scale)
 	{
 		if (delta != NULL && scale != NULL)
 		{

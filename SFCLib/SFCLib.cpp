@@ -28,15 +28,24 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	///////////////////////
 	////pipeline
-	string strinput("out.xyz");
+	string strinput("1.xyz");
 	string stroutput("b.txt");
-	tbb::task_scheduler_init init_serial(1);
+	
 
-	printf("serial run   ");
-	run_pipeline<3,20>(1, strinput, stroutput, 3000,  1, 0);
+	double delta[3] = { 526000, 4333000, 300 };
+	long  scale[3] = { 100, 100, 1000 };
 
-	printf("parallel run ");
-	run_pipeline<3, 20>(8, strinput, stroutput, 3000, 1, 0);
+	{
+		printf("serial run   ");
+		tbb::task_scheduler_init init_serial(1);
+		run_pipeline<3, 20>(1, strinput, stroutput, 1000, 1, 0, delta, scale);
+	}
+
+	{
+		printf("parallel run ");
+		tbb::task_scheduler_init init_parallel;
+		run_pipeline<3, 20>(init_parallel.default_num_threads(), strinput, stroutput, 1000, 1, 0, delta, scale);
+	}
 
 	///////////////////////
 
