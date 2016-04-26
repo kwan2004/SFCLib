@@ -477,7 +477,7 @@ int run_pipeline(int nthreads, char* InputFileName, char* OutputFileName, \
 	fclose(output_file);
 	fclose(input_file);
 
-	printf("time = %g\n", (t1 - t0).seconds());
+	if (strlen(OutputFileName) != 0) printf("time = %g\n", (t1 - t0).seconds());
 	
 	return 1;
 }

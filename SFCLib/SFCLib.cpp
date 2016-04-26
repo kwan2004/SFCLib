@@ -63,14 +63,14 @@ int main(int argc, char* argv[])
 
 	if (nparallel == 0)
 	{
-		printf("serial run   ");
+		if (strlen(szoutput) !=0 ) printf("serial run   "); //if not stdout ,print sth
 		tbb::task_scheduler_init init_serial(1);
 		run_pipeline<3, 20>(1, szinput, szoutput, 3000, 1, 0, delta, scale);
 	}
 
 	if (nparallel == 1)
 	{
-		printf("parallel run ");
+		if (strlen(szoutput) != 0)  printf("parallel run "); //if not stdout ,print sth
 		tbb::task_scheduler_init init_parallel;
 		run_pipeline<3, 20>(init_parallel.default_num_threads(), szinput, szoutput, 3000, 1, 0, delta, scale);
 	}
