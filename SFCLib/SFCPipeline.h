@@ -386,15 +386,15 @@ public:
 			for (int j = 0; j < nDims; j++) 
 			{
 				//fwrite(input[i], sizeof(long), 1, my_output_file);
-				fprintf_s(output_file, "%.6f", pout_item->pPtsArray[i][j]);
-				fprintf_s(output_file, ",");
+				fprintf(output_file, "%.6f", pout_item->pPtsArray[i][j]);
+				fprintf(output_file, ",");
 			}
 
 			// one field for SFC code
 			if (pout_item->_encode_mode == 0 ) ///value type
-				fprintf_s(output_file, "%lu\n", pout_item->out_value[i]);
+				fprintf(output_file, "%lu\n", pout_item->out_value[i]);
 			else
-				fprintf_s(output_file, "%s\n", pout_item->out_string[i].c_str());
+				fprintf(output_file, "%s\n", pout_item->out_string[i].c_str());
 		}
 
 		///////////////////////

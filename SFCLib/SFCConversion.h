@@ -23,7 +23,7 @@ public:
 	Point<long, nDims> ptCoord; //n*m
 	Point<long,  mBits> ptBits; //m*n
 
-	SFCConversion::SFCConversion()
+	SFCConversion()
 	{
 		for (int i = 0; i < nDims; i++)
 		{
