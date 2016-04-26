@@ -392,7 +392,7 @@ public:
 
 			// one field for SFC code
 			if (pout_item->_encode_mode == 0 ) ///value type
-				fprintf_s(output_file, "%ld\n", pout_item->out_value[i]);
+				fprintf_s(output_file, "%lu\n", pout_item->out_value[i]);
 			else
 				fprintf_s(output_file, "%s\n", pout_item->out_string[i].c_str());
 		}
@@ -412,16 +412,15 @@ public:
 };
 
 template<int nDims, int mBits>
-int run_pipeline(int nthreads, string& InputFileName, string& OutputFileName, \
+int run_pipeline(int nthreads, char* InputFileName, char* OutputFileName, \
 	int item_num, int sfc_type, int conv_type, double* delta, long* scale)
 {
 	FILE* input_file = NULL;
-	if (InputFileName.size() != 0)
+	if (InputFileName != NULL && strlen(InputFileName) != 0)
 	{
-		fopen_s(&input_file, InputFileName.c_str(), "r");
+		fopen_s(&input_file, InputFileName, "r");
 		if (!input_file)
 		{
-			throw std::invalid_argument(("Invalid input file name: " + InputFileName).c_str());
 			return 0;
 		}
 	}
@@ -431,20 +430,18 @@ int run_pipeline(int nthreads, string& InputFileName, string& OutputFileName, \
 	}
 	
 	FILE* output_file = NULL;
-	if (OutputFileName.size() != 0)
+	if (OutputFileName != NULL && strlen(OutputFileName) != 0)
 	{
-		fopen_s(&output_file, OutputFileName.c_str(), "w");
+		fopen_s(&output_file, OutputFileName, "w");
 		if (!output_file)
 		{
-			throw std::invalid_argument(("Invalid output file name: " + OutputFileName).c_str());
 			return 0;
 		}
 	}
 	else
 	{
 		output_file = stdout;
-	}
-	
+	}	
 
 	// Create the pipeline
 	tbb::pipeline pipeline;

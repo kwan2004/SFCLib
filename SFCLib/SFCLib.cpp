@@ -24,27 +24,55 @@ void print_bits(unsigned int x)
 	//printf("\n");
 }
 
-int _tmain(int argc, _TCHAR* argv[])
+int main(int argc, char* argv[])
 {
+	if (argc == 1) return 0;
+	if (argc % 2 != 1) return 0; //attribute pair plus exe_name
+
+	int nparallel;
+	char szinput[256] = { 0 };//1.xyz
+	char szoutput[256] = { 0 };
+
+	for (int i = 1; i < argc; i++)
+	{
+		if (strcmp(argv[i], "-p") == 0)//if parallel
+		{
+			i++;
+			nparallel = atoi(argv[i]);
+			continue;
+		}
+
+		if (strcmp(argv[i], "-i") == 0)//input file path
+		{
+			i++;
+			strcpy_s(szinput, argv[i]);
+			continue;
+		}
+
+		if (strcmp(argv[i], "-o") == 0)//output file path
+		{
+			i++;
+			strcpy_s(szoutput, argv[i]);
+		}
+	}	 
+
 	///////////////////////
 	////pipeline
-	string strinput("1.xyz");
-	string stroutput("b.txt");
-	
-
 	double delta[3] = { 526000, 4333000, 300 };
 	long  scale[3] = { 100, 100, 1000 };
 
+	if (nparallel == 0)
 	{
 		printf("serial run   ");
 		tbb::task_scheduler_init init_serial(1);
-		run_pipeline<3, 20>(1, strinput, stroutput, 3000, 1, 0, delta, scale);
+		run_pipeline<3, 20>(1, szinput, szoutput, 3000, 1, 0, delta, scale);
 	}
 
+	if (nparallel == 1)
 	{
 		printf("parallel run ");
 		tbb::task_scheduler_init init_parallel;
-		run_pipeline<3, 20>(init_parallel.default_num_threads(), strinput, stroutput, 3000, 1, 0, delta, scale);
+		run_pipeline<3, 20>(init_parallel.default_num_threads(), szinput, szoutput, 3000, 1, 0, delta, scale);
 	}
 
 	///////////////////////
