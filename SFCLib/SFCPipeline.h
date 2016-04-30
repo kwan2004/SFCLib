@@ -417,14 +417,14 @@ public:
 		}
 
 		///////////////////////
-		/*tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)pout_item->pPtsArray, pout_item->_pt_alloc_size);
+		tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)pout_item->pPtsArray, pout_item->_pt_alloc_size);
 				
 		if (pout_item->_encode_mode == 0)
 			tbb::tbb_allocator<long>().deallocate((long*)pout_item->out_value, pout_item->_actual_size);
 		else
-			tbb::tbb_allocator<string>().deallocate((string*)pout_item->out_string, pout_item->_actual_size);
+			tbb::tbb_allocator<char>().deallocate((char*)pout_item->out_string, pout_item->_actual_size * pout_item->_str_len);
 
-		tbb::tbb_allocator<OutputItem<nDims>>().deallocate((OutputItem<nDims>*)pout_item, 1);*/
+		tbb::tbb_allocator<OutputItem<nDims>>().deallocate((OutputItem<nDims>*)pout_item, 1);
 
 		return NULL;
 	}
