@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 	{
 		if (strlen(szoutput) !=0 ) printf("serial run   "); //if not stdout ,print sth
 		tbb::task_scheduler_init init_serial(1);
-		run_pipeline<3, 20>(1, szinput, szoutput, 3000, 1, 0, delta, scale);
+		run_pipeline<3, 20>(1, szinput, szoutput, 3000, 1, 1, delta, scale);
 	}
 
 	if (nparallel == 1)

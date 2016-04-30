@@ -9,7 +9,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cctype>
-#include "common/utility/utility.h"
+//#include "common/utility/utility.h"
 
 #include "Point.h"
 #include "CoordTransform.h"
@@ -40,16 +40,19 @@ public:
 	Point<double, nDims>* pPtsArray;
 
 	long* out_value;
-	string* out_string;
+	char* out_string;
 
 	int _pt_alloc_size;
 	int _actual_size;
 	int _encode_mode;
+	int _str_len;
 
 	OutputItem()
 	{
 		_actual_size = 0;
 		_encode_mode = 0;
+
+		_str_len = 0;
 
 		pPtsArray = NULL;
 		out_value = NULL;
@@ -293,6 +296,12 @@ public:
 		Point<double, nDims>*  input = pin_item->pPtsArray;
 		
 		//////////////////////////////
+		int base;
+		int ntotalbits = mBits * nDims;
+		if (_conv_type == 1) base = 5;
+		if (_conv_type == 2) base = 6;
+		int nstrlen = (ntotalbits % base) ? (ntotalbits / base + 2) : (ntotalbits / base + 1); //the last is for \0
+		
 		OutputItem<nDims>* pout_item = (OutputItem<nDims>*)tbb::tbb_allocator<OutputItem<nDims>>().allocate(1);
 		pout_item->pPtsArray = pin_item->pPtsArray;
 		pout_item->_actual_size = pin_item->_actual_size;
@@ -301,7 +310,12 @@ public:
 		if (_conv_type == 0)
 			pout_item->out_value = (long*)tbb::tbb_allocator<long>().allocate(pin_item->_actual_size);
 		else
-			pout_item->out_string = (string*)tbb::tbb_allocator<string>().allocate(pin_item->_actual_size);
+		{ 
+			pout_item->out_string = (char*)tbb::tbb_allocator<char>().allocate(pin_item->_actual_size * nstrlen);
+			pout_item->_str_len = nstrlen;
+
+			memset(pout_item->out_string, 0, pin_item->_actual_size * nstrlen); ///initialize to zero
+		}
 
 		//////////////////////////////////////////////////////
 		CoordTransform<double, long, nDims> cotrans;
@@ -341,12 +355,14 @@ public:
 
 			if (_conv_type == 1)
 			{
-				pout_item->out_string[i]= outtrans.BitSequence2String(ptBits, Base32);
+				strcpy_s(pout_item->out_string + i* nstrlen, nstrlen, outtrans.BitSequence2String(ptBits, Base32).c_str());
+				//pout_item->out_string[i] = "a";//outtrans.BitSequence2String(ptBits, Base32);
 			}
 
 			if (_conv_type == 2)
 			{
-				pout_item->out_string[i] = outtrans.BitSequence2String(ptBits, Base64);
+				strcpy_s(pout_item->out_string + i* nstrlen, nstrlen, outtrans.BitSequence2String(ptBits, Base64).c_str());
+				//pout_item->out_string[i] = "a";//outtrans.BitSequence2String(ptBits, Base64);
 			}
 		}
 
@@ -394,18 +410,21 @@ public:
 			if (pout_item->_encode_mode == 0 ) ///value type
 				fprintf(output_file, "%lu\n", pout_item->out_value[i]);
 			else
-				fprintf(output_file, "%s\n", pout_item->out_string[i].c_str());
+			{
+				fprintf(output_file, "%s\n", pout_item->out_string + i * pout_item->_str_len); //pout_item->out_string[i].c_str()
+			}
+				
 		}
 
 		///////////////////////
-		tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)pout_item->pPtsArray, pout_item->_pt_alloc_size);
+		/*tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)pout_item->pPtsArray, pout_item->_pt_alloc_size);
 				
 		if (pout_item->_encode_mode == 0)
 			tbb::tbb_allocator<long>().deallocate((long*)pout_item->out_value, pout_item->_actual_size);
 		else
 			tbb::tbb_allocator<string>().deallocate((string*)pout_item->out_string, pout_item->_actual_size);
 
-		tbb::tbb_allocator<OutputItem<nDims>>().deallocate((OutputItem<nDims>*)pout_item, 1);
+		tbb::tbb_allocator<OutputItem<nDims>>().deallocate((OutputItem<nDims>*)pout_item, 1);*/
 
 		return NULL;
 	}
