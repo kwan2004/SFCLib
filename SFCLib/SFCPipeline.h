@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cctype>
+//#include "common/utility/utility.h"
 
 #include "Point.h"
 #include "CoordTransform.h"
@@ -295,11 +296,19 @@ public:
 		Point<double, nDims>*  input = pin_item->pPtsArray;
 		
 		//////////////////////////////
-		int base = 6;
+		int base;
+		int nstrlen;
 		int ntotalbits = mBits * nDims;
-		if (_conv_type == 1) base = 5;
-		if (_conv_type == 2) base = 6;
-		int nstrlen = (ntotalbits % base) ? (ntotalbits / base + 2) : (ntotalbits / base + 1); //the last is for \0
+		if (_conv_type == 1)
+		{
+			base = 5;
+			nstrlen = (ntotalbits % base) ? (ntotalbits / base + 2) : (ntotalbits / base + 1); //the last is for \0
+		}
+		if (_conv_type == 2)
+		{
+			base = 6;
+			nstrlen = (ntotalbits % base) ? (ntotalbits / base + 2) : (ntotalbits / base + 1); //the last is for \0
+		}
 		
 		OutputItem<nDims>* pout_item = (OutputItem<nDims>*)tbb::tbb_allocator<OutputItem<nDims>>().allocate(1);
 		pout_item->pPtsArray = pin_item->pPtsArray;
@@ -354,7 +363,7 @@ public:
 
 			if (_conv_type == 1)
 			{
-				strcpy_s(pout_item->out_string + i* nstrlen, nstrlen, outtrans.BitSequence2String(ptBits, Base32).c_str());				
+				strcpy_s(pout_item->out_string + i* nstrlen, nstrlen, outtrans.BitSequence2String(ptBits, Base32).c_str());
 				//pout_item->out_string[i] = "a";//outtrans.BitSequence2String(ptBits, Base32);
 			}
 
