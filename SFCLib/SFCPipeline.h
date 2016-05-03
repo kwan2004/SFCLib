@@ -9,7 +9,6 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cctype>
-//#include "common/utility/utility.h"
 
 #include "Point.h"
 #include "CoordTransform.h"
@@ -296,7 +295,7 @@ public:
 		Point<double, nDims>*  input = pin_item->pPtsArray;
 		
 		//////////////////////////////
-		int base;
+		int base = 6;
 		int ntotalbits = mBits * nDims;
 		if (_conv_type == 1) base = 5;
 		if (_conv_type == 2) base = 6;
@@ -355,7 +354,7 @@ public:
 
 			if (_conv_type == 1)
 			{
-				strcpy_s(pout_item->out_string + i* nstrlen, nstrlen, outtrans.BitSequence2String(ptBits, Base32).c_str());
+				strcpy_s(pout_item->out_string + i* nstrlen, nstrlen, outtrans.BitSequence2String(ptBits, Base32).c_str());				
 				//pout_item->out_string[i] = "a";//outtrans.BitSequence2String(ptBits, Base32);
 			}
 

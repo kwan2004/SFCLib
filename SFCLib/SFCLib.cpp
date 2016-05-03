@@ -29,7 +29,9 @@ int main(int argc, char* argv[])
 	if (argc == 1) return 0;
 	if (argc % 2 != 1) return 0; //attribute pair plus exe_name
 
-	int nparallel;
+	int nparallel = 0;
+	int nsfc_type = 0;
+	int nencode_type = 0;
 	char szinput[256] = { 0 };//1.xyz
 	char szoutput[256] = { 0 };
 
@@ -53,6 +55,20 @@ int main(int argc, char* argv[])
 		{
 			i++;
 			strcpy_s(szoutput, argv[i]);
+			continue;
+		}
+
+		if (strcmp(argv[i], "-s") == 0)//sfc conversion type
+		{
+			i++;
+			nsfc_type = atoi(argv[i]);
+			continue;
+		}
+
+		if (strcmp(argv[i], "-e") == 0)//output encoding type
+		{
+			i++;
+			nencode_type = atoi(argv[i]);
 		}
 	}	 
 
@@ -65,14 +81,14 @@ int main(int argc, char* argv[])
 	{
 		if (strlen(szoutput) !=0 ) printf("serial run   "); //if not stdout ,print sth
 		tbb::task_scheduler_init init_serial(1);
-		run_pipeline<3, 20>(1, szinput, szoutput, 3000, 1, 1, delta, scale);
+		run_pipeline<3, 20>(1, szinput, szoutput, 3000, nsfc_type, nencode_type, delta, scale);
 	}
 
 	if (nparallel == 1)
 	{
 		if (strlen(szoutput) != 0)  printf("parallel run "); //if not stdout ,print sth
 		tbb::task_scheduler_init init_parallel;
-		run_pipeline<3, 20>(init_parallel.default_num_threads(), szinput, szoutput, 3000, 1, 0, delta, scale);
+		run_pipeline<3, 20>(init_parallel.default_num_threads(), szinput, szoutput, 3000, nsfc_type, nencode_type, delta, scale);
 	}
 
 	///////////////////////

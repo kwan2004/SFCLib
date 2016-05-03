@@ -1,6 +1,6 @@
-#pragma once
 #ifndef RECTANGLE_H_
 #define RECTANGLE_H_
+
 #include"Point.h"
 #include<vector>
 
