@@ -297,10 +297,18 @@ public:
 		
 		//////////////////////////////
 		int base;
+		int nstrlen;
 		int ntotalbits = mBits * nDims;
-		if (_conv_type == 1) base = 5;
-		if (_conv_type == 2) base = 6;
-		int nstrlen = (ntotalbits % base) ? (ntotalbits / base + 2) : (ntotalbits / base + 1); //the last is for \0
+		if (_conv_type == 1)
+		{
+			base = 5;
+			nstrlen = (ntotalbits % base) ? (ntotalbits / base + 2) : (ntotalbits / base + 1); //the last is for \0
+		}
+		if (_conv_type == 2)
+		{
+			base = 6;
+			nstrlen = (ntotalbits % base) ? (ntotalbits / base + 2) : (ntotalbits / base + 1); //the last is for \0
+		}
 		
 		OutputItem<nDims>* pout_item = (OutputItem<nDims>*)tbb::tbb_allocator<OutputItem<nDims>>().allocate(1);
 		pout_item->pPtsArray = pin_item->pPtsArray;

@@ -65,14 +65,14 @@ int main(int argc, char* argv[])
 	{
 		if (strlen(szoutput) !=0 ) printf("serial run   "); //if not stdout ,print sth
 		tbb::task_scheduler_init init_serial(1);
-		run_pipeline<3, 20>(1, szinput, szoutput, 3000, 1, 1, delta, scale);
+		run_pipeline<3, 20>(1, szinput, szoutput, 3000, 2, 0, delta, scale);
 	}
 
 	if (nparallel == 1)
 	{
 		if (strlen(szoutput) != 0)  printf("parallel run "); //if not stdout ,print sth
 		tbb::task_scheduler_init init_parallel;
-		run_pipeline<3, 20>(init_parallel.default_num_threads(), szinput, szoutput, 3000, 1, 0, delta, scale);
+		run_pipeline<3, 20>(init_parallel.default_num_threads(), szinput, szoutput, 3000, 1, 2, delta, scale);
 	}
 
 	///////////////////////
@@ -181,7 +181,7 @@ int main(int argc, char* argv[])
 
 	
 
-	//system("pause");
+	system("pause");
 	return 0;
 }
 
