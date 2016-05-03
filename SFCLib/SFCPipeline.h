@@ -304,7 +304,7 @@ public:
 			base = 5;
 			nstrlen = (ntotalbits % base) ? (ntotalbits / base + 2) : (ntotalbits / base + 1); //the last is for \0
 		}
-		if (_conv_type == 2)
+		else if (_conv_type == 2)
 		{
 			base = 6;
 			nstrlen = (ntotalbits % base) ? (ntotalbits / base + 2) : (ntotalbits / base + 1); //the last is for \0
