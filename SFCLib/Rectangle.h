@@ -9,7 +9,7 @@ using std::vector;
 #define STATIC_ASSERT( e ) static_assert( e, "!(" #e ")" )
 
 template< typename T, int nDims = 2>
-class Rectangle
+class Rect
 {
 public:
 	Point<T, nDims> minPoint;
@@ -17,14 +17,14 @@ public:
 	int dimensions = nDims;
 public:
 
-	Rectangle(Point<T, nDims> minPoint, Point<T, nDims> maxPoint)
+	Rect(Point<T, nDims> minPoint, Point<T, nDims> maxPoint)
 	{
 		this->minPoint = minPoint;
 		this->maxPoint = maxPoint;
 		this->dimensions = nDims;
 	}
 
-	Rectangle()
+	Rect()
 	{
 
 	}

@@ -2,14 +2,16 @@
 //
 
 #include "stdafx.h"
-#include "Rectangle.h"
+
 #include "Point.h"
+#include "Rectangle.h"
+
 #include "SFCConversion.h"
 #include "QueryBySFC.h"
 #include "OutputSchema.h"
 #include "SFCPipeline.h"
 
-#include "tbb/task_scheduler_init.h"
+//#include "tbb/task_scheduler_init.h"
 
 #include <iostream>
 using namespace std;
@@ -26,8 +28,12 @@ void print_bits(unsigned int x)
 
 int main(int argc, char* argv[])
 {
+	/*
 	if (argc == 1) return 0;
 	if (argc % 2 != 1) return 0; //attribute pair plus exe_name
+
+	const int ndims = 3;
+	const int mbits = 20;
 
 	int nparallel = 0;
 	int nsfc_type = 0;
@@ -81,51 +87,52 @@ int main(int argc, char* argv[])
 	{
 		if (strlen(szoutput) !=0 ) printf("serial run   "); //if not stdout ,print sth
 		tbb::task_scheduler_init init_serial(1);
-		run_pipeline<3, 20>(1, szinput, szoutput, 3000, nsfc_type, nencode_type, delta, scale);
+		run_pipeline<ndims, mbits>(1, szinput, szoutput, 3000, nsfc_type, nencode_type, delta, scale);
 	}
 
 	if (nparallel == 1)
 	{
 		if (strlen(szoutput) != 0)  printf("parallel run "); //if not stdout ,print sth
 		tbb::task_scheduler_init init_parallel;
-		run_pipeline<3, 20>(init_parallel.default_num_threads(), szinput, szoutput, 3000, nsfc_type, nencode_type, delta, scale);
+		run_pipeline<ndims, mbits>(init_parallel.default_num_threads(), szinput, szoutput, 3000, nsfc_type, nencode_type, delta, scale);
 	}
+	*/
 
 	///////////////////////
 
 	///////////////////////////////////////
 	////2D case 8*8, i.e n=2, m=3
-	//Point<long, 2> ptCoord; //SFC coordinates n=2
-	//Point<long, 3> ptBits; //SFC bit sequence m=3
+	Point<long, 2> ptCoord; //SFC coordinates n=2
+	Point<long, 3> ptBits; //SFC bit sequence m=3
 
-	//SFCConversion<2, 3> sfc;
-	//OutputSchema<2, 3> trans;
-	//	
-	//for (int i = 0; i < 8; i++)
-	//{
-	//	for (int j = 0; j < 8; j++)
-	//	{
-	//		ptCoord[0] = j;//i
-	//		ptCoord[1] = i;//j
+	SFCConversion<2, 3> sfc;
+	OutputSchema<2, 3> trans;
+		
+	for (int i = 0; i < 8; i++)
+	{
+		for (int j = 0; j < 8; j++)
+		{
+			ptCoord[0] = i;//i
+			ptCoord[1] = j;//j
 
-	//		sfc.ptCoord = ptCoord;
-	//		//sfc.MortonEncode();
-	//		sfc.HilbertEncode();
-	//		ptBits = sfc.ptBits;
+			sfc.ptCoord = ptCoord;
+			//sfc.MortonEncode();
+			sfc.HilbertEncode();
+			ptBits = sfc.ptBits;
 
-	//		/*cout << i << ", " << j << "---";
-	//		print_bits(i); cout << " ";
-	//		print_bits(j); cout << " ---";
-	//		print_bits(ptBits[0]); cout << " ";
-	//		print_bits(ptBits[1]); cout << " ";
-	//		print_bits(ptBits[2]);
-	//		cout << endl;*/
-	//		
-	//		long outval = trans.BitSequence2Value(ptBits);
+			/*cout << i << ", " << j << "---";
+			print_bits(i); cout << " ";
+			print_bits(j); cout << " ---";
+			print_bits(ptBits[0]); cout << " ";
+			print_bits(ptBits[1]); cout << " ";
+			print_bits(ptBits[2]);
+			cout << endl;*/
+			
+			long outval = trans.BitSequence2Value(ptBits);
 
-	//		cout << i << ", " << j << "====" << outval <<endl;
-	//	}
-	//}
+			cout << i << ", " << j << "====" << outval <<endl;
+		}
+	}
 
 	//
 	//////////////////////////////////
@@ -152,15 +159,15 @@ int main(int argc, char* argv[])
 
 	//
 	////2D sample
-	//long Point1[2] = { 3, 2 };
-	//long Point2[2] = { 6, 6 };
-	//Point<long, 2> MinPoint(Point1);
-	//Point<long, 2> MaxPoint(Point2);
-	//Rectangle<long, 2> rec(MinPoint, MaxPoint);
-	//QueryBySFC<long, 2, 3> querytest;
-	//querytest.RangeQueryByBruteforce(rec, Morton);
-	////querytest.RangeQueryByBruteforce(rec);
-	//querytest.RangeQueryByRecursive(rec, Morton);
+	long Point1[2] = { 3, 2};
+	long Point2[2] = { 5, 5 };
+	Point<long, 2> MinPoint(Point1);
+	Point<long, 2> MaxPoint(Point2);
+	Rect<long, 2> rec(MinPoint, MaxPoint);
+	QueryBySFC<long, 2, 3> querytest;
+	querytest.RangeQueryByBruteforce(rec, Hilbert);
+
+	querytest.RangeQueryByRecursive(rec, Hilbert);
 
 	//SFCConversion<2, 3> sfc2D;
 	//OutputSchema<2, 3> trans2D;
