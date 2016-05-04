@@ -136,7 +136,7 @@ private:
 	int query_approximate(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode);
 
 public:
-	vector<vector<long>>  RangeQueryByBruteforce(Rect<T, nDims> queryRect, SFCType code_type);
+	vector<long>  RangeQueryByBruteforce(Rect<T, nDims> queryRect, SFCType code_type);
 	void RangeQueryByRecursive(Rect<T, nDims> queryrect, SFCType code_type);
 
 };
@@ -376,8 +376,10 @@ void QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive(Rect<T, nDims> queryrect
 				pt = sfc.ptBits;
 				val = trans.BitSequence2Value(pt);
 				temCode.push_back(val);
+
 				cout << val << endl;
 			}
+
 			resultCode.push_back(temCode);
 		}
 	}
@@ -401,8 +403,10 @@ void QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive(Rect<T, nDims> queryrect
 				pt = sfc.ptBits;
 				val = trans.BitSequence2Value(pt);
 				temCode.push_back(val);
+
 				cout << val << endl;
 			}
+
 			resultCode.push_back(temCode);
 		}
 	}
@@ -448,7 +452,7 @@ void QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive(Rect<T, nDims> queryrect
 
 
 template< typename T, int nDims, int mBits>
-vector<vector<long>>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce(Rect<T, nDims> queryRect, SFCType code_type)
+vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce(Rect<T, nDims> queryRect, SFCType code_type)
 {
 	Point<T, nDims> minPoint = queryRect.GetMinPoint();
 	Point<T, nDims> maxPoint = queryRect.GetMaxPoint();
@@ -524,28 +528,45 @@ vector<vector<long>>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce(Rect<T
 			result[count] = val;
 			//points.push_back(point);
 		}
-	}
-	
+	}	
 
 	delete[]para;
 	delete[]difference;
 
 	//sort the morton values
 	std::sort(result, result + size);
+
 	///the test code.it can be deleted
 	//////////////////////////////////////
-	printf("\n morton sort result: \n");
+	/*printf("\n morton sort result: \n");
 	for (int i = 0; i < size; i++)
 	{
 		printf("%d\t", result[i]);
 	}
-	printf("\n");
+	printf("\n");*/
 
-	vector<vector<long>> resultVector;
-	int flag = 0;
+	vector<long> rangevec;
+	int nstart = 0;
 	for (int i = 0; i < size - 1; i++)
 	{
-		if (result[i + 1] == (result[i] + 1))
+		if (result[i + 1] != (result[i] + 1))
+		{
+			rangevec.push_back(result[nstart]);
+			rangevec.push_back(result[i]);
+
+			//printf("%d---%d\n", result[nstart], result[i]);
+
+			nstart = i+1;
+		}
+
+		if (result[i + 1] == (result[i] + 1) && (i + 1) == size - 1)
+		{
+			rangevec.push_back(result[nstart]);
+			rangevec.push_back(result[i]);
+
+			//printf("%d---%d\n", result[nstart], result[i]);
+		}
+		/*if (result[i + 1] == (result[i] + 1))
 		{
 			if ((i + 1) == size - 1)
 			{
@@ -575,22 +596,20 @@ vector<vector<long>>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce(Rect<T
 				vector<long>  last = { result[flag] };
 				resultVector.push_back(last);
 			}
-		}
+		}*/
 	}
 
-	printf("\n morton final result: \n");
-	for (int i = 0; i < resultVector.size(); i++)
-	{
-		printf("\n");
-		for (int j = 0; j < resultVector[i].size(); j++)
-		{
-			printf("%d\t", resultVector[i][j]);
-		}
+	//printf("\n morton final result: \n");
+	//for (int i = 0; i < rangevec.size(); i = i + 2)
+	//{
+	//	//printf("\n");
+	//	
+	//	printf("%d---%d\n", rangevec[i], rangevec[i + 1]);
 
-	}
-	printf("\n");
+	//}
+	//printf("\n");
 
 	delete[]result;
-	return resultVector;
+	return rangevec;
 }
 #endif

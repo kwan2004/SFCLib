@@ -165,7 +165,16 @@ int main(int argc, char* argv[])
 	Point<long, 2> MaxPoint(Point2);
 	Rect<long, 2> rec(MinPoint, MaxPoint);
 	QueryBySFC<long, 2, 3> querytest;
-	querytest.RangeQueryByBruteforce(rec, Hilbert);
+	vector<long> vec_res = querytest.RangeQueryByBruteforce(rec, Hilbert);
+
+	printf("\n morton final result: \n");
+	for (int i = 0; i < vec_res.size(); i = i + 2)
+	{
+		//printf("\n");
+
+		printf("%d---%d\n", vec_res[i], vec_res[i + 1]);
+
+	}
 
 	querytest.RangeQueryByRecursive(rec, Hilbert);
 
@@ -176,13 +185,15 @@ int main(int argc, char* argv[])
 	//string str32 = trans2D.BitSequence2String(sfc2D.ptBits, Base64);
 
 	////3D sample
-	//long Point31[3] = { 4, 2, 5 };
-	//long Point32[3] = { 5, 4, 7 };
-	//Point<long, 3> MinPoint3(Point31);
-	//Point<long, 3> MaxPoint3(Point32);
-	//Rectangle<long, 3> rec3(MinPoint3, MaxPoint3);
-	//QueryBySFC<long, 3, 10> querytest3;
-	//querytest3.RangeQueryByBruteforce(rec3, Morton);
+	/*long Point31[3] = { 4, 2, 5 };
+	long Point32[3] = { 5, 4, 7 };
+	Point<long, 3> MinPoint3(Point31);
+	Point<long, 3> MaxPoint3(Point32);
+
+	Rect<long, 3> rec3(MinPoint3, MaxPoint3);
+
+	QueryBySFC<long, 3, 10> querytest3;
+	querytest3.RangeQueryByBruteforce(rec3, Morton);*/
 	//querytest3.RangeQueryByRecursive(rec3, Morton);
 
 	//SFCConversion<3, 9> sfc3D;
