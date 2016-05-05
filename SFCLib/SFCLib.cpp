@@ -176,7 +176,16 @@ int main(int argc, char* argv[])
 
 	}
 
-	querytest.RangeQueryByRecursive(rec, Hilbert);
+	vector<long> vec_res2= querytest.RangeQueryByRecursive(rec, Hilbert);
+
+	printf("\n hilbert final result: \n");
+	for (int i = 0; i < vec_res2.size(); i = i + 2)
+	{
+		//printf("\n");
+
+		printf("%d---%d\n", vec_res2[i], vec_res2[i + 1]);
+
+	}
 
 	//SFCConversion<2, 3> sfc2D;
 	//OutputSchema<2, 3> trans2D;

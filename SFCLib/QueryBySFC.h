@@ -133,11 +133,11 @@ class QueryBySFC
 private:
 	//vector<Point<T, nDims>> getAllPoints(Rect<T, nDims> queryRect);
 	
-	int query_approximate(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode);
+	void query_approximate(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode);
 
 public:
 	vector<long>  RangeQueryByBruteforce(Rect<T, nDims> queryRect, SFCType code_type);
-	void RangeQueryByRecursive(Rect<T, nDims> queryrect, SFCType code_type);
+	vector<long>  RangeQueryByRecursive(Rect<T, nDims> queryrect, SFCType code_type);
 
 };
 
@@ -196,7 +196,7 @@ vector<Point<T, nDims>> QueryBySFC<T, nDims, mBits>::getAllPoints(Rect<T, nDims>
 */
 
 template<typename T, int nDims, int mBits>
-int QueryBySFC<T, nDims, mBits>::query_approximate(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode)
+void QueryBySFC<T, nDims, mBits>::query_approximate(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode)
 {
 	/*
 	divide current tree node
@@ -216,7 +216,7 @@ int QueryBySFC<T, nDims, mBits>::query_approximate(TreeNode<T, nDims> nd, Rect<T
 			if (nchild[i].Spatialrelationship(queryrect) == 0)  //equal: stop
 			{
 				resultTNode.push_back(nchild[i]);
-				return 0;
+				return ;
 			}
 			else if (nchild[i].Spatialrelationship(queryrect) == 2)  //intersect: divide queryrectangle
 			{
@@ -304,7 +304,7 @@ int QueryBySFC<T, nDims, mBits>::query_approximate(TreeNode<T, nDims> nd, Rect<T
 }
 
 template< typename T, int nDims, int mBits>
-void QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive(Rect<T, nDims> queryrect, SFCType code_type)
+vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive(Rect<T, nDims> queryrect, SFCType code_type)
 {
 	vector<TreeNode<T, nDims>> resultTNode;  //tree nodes correspond to queryRectangle
 	TreeNode<T, nDims> root;  //root node
@@ -350,7 +350,7 @@ void QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive(Rect<T, nDims> queryrect
 
 		resultPoints.push_back(nodePoints);
 
-		cout << "level: " << resultTNode[i].level << "\t" << endl;
+		//cout << "level: " << resultTNode[i].level << "\t" << endl;
 	}
 
 	vector<vector<long>> resultCode;
@@ -411,7 +411,9 @@ void QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive(Rect<T, nDims> queryrect
 		}
 	}
 
-	vector<vector<long>> results(resultCode.size());
+	vector<long> vec_return;
+
+	//vector<vector<long>> results(resultCode.size());
 	long min, max;
 	for (int i = 0; i < resultCode.size(); i++)
 	{
@@ -430,24 +432,25 @@ void QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive(Rect<T, nDims> queryrect
 		}
 		if (min != max)
 		{
-			results[i].push_back(min);
-			results[i].push_back(max);
+			//results[i].push_back(min);
+			//results[i].push_back(max);
+			vec_return.push_back(min);
+			vec_return.push_back(max);
 		}
 		else
 		{
-			results[i].push_back(min);
+			//results[i].push_back(min);
+			vec_return.push_back(min);
+			vec_return.push_back(min);
 		}
 	}
 
-	for (int i = 0; i < results.size(); i++)
+	/*for (int i = 0; i < vec_return.size(); i=i+2)
 	{
-		for (int j = 0; j < results[i].size(); j++)
-		{
-			cout << results[i][j];
-			cout << "\t";
-		}
-		cout << endl;
-	}
+		cout << vec_return[i] << "\t" << vec_return[i+1] << endl;
+	}*/
+
+	return vec_return;
 }
 
 
