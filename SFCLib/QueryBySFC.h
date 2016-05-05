@@ -141,59 +141,6 @@ public:
 
 };
 
-/*
-template<typename T, int nDims, int mBits>
-vector<Point<T, nDims>> QueryBySFC<T, nDims, mBits>::getAllPoints(Rect<T, nDims> queryRect)
-{
-	Point<T, nDims> minPoint = queryRect.GetMinPoint();
-	Point<T, nDims> maxPoint = queryRect.GetMaxPoint();
-
-	long *difference = new long[nDims];
-	long *para = new long[nDims + 1];
-
-	para[0] = 1;
-	for (int i = 0; i < nDims; i++)
-	{
-		difference[i] = maxPoint[i] - minPoint[i] + 1;
-		para[i + 1] = para[i] * difference[i];
-	}
-
-
-	vector<vector<T>> queryVector;
-	for (int i = 0; i < nDims; i++)
-	{
-		vector<T> tempVector;
-		//int difference = maxPoint[i] - minPoint[i];
-		T temp = minPoint[i];
-		for (int j = 0; j <= difference[i]; j++)
-		{
-			tempVector.push_back(temp + j);
-		}
-		queryVector.push_back(tempVector);
-	}
-
-	Point<T, nDims> point;
-	vector <Point<T, nDims>> result;
-	long tmp = para[nDims] - 1;
-	for (int count = tmp; count >= 0; count--)
-	{
-		long offset = count;
-		for (int j = nDims - 1; j >= 0; j--)
-		{
-			long div = para[j];
-			int n = offset / div;
-			offset = offset % div;
-			point[j] = queryVector[j][n];
-		}
-		result.push_back(point);
-	}
-
-	delete[]para;
-	delete[]difference;
-
-	return result;
-}
-*/
 
 template<typename T, int nDims, int mBits>
 void QueryBySFC<T, nDims, mBits>::query_approximate(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode)
@@ -326,7 +273,7 @@ vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive(Rect<T, nDims> 
 		query_approximate(root, queryrect, resultTNode);
 	}
 
-	vector<vector<Point<T, nDims>>> resultPoints;  //all cell points
+	vector<vector<Point<T, nDims>>> resultPoints;  //get all cell corner points
 	for (int i = 0; i < resultTNode.size(); i++)
 	{
 		int ncount = 1;
@@ -335,10 +282,10 @@ vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive(Rect<T, nDims> 
 		for (int j = 0; j < nDims; j++)
 		{
 			int newadd = 0;
-			for (int k = 0; k < ncount; k++)
+			for (int k = 0; k < ncount; k++) //1-->2;2-->4, --->2^Dims
 			{
 				Point<T, nDims> newPoint = nodePoints[k];
-				newPoint[j] = resultTNode[i].maxPoint[j] - 1;  //cell point = maxPoint - 1
+				newPoint[j] = resultTNode[i].maxPoint[j] - 1;  //get the cordinate from maxpoint in this dimension
 				if (newPoint[j] != nodePoints[k][j])  //if newPoint equals to current points or not
 				{
 					nodePoints.push_back(newPoint);
@@ -397,7 +344,6 @@ vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive(Rect<T, nDims> 
 	return rangevec;
 }
 
-
 template< typename T, int nDims, int mBits>
 vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce(Rect<T, nDims> queryRect, SFCType code_type)
 {
@@ -428,69 +374,40 @@ vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce(Rect<T, nDims>
 	}
 
 	Point<T, nDims> point;
-	//vector <Point<T, nDims>> points;
+
 	long tmp = para[nDims] - 1;
 	SFCConversion<nDims, mBits> sfc;
 	OutputSchema<nDims, mBits> trans;
+
 	long val = 0;
 	int size = tmp + 1;
 	long* result = new long[size];
 	Point<long, mBits> pt;
-	if (code_type == Morton)
+
+	for (int count = tmp; count >= 0; count--)
 	{
-		for (int count = tmp; count >= 0; count--)
+		long offset = count;
+		for (int j = nDims - 1; j >= 0; j--)
 		{
-			long offset = count;
-			for (int j = nDims - 1; j >= 0; j--)
-			{
-				long div = para[j];
-				int n = offset / div;
-				offset = offset % div;
-				point[j] = queryVector[j][n];
-			}
-			sfc.ptCoord = point;
-			sfc.MortonEncode();
-			pt = sfc.ptBits;
-			val = trans.BitSequence2Value(pt);
-			result[count] = val;
-			//points.push_back(point);
+			long div = para[j];
+			int n = offset / div;
+			offset = offset % div;
+			point[j] = queryVector[j][n];
 		}
+
+		sfc.ptCoord = point;
+		if (code_type == Morton) sfc.MortonEncode();
+		if (code_type == Hilbert)  sfc.HilbertEncode();
+		pt = sfc.ptBits;
+
+		val = trans.BitSequence2Value(pt);
+		result[count] = val;
 	}
-	else if (code_type == Hilbert)
-	{
-		for (int count = tmp; count >= 0; count--)
-		{
-			long offset = count;
-			for (int j = nDims - 1; j >= 0; j--)
-			{
-				long div = para[j];
-				int n = offset / div;
-				offset = offset % div;
-				point[j] = queryVector[j][n];
-			}
-			sfc.ptCoord = point;
-			sfc.HilbertEncode();
-			pt = sfc.ptBits;
-			val = trans.BitSequence2Value(pt);
-			result[count] = val;
-			//points.push_back(point);
-		}
-	}	
 
 	delete[]para;
 	delete[]difference;
 
-	//sort the morton values
 	std::sort(result, result+size);
-
-	///the test code.it can be deleted
-	//////////////////////////////////////
-	/*printf("\n morton sort result: \n");
-	for (int i = 0; i < size; i++)
-	{
-		printf("%d\t", result[i]);
-	}
-	printf("\n");*/
 
 	vector<long> rangevec;
 	int nstart = 0;
@@ -501,8 +418,6 @@ vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce(Rect<T, nDims>
 			rangevec.push_back(result[nstart]);
 			rangevec.push_back(result[i]);
 
-			//printf("%d---%d\n", result[nstart], result[i]);
-
 			nstart = i+1;
 		}
 
@@ -510,51 +425,9 @@ vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce(Rect<T, nDims>
 		{
 			rangevec.push_back(result[nstart]);
 			rangevec.push_back(result[i]);
-
-			//printf("%d---%d\n", result[nstart], result[i]);
 		}
-		/*if (result[i + 1] == (result[i] + 1))
-		{
-			if ((i + 1) == size - 1)
-			{
-				vector<long> eachRange;
-				eachRange.push_back(result[flag]);
-				eachRange.push_back(result[i + 1]);
-				resultVector.push_back(eachRange);
-			}
-			continue;
-		}
-		if (result[i + 1] != (result[i] + 1))
-		{
-			vector<long> eachRange;
-			if (i - flag>0)
-			{
-				eachRange.push_back(result[flag]);
-				eachRange.push_back(result[i]);
-			}
-			else
-			{
-				eachRange.push_back(result[flag]);
-			}
-			resultVector.push_back(eachRange);
-			flag = i + 1;
-			if (i + 1 == size - 1)
-			{
-				vector<long>  last = { result[flag] };
-				resultVector.push_back(last);
-			}
-		}*/
 	}
 
-	//printf("\n morton final result: \n");
-	//for (int i = 0; i < rangevec.size(); i = i + 2)
-	//{
-	//	//printf("\n");
-	//	
-	//	printf("%d---%d\n", rangevec[i], rangevec[i + 1]);
-
-	//}
-	//printf("\n");
 
 	delete[]result;
 	return rangevec;
