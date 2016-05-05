@@ -349,108 +349,53 @@ vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive(Rect<T, nDims> 
 		}
 
 		resultPoints.push_back(nodePoints);
-
-		//cout << "level: " << resultTNode[i].level << "\t" << endl;
 	}
 
-	vector<vector<long>> resultCode;
+	vector<long> result;
+
 	long val = 0;
 	Point<long, mBits> pt;
-	if (code_type == Morton)
+	SFCConversion<nDims, mBits> sfc;
+	OutputSchema<nDims, mBits> trans;
+
+	for (int i = 0; i < resultPoints.size(); i++)
 	{
-		for (int i = 0; i < resultPoints.size(); i++)
+		for (int j = 0; j < resultPoints[i].size(); j++)
 		{
-			vector<long> temCode;
-			for (int j = 0; j < resultPoints[i].size(); j++)
-			{
-				for (int k = 0; k < nDims; k++)
-				{
-					cout << resultPoints[i][j][k] << "\t";
-				}
+			sfc.ptCoord = resultPoints[i][j];
+			if (code_type == Morton) sfc.MortonEncode();
+			if (code_type == Hilbert) sfc.HilbertEncode();
+			pt = sfc.ptBits;
 
-				SFCConversion<nDims, mBits> sfc;
-				sfc.ptCoord = resultPoints[i][j];
-				//sfc.HilbertEncode();
-				sfc.MortonEncode();
-				OutputSchema<nDims, mBits> trans;
-				pt = sfc.ptBits;
-				val = trans.BitSequence2Value(pt);
-				temCode.push_back(val);
-
-				cout << val << endl;
-			}
-
-			resultCode.push_back(temCode);
-		}
-	}
-	else if (code_type == Hilbert)
-	{
-		for (int i = 0; i < resultPoints.size(); i++)
-		{
-			vector<long> temCode;
-			for (int j = 0; j < resultPoints[i].size(); j++)
-			{
-				for (int k = 0; k < nDims; k++)
-				{
-					cout << resultPoints[i][j][k] << "\t";
-				}
-
-				SFCConversion<nDims, mBits> sfc;
-				sfc.ptCoord = resultPoints[i][j];
-				sfc.HilbertEncode();
-				//sfc.MortonEncode();
-				OutputSchema<nDims, mBits> trans;
-				pt = sfc.ptBits;
-				val = trans.BitSequence2Value(pt);
-				temCode.push_back(val);
-
-				cout << val << endl;
-			}
-
-			resultCode.push_back(temCode);
+			val = trans.BitSequence2Value(pt);
+			result.push_back(val);
 		}
 	}
 
-	vector<long> vec_return;
+	//sort the morton values
+	int size = result.size();
+	std::sort(result.begin(), result.end());
 
-	//vector<vector<long>> results(resultCode.size());
-	long min, max;
-	for (int i = 0; i < resultCode.size(); i++)
+	vector<long> rangevec;
+	int nstart = 0;
+	for (int i = 0; i < size - 1; i++)
 	{
-		min = resultCode[i][0];
-		max = resultCode[i][0];
-		for (int j = 0; j < resultCode[i].size(); j++)
+		if (result[i + 1] != (result[i] + 1))
 		{
-			if (resultCode[i][j] < min)
-			{
-				min = resultCode[i][j];
-			}
-			if (resultCode[i][j] > max)
-			{
-				max = resultCode[i][j];
-			}
+			rangevec.push_back(result[nstart]);
+			rangevec.push_back(result[i]);
+
+			nstart = i + 1;
 		}
-		if (min != max)
+
+		if (result[i + 1] == (result[i] + 1) && (i + 1) == size - 1)
 		{
-			//results[i].push_back(min);
-			//results[i].push_back(max);
-			vec_return.push_back(min);
-			vec_return.push_back(max);
-		}
-		else
-		{
-			//results[i].push_back(min);
-			vec_return.push_back(min);
-			vec_return.push_back(min);
-		}
+			rangevec.push_back(result[nstart]);
+			rangevec.push_back(result[i]);
+		}		
 	}
-
-	/*for (int i = 0; i < vec_return.size(); i=i+2)
-	{
-		cout << vec_return[i] << "\t" << vec_return[i+1] << endl;
-	}*/
-
-	return vec_return;
+	
+	return rangevec;
 }
 
 
@@ -537,7 +482,7 @@ vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce(Rect<T, nDims>
 	delete[]difference;
 
 	//sort the morton values
-	std::sort(result, result + size);
+	std::sort(result, result+size);
 
 	///the test code.it can be deleted
 	//////////////////////////////////////
