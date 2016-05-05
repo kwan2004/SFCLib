@@ -40,6 +40,20 @@ void print_ranges(char * str, vector<long>& ranges)
 	}
 }
 
+void print_ranges_str(char * str, vector<string>& ranges)
+{
+	if (str == NULL) return;
+
+	printf("%s \n", str);
+	for (int i = 0; i < ranges.size(); i = i + 2)
+	{
+		//printf("\n");
+
+		printf("%s---%s\n", ranges[i].c_str(), ranges[i + 1].c_str());
+
+	}
+}
+
 int main(int argc, char* argv[])
 {
 	/*
@@ -185,11 +199,12 @@ int main(int argc, char* argv[])
 	vector<long> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, Hilbert);
 	print_ranges("hilbert 2d recursive", vec_res2);
 
-	//SFCConversion<2, 3> sfc2D;
-	//OutputSchema<2, 3> trans2D;
-	//sfc2D.ptCoord = Point1;
-	//sfc2D.MortonEncode();	
-	//string str32 = trans2D.BitSequence2String(sfc2D.ptBits, Base64);
+	vector<string> vec_res5 = querytest.RangeQueryByBruteforce_STR(rec, Hilbert, Base64);
+	print_ranges_str("hilbert 2d brute force", vec_res5);
+
+	vector<string> vec_res6 = querytest.RangeQueryByRecursive_STR(rec, Hilbert, Base64);
+	print_ranges_str("hilbert 2d recursive", vec_res6);
+
 
 	////3D sample
 	long Point31[3] = { 4, 2, 5 };
@@ -206,6 +221,12 @@ int main(int argc, char* argv[])
 	vector<long> vec_res4 = querytest3.RangeQueryByRecursive_LNG(rec3, Morton);
 	print_ranges("morton 3d recursive", vec_res4);
 
+	vector<string> vec_res7 = querytest3.RangeQueryByBruteforce_STR(rec3, Hilbert, Base64);
+	print_ranges_str("hilbert 2d brute force", vec_res7);
+
+	vector<string> vec_res8 = querytest3.RangeQueryByRecursive_STR(rec3, Hilbert, Base64);
+	print_ranges_str("hilbert 2d recursive", vec_res8);
+
 	//SFCConversion<3, 9> sfc3D;
 	//OutputSchema<3, 9> trans3D;
 	//sfc3D.ptCoord = Point31;
@@ -221,7 +242,6 @@ int main(int argc, char* argv[])
 	//sfc3D3.MortonEncode();
 	//string str3D3 = trans3D3.BitSequence2String(sfc3D3.ptBits, Base32);
 	//Point<long, 4> mmm = trans3D3.String2BitSequence(str3D3, Base32);
-
 
 	
 

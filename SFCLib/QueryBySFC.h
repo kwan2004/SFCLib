@@ -441,7 +441,12 @@ vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect<T, nD
 template<typename T, int nDims, int mBits>
 int QueryBySFC<T, nDims, mBits>::iscontinuous(string& str1, string& str2)
 {
-	return 1;
+	if (str1.size() != str2.size()) return 0;
+	int nsize = str1.size();
+
+	if (str1.c_str()[nsize - 1] - str2.c_str()[nsize - 1] == 1) return 1;
+
+	return 0;
 }
 
 
@@ -529,7 +534,7 @@ vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_STR(Rect<T, n
 			nstart = i + 1;
 		}
 
-		if (!iscontinuous(result[i + 1], result[i]) && (i + 1) == size - 1)
+		if (iscontinuous(result[i + 1], result[i]) && (i + 1) == size - 1)
 		{
 			rangevec2.push_back(result[nstart]);
 			rangevec2.push_back(result[i]);
@@ -606,7 +611,6 @@ vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_STR(Rect<T, 
 	std::sort(result.begin(), result.end());
 
 	vector<string> rangevec2;
-	//vector<long> rangevec;
 	int nstart = 0;
 	for (int i = 0; i < size - 1; i++)
 	{
@@ -618,7 +622,7 @@ vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_STR(Rect<T, 
 			nstart = i + 1;
 		}
 
-		if (!iscontinuous(result[i + 1], result[i]) && (i + 1) == size - 1)
+		if (iscontinuous(result[i + 1], result[i]) && (i + 1) == size - 1)
 		{
 			rangevec2.push_back(result[nstart]);
 			rangevec2.push_back(result[i]);
