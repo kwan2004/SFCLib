@@ -372,7 +372,6 @@ vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive(Rect<T, nDims> 
 		}
 	}
 
-	//sort the morton values
 	int size = result.size();
 	std::sort(result.begin(), result.end());
 
