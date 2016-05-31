@@ -50,7 +50,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;RANDOM_LOD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>D:\projects\tbb44\include;D:\projects\tbb44\examples</AdditionalIncludeDirectories>
     </ClCompile>
@@ -86,6 +86,7 @@
     <ClInclude Include="OutputSchema.h" />
     <ClInclude Include="Point.h" />
     <ClInclude Include="QueryBySFC.h" />
+    <ClInclude Include="RandomLOD.h" />
     <ClInclude Include="Rectangle.h" />
     <ClInclude Include="SFCConversion.h" />
     <ClInclude Include="SFCPipeline.h" />

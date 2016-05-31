@@ -11,6 +11,8 @@
 #include "OutputSchema.h"
 #include "SFCPipeline.h"
 
+#include "RandomLOD.h"
+
 //#include "tbb/task_scheduler_init.h"
 
 #include <iostream>
@@ -56,6 +58,7 @@ void print_ranges_str(char * str, vector<string>& ranges)
 
 int main(int argc, char* argv[])
 {
+#ifdef PARALLEL_PIPELINE
 	/*
 	if (argc == 1) return 0;
 	if (argc % 2 != 1) return 0; //attribute pair plus exe_name
@@ -125,9 +128,9 @@ int main(int argc, char* argv[])
 		run_pipeline<ndims, mbits>(init_parallel.default_num_threads(), szinput, szoutput, 3000, nsfc_type, nencode_type, delta, scale);
 	}
 	*/
-
+#endif
 	///////////////////////
-
+#ifdef SFC_GEN_QUERY
 	///////////////////////////////////////
 	////2D case 8*8, i.e n=2, m=3
 	Point<long, 2> ptCoord; //SFC coordinates n=2
@@ -243,8 +246,29 @@ int main(int argc, char* argv[])
 	//string str3D3 = trans3D3.BitSequence2String(sfc3D3.ptBits, Base32);
 	//Point<long, 4> mmm = trans3D3.String2BitSequence(str3D3, Base32);
 
-	
+#endif
 
+#ifdef RANDOM_LOD
+
+	RandomLOD<2, 22> rnd_gen(14);
+
+	int ncount[14] = { 0 };
+
+	int nlevel=0;
+	for (int i = 0; i < 100000000; i++)
+	{
+		nlevel = rnd_gen.RLOD_Gen();
+
+		ncount[nlevel]++;
+	}
+
+	for (int i = 0; i < 14; i++)
+	{
+		cout << i << ":" << ncount[i] << endl;
+	}
+
+	cout << "out: " << rnd_gen.ntest << endl;
+#endif
 	//system("pause");
 	return 0;
 }
