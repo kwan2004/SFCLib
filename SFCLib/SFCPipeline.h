@@ -16,6 +16,8 @@
 #include "SFCConversion.h"
 #include "OutputSchema.h"
 
+#include "RandomLOD.h"
+
 template<int nDims>
 class InputItem
 {
@@ -130,147 +132,6 @@ private:
 		return pItem;
 	}
 };
-
-//
-/////////////////////////////////////////////////////
-////Input coordinate transfomartion filter
-//template<int nDims>
-//class CoordTransFilter : public tbb::filter
-//{
-//public:
-//	CoordTransFilter(int size);
-//	/*override*/void* operator()(void* item);
-//
-//	void SetTransform(double* delta, long* scale);
-//private:
-//	int _size;
-//	double* _delta;
-//	long* _scale;
-//};
-//
-//template<int nDims>
-//CoordTransFilter::CoordTransFilter(int size) :
-//tbb::filter(parallel),
-//_size(size)
-//{
-//}
-//
-//template< typename T, int nDims>
-//void CoordTransFilter::SetTransform(double* delta, long* scale)
-//{
-//	_delta = delta;
-//	_scale = scale;
-//}
-//
-//template<int nDims>
-///*override*/void* CoordTransFilter::operator()(void* item)
-//{
-//	Point<double, nDims>*  input = static_cast<Point<double, nDims>* >(item);
-//	Point<long, nDims>* output = (Point<long, nDims>*)tbb::tbb_allocator<Point<long, nDims>>().allocate(_size);
-//	
-//	CoordTransform<double, long, nDims> cotrans(_delta, _scale);
-//	
-//	for (int i = 0; i < _size; i++)
-//	{
-//		output[i] = cotrans.Transform(input[i]);
-//	}
-//
-//	tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)input, _size);
-//
-//	return output;
-//}
-//
-/////////////////////////////////////////////////////
-////Input coordinate transfomartion filter
-//template< int nDims, int mBits>
-//class SFCGenFilter : public tbb::filter
-//{
-//public:
-//	SFCGenFilter(int size, int sfctype);
-//	/*override*/void* operator()(void* item);
-//private:
-//	int _size;
-//	int _sfctype;
-//};
-//
-//template< int nDims, int mBits>
-//SFCGenFilter::SFCGenFilter(int size) :
-//tbb::filter(parallel),
-//_size(size),
-//_sfctype(sfctype),
-//{
-//}
-//
-//template< int nDims, int mBits>
-///*override*/void* SFCGenFilter::operator()(void* item)
-//{
-//	Point<long, nDims>*  input = static_cast<Point<long, nDims>*>(item);
-//	Point<long, mBits>* output = (Point<long, mBits>*)tbb::tbb_allocator<Point<long, mBits>>().allocate(_size);
-//
-//	SFCConversion<nDims, mBits> sfcgen;
-//	if (_sfctype == 0) //morton
-//	{
-//		for (int i = 0; i < _size; i++)
-//		{
-//			sfcgen.ptCoord = input[i];
-//			sfcgen.MortonEncode();
-//			output[i] = sfcgen.ptBits;
-//		}
-//	}
-//	if (_sfctype == 1) //hilbert
-//	{
-//		for (int i = 0; i < _size; i++)
-//		{
-//			sfcgen.ptCoord = input[i];
-//			sfcgen.HilbertEncode();
-//			output[i] = sfcgen.ptBits;
-//		}
-//	}
-//
-//	tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)input, _size);
-//
-//	return output;
-//
-//}
-//
-/////////////////////////////////////////////////////
-////Input coordinate transfomartion filter
-//template< int nDims, int mBits>
-//class BitsConvFilter : public tbb::filter
-//{
-//public:
-//	BitsConvFilter(int size, int conv_type);
-//	/*override*/void* operator()(void* item);
-//private:
-//	int _size;
-//	int _conv_type;
-//};
-//
-//template< int nDims, int mBits>
-//BitsConvFilter::BitsConvFilter(int size) :
-//tbb::filter(parallel),
-//_size(size),
-//_conv_type(conv_type)
-//{
-//}
-//
-//template< int nDims, int mBits>
-///*override*/void* BitsConvFilter::operator()(void* item)
-//{
-//	Point<long, mBits>*  input = static_cast<Point<long, mBits>*>(item);
-//	long* output = (long*)tbb::tbb_allocator<long>().allocate(_size);
-//
-//	OutputTransform<nDims, mBits> outtrans;
-//	for (int i = 0; i < _size; i++)
-//	{
-//		output[i] = outtrans.BitSequence2Value(input[i]);
-//	}
-//
-//
-//	tbb::tbb_allocator<Point<long, mBits>>().deallocate((Point<long, mBits>*)input, _size);
-//
-//	return output;
-//}
 
 ///////////////////////////////////////////////////
 //new whole transfomartion filter
@@ -393,13 +254,37 @@ private:
 template<int nDims>
 class OutputFilter : public tbb::filter
 {
+private:
 	FILE* output_file;
+
+	bool bis_lod;
+	RandomLOD<nDims>*  p_rnd_gen;
+
 public:
 	OutputFilter(FILE* output_file) :
 		tbb::filter(serial_in_order),
-		output_file(output_file)
+		output_file(output_file),
+		bis_lod(false),
+		p_rnd_gen(NULL)
 	{
 	}
+
+	OutputFilter(FILE* output_file, int levels, int levelmax) :
+		tbb::filter(serial_in_order),
+		output_file(output_file),
+		bis_lod(true)
+	{
+		p_rnd_gen = new RandomLOD<nDims>(levels, levelmax);
+	}
+
+	~OutputFilter()
+	{
+		if (p_rnd_gen == NULL)
+		{
+			delete p_rnd_gen;
+		}
+	}
+
 	/*override*/void* operator()(void* item)
 	{
 		OutputItem<nDims>*  pout_item = static_cast<OutputItem<nDims>*>(item);
@@ -416,12 +301,19 @@ public:
 
 			// one field for SFC code
 			if (pout_item->_encode_mode == 0 ) ///value type
-				fprintf(output_file, "%lu\n", pout_item->out_value[i]);
+				fprintf(output_file, "%lu", pout_item->out_value[i]);
 			else
 			{
-				fprintf(output_file, "%s\n", pout_item->out_string + i * pout_item->_str_len); //pout_item->out_string[i].c_str()
+				fprintf(output_file, "%s", pout_item->out_string + i * pout_item->_str_len); //pout_item->out_string[i].c_str()
 			}
-				
+
+			//one field for lod value
+			if (bis_lod)
+			{
+				fprintf(output_file, ",%d", p_rnd_gen->RLOD_Gen());
+			}
+
+			fprintf(output_file, "\n");
 		}
 
 		///////////////////////
@@ -491,7 +383,7 @@ int run_pipeline(int nthreads, char* InputFileName, char* OutputFileName, \
 	pipeline.add_filter(nsfcgen_filter);
 
 	// Create file-writing stage and add it to the pipeline
-	OutputFilter<nDims> output_filter(output_file);
+	OutputFilter<nDims> output_filter(output_file, 10, 20);
 	pipeline.add_filter(output_filter);
 
 	// Run the pipeline

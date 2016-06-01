@@ -59,7 +59,7 @@ void print_ranges_str(char * str, vector<string>& ranges)
 int main(int argc, char* argv[])
 {
 #ifdef PARALLEL_PIPELINE
-	/*
+	
 	if (argc == 1) return 0;
 	if (argc % 2 != 1) return 0; //attribute pair plus exe_name
 
@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
 		tbb::task_scheduler_init init_parallel;
 		run_pipeline<ndims, mbits>(init_parallel.default_num_threads(), szinput, szoutput, 3000, nsfc_type, nencode_type, delta, scale);
 	}
-	*/
+	
 #endif
 	///////////////////////
 #ifdef SFC_GEN_QUERY
@@ -250,12 +250,12 @@ int main(int argc, char* argv[])
 
 #ifdef RANDOM_LOD
 
-	RandomLOD<2, 22> rnd_gen(14);
+	RandomLOD<3> rnd_gen(14,20);
 
 	int ncount[14] = { 0 };
 
 	int nlevel=0;
-	for (int i = 0; i < 100000000; i++)
+	for (int i = 0; i < 1000000; i++)
 	{
 		nlevel = rnd_gen.RLOD_Gen();
 
