@@ -71,6 +71,7 @@ int main(int argc, char* argv[])
 	int nencode_type = 0;
 	char szinput[256] = { 0 };//1.xyz
 	char szoutput[256] = { 0 };
+	char sztransfile[256] = { 0 };
 
 	for (int i = 1; i < argc; i++)
 	{
@@ -106,14 +107,78 @@ int main(int argc, char* argv[])
 		{
 			i++;
 			nencode_type = atoi(argv[i]);
+			continue;
+		}
+
+		if (strcmp(argv[i], "-t") == 0)//coordinates transformation file, two lines: translation and scale, comma separated
+		{
+			i++;
+			strcpy_s(sztransfile, argv[i]);
 		}
 	}	 
 
+	///////////////////////////////////////////////////
+	///get the coordinates transfomration file
+	double delta[ndims] = { 0 }; // 526000, 4333000, 300
+	long  scale[ndims] = { 1 }; //100, 100, 1000
+
+	if (strlen(sztransfile) != 0)
+	{
+		FILE* input_file = NULL;
+		fopen_s(&input_file, sztransfile, "r");
+		if (input_file)
+		{
+			int j;
+			char buf[1024];
+			char * pch, *lastpos;
+			char ele[64];
+
+			//////translation
+			memset(buf, 0, 1024);
+			fgets(buf, 1024, input_file);
+
+			j = 0;
+			lastpos = buf;
+			pch = strchr(buf, ',');
+			while (pch != NULL)
+			{
+				memset(ele, 0, 64);
+				strncpy_s(ele, 64, lastpos, pch - lastpos);
+				//printf("found at %d\n", pch - str + 1);
+				delta[j] = atof(ele);
+				j++;
+
+				lastpos = pch + 1;
+				pch = strchr(lastpos, ',');
+			}
+			delta[j] = atof(lastpos); //final part
+
+			//////scale
+			memset(buf, 0, 1024);
+			fgets(buf, 1024, input_file);
+
+			j = 0;
+			lastpos = buf;
+			pch = strchr(buf, ',');
+			while (pch != NULL)
+			{
+				memset(ele, 0, 64);
+				strncpy_s(ele, 64, lastpos, pch - lastpos);
+				//printf("found at %d\n", pch - str + 1);
+				scale[j] = atoi(ele);
+				j++;
+
+				lastpos = pch + 1;
+				pch = strchr(lastpos, ',');
+			}
+			scale[j] = atoi(lastpos); //final part
+
+			fclose(input_file);
+		}//end if input_file
+	}//end if strlen
+	
 	///////////////////////
 	////pipeline
-	double delta[3] = { 526000, 4333000, 300 };
-	long  scale[3] = { 100, 100, 1000 };
-
 	if (nparallel == 0)
 	{
 		if (strlen(szoutput) !=0 ) printf("serial run   "); //if not stdout ,print sth

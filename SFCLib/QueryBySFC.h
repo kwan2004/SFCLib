@@ -37,7 +37,8 @@ public:
 		dimensions = other.dimensions;
 	}
 	
-	TreeNode<T, nDims>::TreeNode()
+	
+	TreeNode()
 	{
 	}
 
