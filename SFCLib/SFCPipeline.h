@@ -129,7 +129,7 @@ public:
 			while (pch != NULL)
 			{
 				memset(ele, 0, 64);
-				strncpy_s(ele, 64, lastpos, pch - lastpos);
+				strncpy(ele, lastpos, pch - lastpos);
 				//printf("found at %d\n", pch - str + 1);
 				pItem->pPtsArray[i][j] = atof(ele);
 				j++;
@@ -252,13 +252,13 @@ public:
 
 			if (_conv_type == 1)
 			{
-				strcpy_s(pout_item->out_string + i* nstrlen, nstrlen, outtrans.BitSequence2String(ptBits, Base32).c_str());
+				strcpy(pout_item->out_string + i* nstrlen, outtrans.BitSequence2String(ptBits, Base32).c_str());
 				//pout_item->out_string[i] = "a";//outtrans.BitSequence2String(ptBits, Base32);
 			}
 
 			if (_conv_type == 2)
 			{
-				strcpy_s(pout_item->out_string + i* nstrlen, nstrlen, outtrans.BitSequence2String(ptBits, Base64).c_str());
+				strcpy(pout_item->out_string + i* nstrlen, outtrans.BitSequence2String(ptBits, Base64).c_str());
 				//pout_item->out_string[i] = "a";//outtrans.BitSequence2String(ptBits, Base64);
 			}
 		}
@@ -385,7 +385,7 @@ int run_pipeline(int nthreads, char* InputFileName, char* OutputFileName, \
 	FILE* input_file = NULL;
 	if (InputFileName != NULL && strlen(InputFileName) != 0)
 	{
-		fopen_s(&input_file, InputFileName, "r");
+		input_file = fopen(InputFileName, "r");
 		if (!input_file)
 		{
 			return 0;
@@ -399,7 +399,7 @@ int run_pipeline(int nthreads, char* InputFileName, char* OutputFileName, \
 	FILE* output_file = NULL;
 	if (OutputFileName != NULL && strlen(OutputFileName) != 0)
 	{
-		fopen_s(&output_file, OutputFileName, "w");
+		output_file = fopen(OutputFileName, "w");
 		if (!output_file)
 		{
 			return 0;

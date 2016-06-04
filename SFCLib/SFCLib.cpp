@@ -92,14 +92,14 @@ int main(int argc, char* argv[])
 		if (strcmp(argv[i], "-i") == 0)//input file path
 		{
 			i++;
-			strcpy_s(szinput, argv[i]);
+			strcpy(szinput, argv[i]);
 			continue;
 		}
 
 		if (strcmp(argv[i], "-o") == 0)//output file path
 		{
 			i++;
-			strcpy_s(szoutput, argv[i]);
+			strcpy(szoutput, argv[i]);
 			continue;
 		}
 
@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
 		if (strcmp(argv[i], "-t") == 0)//coordinates transformation file, two lines: translation and scale, comma separated
 		{
 			i++;
-			strcpy_s(sztransfile, argv[i]);
+			strcpy(sztransfile, argv[i]);
 			continue;
 		}
 
@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
 	if (strlen(sztransfile) != 0)
 	{
 		FILE* input_file = NULL;
-		fopen_s(&input_file, sztransfile, "r");
+		input_file= fopen(sztransfile, "r");
 		if (input_file)
 		{
 			int j;
@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
 			while (pch != NULL)
 			{
 				memset(ele, 0, 64);
-				strncpy_s(ele, 64, lastpos, pch - lastpos);
+				strncpy(ele, lastpos, pch - lastpos);
 				//printf("found at %d\n", pch - str + 1);
 				delta[j] = atof(ele);
 				j++;
@@ -185,7 +185,7 @@ int main(int argc, char* argv[])
 			while (pch != NULL)
 			{
 				memset(ele, 0, 64);
-				strncpy_s(ele, 64, lastpos, pch - lastpos);
+				strncpy(ele, lastpos, pch - lastpos);
 				//printf("found at %d\n", pch - str + 1);
 				scale[j] = atoi(ele);
 				j++;
