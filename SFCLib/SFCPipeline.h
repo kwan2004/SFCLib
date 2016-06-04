@@ -65,19 +65,42 @@ public:
 template<int nDims>
 class InputFilter : public tbb::filter
 {
+private:
+	FILE* input_file;
+	int _size;
+
+	bool bis_lod;
+	RandomLOD<nDims>*  p_rnd_gen;
+
 public:
 	InputFilter(FILE* input_file_, int size) :
 		filter(serial_in_order),
 		input_file(input_file_),
-		_size(size)
+		_size(size),
+		bis_lod(false),
+		p_rnd_gen(NULL)
 	{
 	}
 
+	InputFilter(FILE* input_file_, int size,  int levels, int levelmax) :
+		filter(serial_in_order),
+		input_file(input_file_),
+		_size(size),
+		bis_lod(true)
+
+	{
+		p_rnd_gen = new RandomLOD<nDims>(levels, levelmax);
+	}
+
 	~InputFilter()
-	{}
-private:
-	FILE* input_file;
-	int _size;
+	{
+		if (p_rnd_gen == NULL)
+		{
+			delete p_rnd_gen;
+		}
+	}
+
+
 	/*override*/ void* operator()(void*)
 	{
 		// Read raw points coornidates
@@ -115,6 +138,11 @@ private:
 				pch = strchr(lastpos, ',');
 			}
 			pItem->pPtsArray[i][j] = atof(lastpos); //final part
+
+			if (bis_lod)
+			{
+				pItem->pPtsArray[i][j+1] =  p_rnd_gen->RLOD_Gen();
+			}
 
 			i++;
 		}
@@ -256,65 +284,85 @@ class OutputFilter : public tbb::filter
 {
 private:
 	FILE* output_file;
+	bool bis_onlysfc;
 
-	bool bis_lod;
-	RandomLOD<nDims>*  p_rnd_gen;
+	//bool bis_lod;
+	//RandomLOD<nDims>*  p_rnd_gen;
 
 public:
-	OutputFilter(FILE* output_file) :
+	OutputFilter(FILE* output_file, bool is_onlysfc) :
 		tbb::filter(serial_in_order),
 		output_file(output_file),
+		bis_onlysfc(is_onlysfc)/*,
 		bis_lod(false),
-		p_rnd_gen(NULL)
+		p_rnd_gen(NULL)*/
 	{
 	}
 
-	OutputFilter(FILE* output_file, int levels, int levelmax) :
-		tbb::filter(serial_in_order),
-		output_file(output_file),
-		bis_lod(true)
-	{
-		p_rnd_gen = new RandomLOD<nDims>(levels, levelmax);
-	}
+	//OutputFilter(FILE* output_file, bool is_onlysfc, int levels, int levelmax) :
+	//	tbb::filter(serial_in_order),
+	//	output_file(output_file),
+	//	bis_onlysfc(is_onlysfc),
+	//	bis_lod(true)
+	//{
+	//	//p_rnd_gen = new RandomLOD<nDims>(levels, levelmax);
+	//}
 
 	~OutputFilter()
 	{
-		if (p_rnd_gen == NULL)
-		{
-			delete p_rnd_gen;
-		}
+		//if (p_rnd_gen == NULL)
+		//{
+		//	delete p_rnd_gen;
+		//}
 	}
 
 	/*override*/void* operator()(void* item)
 	{
 		OutputItem<nDims>*  pout_item = static_cast<OutputItem<nDims>*>(item);
 
-		///////////////////////
-		for (int i = 0; i < pout_item->_actual_size; i++)
+		if (bis_onlysfc) //only output sfc code
 		{
-			for (int j = 0; j < nDims; j++) 
+			for (int i = 0; i < pout_item->_actual_size; i++)
 			{
-				//fwrite(input[i], sizeof(long), 1, my_output_file);
-				fprintf(output_file, "%.6f", pout_item->pPtsArray[i][j]);
-				fprintf(output_file, ",");
-			}
+				if (pout_item->_encode_mode == 0) ///value type
+					fprintf(output_file, "%lu", pout_item->out_value[i]);
+				else
+				{
+					fprintf(output_file, "%s", pout_item->out_string + i * pout_item->_str_len); //pout_item->out_string[i].c_str()
+				}
 
-			// one field for SFC code
-			if (pout_item->_encode_mode == 0 ) ///value type
-				fprintf(output_file, "%lu", pout_item->out_value[i]);
-			else
-			{
-				fprintf(output_file, "%s", pout_item->out_string + i * pout_item->_str_len); //pout_item->out_string[i].c_str()
-			}
-
-			//one field for lod value
-			if (bis_lod)
-			{
-				fprintf(output_file, ",%d", p_rnd_gen->RLOD_Gen());
-			}
-
-			fprintf(output_file, "\n");
+				fprintf(output_file, "\n");
+			}//end for
 		}
+		else
+		{
+			///////////////////////
+			for (int i = 0; i < pout_item->_actual_size; i++)
+			{
+				for (int j = 0; j < nDims; j++)
+				{
+					//fwrite(input[i], sizeof(long), 1, my_output_file);
+					fprintf(output_file, "%.6f", pout_item->pPtsArray[i][j]);
+					fprintf(output_file, ",");
+				}
+
+				// one field for SFC code
+				if (pout_item->_encode_mode == 0) ///value type
+					fprintf(output_file, "%lu", pout_item->out_value[i]);
+				else
+				{
+					fprintf(output_file, "%s", pout_item->out_string + i * pout_item->_str_len); //pout_item->out_string[i].c_str()
+				}
+
+				////one field for lod value
+				//if (bis_lod)
+				//{
+				//	fprintf(output_file, ",%d", p_rnd_gen->RLOD_Gen());
+				//}
+
+				fprintf(output_file, "\n");
+			}///end for
+		}///end if
 
 		///////////////////////
 		tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)pout_item->pPtsArray, pout_item->_pt_alloc_size);
@@ -332,7 +380,7 @@ public:
 
 template<int nDims, int mBits>
 int run_pipeline(int nthreads, char* InputFileName, char* OutputFileName, \
-	int item_num, int sfc_type, int conv_type, double* delta, long* scale)
+	int item_num, int sfc_type, int conv_type, double* delta, long* scale, bool onlysfc, int nlodlevels)
 {
 	FILE* input_file = NULL;
 	if (InputFileName != NULL && strlen(InputFileName) != 0)
@@ -366,7 +414,7 @@ int run_pipeline(int nthreads, char* InputFileName, char* OutputFileName, \
 	tbb::pipeline pipeline;
 
 	// Create file-reading writing stage and add it to the pipeline
-	InputFilter<nDims> input_filter(input_file, item_num);
+	InputFilter<nDims> input_filter(input_file, item_num, nlodlevels, 20);
 	pipeline.add_filter(input_filter);
 
 	// Create squaring stage and add it to the pipeline
@@ -383,7 +431,7 @@ int run_pipeline(int nthreads, char* InputFileName, char* OutputFileName, \
 	pipeline.add_filter(nsfcgen_filter);
 
 	// Create file-writing stage and add it to the pipeline
-	OutputFilter<nDims> output_filter(output_file, 10, 20);
+	OutputFilter<nDims> output_filter(output_file, onlysfc);//, nlodlevels, 20
 	pipeline.add_filter(output_filter);
 
 	// Run the pipeline

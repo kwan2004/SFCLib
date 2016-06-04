@@ -61,21 +61,28 @@ int main(int argc, char* argv[])
 #ifdef PARALLEL_PIPELINE
 	
 	if (argc == 1) return 0;
-	if (argc % 2 != 1) return 0; //attribute pair plus exe_name
+	//if (argc % 2 != 1) return 0; //attribute pair plus exe_name
 
-	const int ndims = 3;
+	const int ndims = 4;
 	const int mbits = 20;
 
 	int nparallel = 0;
+
 	int nsfc_type = 0;
 	int nencode_type = 0;
+
+	bool bisonlysfc = false;
+
+	bool bislod = false;
+	int lod_levels = 0;
+
 	char szinput[256] = { 0 };//1.xyz
 	char szoutput[256] = { 0 };
 	char sztransfile[256] = { 0 };
 
 	for (int i = 1; i < argc; i++)
 	{
-		if (strcmp(argv[i], "-p") == 0)//if parallel
+		if (strcmp(argv[i], "-p") == 0)//if parallel: 0 sequential, 1 max parallel
 		{
 			i++;
 			nparallel = atoi(argv[i]);
@@ -96,14 +103,14 @@ int main(int argc, char* argv[])
 			continue;
 		}
 
-		if (strcmp(argv[i], "-s") == 0)//sfc conversion type
+		if (strcmp(argv[i], "-s") == 0)//sfc conversion type: 0 morthon, 1 hilbert
 		{
 			i++;
 			nsfc_type = atoi(argv[i]);
 			continue;
 		}
 
-		if (strcmp(argv[i], "-e") == 0)//output encoding type
+		if (strcmp(argv[i], "-e") == 0)//output encoding type: 0 number 1 base32 2 base64
 		{
 			i++;
 			nencode_type = atoi(argv[i]);
@@ -114,6 +121,21 @@ int main(int argc, char* argv[])
 		{
 			i++;
 			strcpy_s(sztransfile, argv[i]);
+			continue;
+		}
+
+		if (strcmp(argv[i], "-onlysfc") == 0)//output onlye sfc code
+		{
+			i++;
+			bisonlysfc = true; //(bool)atoi(argv[i]);
+			continue;
+		}
+
+		if (strcmp(argv[i], "-l") == 0)//if generate the lod value and the lod levels
+		{
+			i++;
+			bislod = true;
+			lod_levels = atoi(argv[i]);
 		}
 	}	 
 
@@ -177,20 +199,21 @@ int main(int argc, char* argv[])
 		}//end if input_file
 	}//end if strlen
 	
-	///////////////////////
+	/////////////////////////////////
 	////pipeline
 	if (nparallel == 0)
 	{
 		if (strlen(szoutput) !=0 ) printf("serial run   "); //if not stdout ,print sth
 		tbb::task_scheduler_init init_serial(1);
-		run_pipeline<ndims, mbits>(1, szinput, szoutput, 3000, nsfc_type, nencode_type, delta, scale);
+		run_pipeline<ndims, mbits>(1, szinput, szoutput, 3000, nsfc_type, nencode_type, delta, scale, bisonlysfc, lod_levels);
 	}
 
 	if (nparallel == 1)
 	{
 		if (strlen(szoutput) != 0)  printf("parallel run "); //if not stdout ,print sth
 		tbb::task_scheduler_init init_parallel;
-		run_pipeline<ndims, mbits>(init_parallel.default_num_threads(), szinput, szoutput, 3000, nsfc_type, nencode_type, delta, scale);
+		run_pipeline<ndims, mbits>(init_parallel.default_num_threads(), szinput, szoutput, 3000, nsfc_type, \
+			nencode_type, delta, scale, bisonlysfc, lod_levels);
 	}
 	
 #endif
