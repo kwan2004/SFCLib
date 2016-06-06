@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
 	if (argc == 1) return 0;
 	//if (argc % 2 != 1) return 0; //attribute pair plus exe_name
 
-	const int ndims = 4;
+	const int ndims = 3;
 	const int mbits = 20;
 
 	int nparallel = 0;
@@ -140,9 +140,15 @@ int main(int argc, char* argv[])
 	}	 
 
 	///////////////////////////////////////////////////
-	///get the coordinates transfomration file
-	double delta[ndims] = { 0 }; // 526000, 4333000, 300
-	long  scale[ndims] = { 1 }; //100, 100, 1000
+	///get the coordinates transfomration file--one more for lod value
+	double delta[ndims + 1] = { 0 }; // 526000, 4333000, 300
+	long  scale[ndims + 1] = { 1 }; //100, 100, 1000
+
+	for (int i = 1; i < ndims + 1; i++)
+	{
+		delta[i] = 0;
+		scale[i] = 1;
+	}
 
 	if (strlen(sztransfile) != 0)
 	{
@@ -205,15 +211,25 @@ int main(int argc, char* argv[])
 	{
 		if (strlen(szoutput) !=0 ) printf("serial run   "); //if not stdout ,print sth
 		tbb::task_scheduler_init init_serial(1);
-		run_pipeline<ndims, mbits>(1, szinput, szoutput, 3000, nsfc_type, nencode_type, delta, scale, bisonlysfc, lod_levels);
+		
+		if (bislod)//lod value, one more dimension
+			run_pipeline<ndims+1, mbits>(1, szinput, szoutput, 3000, nsfc_type, nencode_type, delta, scale, bisonlysfc, bislod, lod_levels);
+		else
+			run_pipeline<ndims, mbits>(1, szinput, szoutput, 3000, nsfc_type, nencode_type, delta, scale, bisonlysfc, bislod, lod_levels);
+
 	}
 
 	if (nparallel == 1)
 	{
 		if (strlen(szoutput) != 0)  printf("parallel run "); //if not stdout ,print sth
 		tbb::task_scheduler_init init_parallel;
-		run_pipeline<ndims, mbits>(init_parallel.default_num_threads(), szinput, szoutput, 3000, nsfc_type, \
-			nencode_type, delta, scale, bisonlysfc, lod_levels);
+
+		if (bislod)//lod value, one more dimension
+			run_pipeline<ndims+1, mbits>(init_parallel.default_num_threads(), szinput, szoutput, 3000, nsfc_type, \
+			nencode_type, delta, scale, bisonlysfc, bislod, lod_levels);
+		else
+			run_pipeline<ndims, mbits>(init_parallel.default_num_threads(), szinput, szoutput, 3000, nsfc_type, \
+			nencode_type, delta, scale, bisonlysfc, bislod, lod_levels);
 	}
 	
 #endif

@@ -380,7 +380,7 @@ public:
 
 template<int nDims, int mBits>
 int run_pipeline(int nthreads, char* InputFileName, char* OutputFileName, \
-	int item_num, int sfc_type, int conv_type, double* delta, long* scale, bool onlysfc, int nlodlevels)
+	int item_num, int sfc_type, int conv_type, double* delta, long* scale, bool onlysfc, bool bgenlod, int nlodlevels)
 {
 	FILE* input_file = NULL;
 	if (InputFileName != NULL && strlen(InputFileName) != 0)
@@ -414,8 +414,17 @@ int run_pipeline(int nthreads, char* InputFileName, char* OutputFileName, \
 	tbb::pipeline pipeline;
 
 	// Create file-reading writing stage and add it to the pipeline
-	InputFilter<nDims> input_filter(input_file, item_num, nlodlevels, 20);
-	pipeline.add_filter(input_filter);
+	InputFilter<nDims>* input_filter=NULL;
+	if (bgenlod) //should generate lod value for each point
+	{		
+		input_filter = new InputFilter<nDims>(input_file, item_num, nlodlevels, 20);
+	}
+	else
+	{		
+		input_filter = new InputFilter<nDims>(input_file, item_num);
+	}
+	pipeline.add_filter(*input_filter);
+	
 
 	// Create squaring stage and add it to the pipeline
 	//CoordTransFilter<> coordtrans_filter;
@@ -445,6 +454,8 @@ int run_pipeline(int nthreads, char* InputFileName, char* OutputFileName, \
 	fclose(input_file);
 
 	if (strlen(OutputFileName) != 0) printf("time = %g\n", (t1 - t0).seconds());
+
+	delete input_filter;
 	
 	return 1;
 }
