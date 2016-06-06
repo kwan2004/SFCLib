@@ -1,7 +1,7 @@
 #ifndef QUERYBYSFC_H_
 #define QUERYBYSFC_H_
 
-#include "stdafx.h"
+//#include "stdafx.h"
 
 #include "Point.h"
 #include "Rectangle.h"
@@ -9,6 +9,8 @@
 #include "SFCConversion.h"
 #include <iostream>
 #include <vector>
+
+#include <algorithm>
 
 #include <time.h>
 
