@@ -131,17 +131,25 @@ public:
 				memset(ele, 0, 64);
 				strncpy(ele, lastpos, pch - lastpos);
 				//printf("found at %d\n", pch - str + 1);
-				pItem->pPtsArray[i][j] = atof(ele);
-				j++;
+				if (strlen(ele) != 0)
+				{
+					pItem->pPtsArray[i][j] = atof(ele);
+					j++;
+				}
 
 				lastpos = pch + 1;
 				pch = strchr(lastpos, ',');
 			}
-			pItem->pPtsArray[i][j] = atof(lastpos); //final part
+
+			if (strlen(lastpos) != 0 && strcmp(lastpos, "\n") != 0)//final part
+			{
+				pItem->pPtsArray[i][j] = atof(lastpos);
+				j++;
+			}
 
 			if (bis_lod)
 			{
-				pItem->pPtsArray[i][j+1] =  p_rnd_gen->RLOD_Gen();
+				pItem->pPtsArray[i][j] =  p_rnd_gen->RLOD_Gen();
 			}
 
 			i++;
