@@ -58,14 +58,14 @@ void print_ranges_str(char * str, vector<string>& ranges)
 
 int main(int argc, char* argv[])
 {
-#ifdef PARALLEL_PIPELINE
 	
 	if (argc == 1) return 0;
 	//if (argc % 2 != 1) return 0; //attribute pair plus exe_name
 
-	const int ndims = 3;
+	const int ndims = 2;
 	const int mbits = 20;
 
+#ifdef PARALLEL_PIPELINE
 	int nparallel = 0;
 
 	int nsfc_type = 0;
@@ -351,6 +351,221 @@ int main(int argc, char* argv[])
 	//Point<long, 4> mmm = trans3D3.String2BitSequence(str3D3, Base32);
 
 #endif
+
+#ifdef SFC_QUERY
+	int nsfc_type = 0;
+	int nencode_type = 0;
+
+	bool bisonlysfc = false;
+
+	bool bislod = false;
+	int lod_levels = 0;
+
+	char szinput[1024] = { 0 };//1.xyz
+	char szoutput[256] = { 0 };
+	char sztransfile[256] = { 0 };
+
+	for (int i = 1; i < argc; i++)
+	{
+		if (strcmp(argv[i], "-i") == 0)//input filter coordinates
+		{
+			i++;
+			strcpy(szinput, argv[i]);
+			continue;
+		}
+
+		if (strcmp(argv[i], "-o") == 0)//output file path
+		{
+			i++;
+			strcpy(szoutput, argv[i]);
+			continue;
+		}
+
+		if (strcmp(argv[i], "-s") == 0)//sfc conversion type: 0 morthon, 1 hilbert
+		{
+			i++;
+			nsfc_type = atoi(argv[i]);
+			continue;
+		}
+
+		if (strcmp(argv[i], "-e") == 0)//output encoding type: 0 number 1 base32 2 base64
+		{
+			i++;
+			nencode_type = atoi(argv[i]);
+			continue;
+		}
+
+		if (strcmp(argv[i], "-t") == 0)//coordinates transformation file, two lines: translation and scale, comma separated
+		{
+			i++;
+			strcpy(sztransfile, argv[i]);
+			continue;
+		}
+	}
+
+	///////////////////////////////////////////////////
+	///get the coordinates transfomration file--one more for lod value
+	double delta[ndims + 1] = { 0 }; // 526000, 4333000, 300
+	long  scale[ndims + 1] = { 1 }; //100, 100, 1000
+
+	for (int i = 1; i < ndims + 1; i++)
+	{
+		delta[i] = 0;
+		scale[i] = 1;
+	}
+
+	if (strlen(sztransfile) != 0)
+	{
+		FILE* input_file = NULL;
+		input_file = fopen(sztransfile, "r");
+		if (input_file)
+		{
+			int j;
+			char buf[1024];
+			char * pch, *lastpos;
+			char ele[64];
+
+			//////translation
+			memset(buf, 0, 1024);
+			fgets(buf, 1024, input_file);
+
+			j = 0;
+			lastpos = buf;
+			pch = strchr(buf, ',');
+			while (pch != NULL)
+			{
+				memset(ele, 0, 64);
+				strncpy(ele, lastpos, pch - lastpos);
+				//printf("found at %d\n", pch - str + 1);
+				delta[j] = atof(ele);
+				j++;
+
+				lastpos = pch + 1;
+				pch = strchr(lastpos, ',');
+			}
+			delta[j] = atof(lastpos); //final part
+
+			//////scale
+			memset(buf, 0, 1024);
+			fgets(buf, 1024, input_file);
+
+			j = 0;
+			lastpos = buf;
+			pch = strchr(buf, ',');
+			while (pch != NULL)
+			{
+				memset(ele, 0, 64);
+				strncpy(ele, lastpos, pch - lastpos);
+				//printf("found at %d\n", pch - str + 1);
+				scale[j] = atoi(ele);
+				j++;
+
+				lastpos = pch + 1;
+				pch = strchr(lastpos, ',');
+			}
+			scale[j] = atoi(lastpos); //final part
+
+			fclose(input_file);
+		}//end if input_file
+	}//end if strlen
+	
+	CoordTransform<double, long, ndims> cotrans;
+	cotrans.SetTransform(delta, scale);
+	////////////////////////////////////////////////
+	//get the input filter
+	double pt1[ndims] = { 0.0f };
+	double pt2[ndims] = { 0.0f };
+
+	memset(pt1, 0, sizeof(double)*ndims);
+	memset(pt2, 0, sizeof(double)*ndims);
+
+	char * pch, *lastpos;
+	char ele[64];
+
+	lastpos = szinput;
+	for (int i = 0; i < ndims; i++)
+	{
+		///////min
+		memset(ele, 0, 64);
+		
+		pch = strchr(lastpos, '//');
+		strncpy(ele, lastpos, pch - lastpos);
+		pt1[i] = atof(ele);
+
+		lastpos = pch + 1;
+		///////max
+		if (i != ndims - 1)
+		{
+			memset(ele, 0, 64);
+
+			pch = strchr(lastpos, '//');
+			strncpy(ele, lastpos, pch - lastpos);
+			pt2[i] = atof(ele);
+
+			lastpos = pch + 1;
+		}
+		else
+		{
+			pt2[i] = atof(lastpos);
+		}
+
+	}
+	///////////////////////////////////////////////
+	//point transfomration
+	Point<double, ndims> MinPt1(pt1);
+	Point<double, ndims> MaxPt1(pt2);
+
+	Point<long, ndims> MinPt2 = cotrans.Transform(MinPt1);
+	Point<long, ndims> MaxPt2 = cotrans.Transform(MaxPt1);
+
+	/////////////////////////////////////////////////////
+	////query
+	Rect<long, ndims> rec(MinPt2, MaxPt2);
+	QueryBySFC<long, ndims, mbits> querytest;
+
+	FILE* output_file = NULL;
+	if (szoutput != NULL && strlen(szoutput) != 0)
+	{
+		output_file = fopen(szoutput, "w");
+		if (!output_file)
+		{
+			return 0;
+		}
+	}
+	else
+	{
+		output_file = stdout;
+	}
+
+	if (nencode_type == 0) //number
+	{
+		//vector<long> vec_res = querytest.RangeQueryByBruteforce_LNG(rec, (SFCType)nsfc_type);
+		//print_ranges("hilbert 2d brute force", vec_res);
+
+		vector<long> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, (SFCType)nsfc_type);
+		//print_ranges("hilbert 2d recursive", vec_res2);
+		for (int i = 0; i < vec_res2.size(); i = i + 2)
+		{
+			fprintf(output_file, "%ld,%ld\n", vec_res2[i], vec_res2[i + 1]);
+		}
+	}
+	else //string BASE32 BASE64
+	{
+		//vector<string> vec_res5 = querytest.RangeQueryByBruteforce_STR(rec, (SFCType)nsfc_type, (StringType)(nencode_type - 1));
+		//print_ranges_str("hilbert 2d brute force", vec_res5);
+
+		vector<string> vec_res6 = querytest.RangeQueryByRecursive_STR(rec, (SFCType)nsfc_type, (StringType)(nencode_type - 1));
+		//print_ranges_str("hilbert 2d recursive", vec_res6);
+
+		for (int i = 0; i < vec_res6.size(); i = i + 2)
+		{
+			fprintf(output_file, "%s,%s\n", vec_res6[i].c_str(), vec_res6[i + 1].c_str());
+		}
+	}
+	
+	if (output_file != NULL) fclose(output_file);
+#endif
+
 
 #ifdef RANDOM_LOD
 
