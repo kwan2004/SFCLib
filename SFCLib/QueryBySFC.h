@@ -140,8 +140,8 @@ private:
 	int  iscontinuous(string& str1, string& str2);
 
 public:
-	vector<long>  RangeQueryByBruteforce_LNG(Rect<T, nDims> queryRect, SFCType sfc_type);
-	vector<long>  RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type);
+	vector<long long>  RangeQueryByBruteforce_LNG(Rect<T, nDims> queryRect, SFCType sfc_type);
+	vector<long long>  RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type);
 
 	vector<string>  RangeQueryByBruteforce_STR(Rect<T, nDims> queryRect, SFCType sfc_type, StringType encode_type);
 	vector<string>  RangeQueryByRecursive_STR(Rect<T, nDims> queryrect, SFCType sfc_type, StringType encode_type);
@@ -257,7 +257,7 @@ void QueryBySFC<T, nDims, mBits>::query_approximate(TreeNode<T, nDims> nd, Rect<
 }
 
 template< typename T, int nDims, int mBits>
-vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type)
+vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type)
 {
 	vector<TreeNode<T, nDims>> resultTNode;  //tree nodes correspond to queryRectangle
 	TreeNode<T, nDims> root;  //root node
@@ -304,9 +304,9 @@ vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T, nDi
 		resultPoints.push_back(nodePoints);
 	}
 
-	vector<long> result;
+	vector<long long> result;
 
-	long val = 0;
+	long long val = 0;
 	Point<long, mBits> pt;
 	SFCConversion<nDims, mBits> sfc;
 	OutputSchema<nDims, mBits> trans;
@@ -328,7 +328,7 @@ vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T, nDi
 	int size = result.size();
 	std::sort(result.begin(), result.end());
 
-	vector<long> rangevec;
+	vector<long long> rangevec;
 	int nstart = 0;
 	for (int i = 0; i < size - 1; i++)
 	{
@@ -351,13 +351,13 @@ vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T, nDi
 }
 
 template< typename T, int nDims, int mBits>
-vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect<T, nDims> queryRect, SFCType sfc_type)
+vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect<T, nDims> queryRect, SFCType sfc_type)
 {
 	Point<T, nDims> minPoint = queryRect.GetMinPoint();
 	Point<T, nDims> maxPoint = queryRect.GetMaxPoint();
 
 	long *difference = new long[nDims];
-	long *para = new long[nDims + 1];
+	long long *para = new long long[nDims + 1];
 
 	para[0] = 1;
 	for (int i = 0; i < nDims; i++)
@@ -372,7 +372,7 @@ vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect<T, nD
 		vector<T> tempVector;
 		//int difference = maxPoint[i] - minPoint[i];
 		T temp = minPoint[i];
-		for (int j = 0; j <= difference[i]; j++)
+		for (long j = 0; j <= difference[i]; j++)
 		{
 			tempVector.push_back(temp + j);
 		}
@@ -381,21 +381,21 @@ vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect<T, nD
 
 	Point<T, nDims> point;
 
-	long tmp = para[nDims] - 1;
+	long long tmp = para[nDims] - 1;
 	SFCConversion<nDims, mBits> sfc;
 	OutputSchema<nDims, mBits> trans;
 
-	long val = 0;
-	int size = tmp + 1;
-	long* result = new long[size];
+	long long val = 0;
+	long long  size = tmp + 1;
+	long long* result = new long long[size];
 	Point<long, mBits> pt;
 
-	for (int count = tmp; count >= 0; count--)
+	for (long long count = tmp; count >= 0; count--)
 	{
-		long offset = count;
+		long long offset = count;
 		for (int j = nDims - 1; j >= 0; j--)
 		{
-			long div = para[j];
+			long long div = para[j];
 			int n = offset / div;
 			offset = offset % div;
 			point[j] = queryVector[j][n];
@@ -415,7 +415,7 @@ vector<long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect<T, nD
 
 	std::sort(result, result+size);
 
-	vector<long> rangevec;
+	vector<long long> rangevec;
 	int nstart = 0;
 	for (int i = 0; i < size - 1; i++)
 	{
@@ -554,7 +554,7 @@ vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_STR(Rect<T, 
 	Point<T, nDims> maxPoint = queryRect.GetMaxPoint();
 
 	long *difference = new long[nDims];
-	long *para = new long[nDims + 1];
+	long long *para = new long long[nDims + 1];
 
 	para[0] = 1;
 	for (int i = 0; i < nDims; i++)
@@ -569,7 +569,7 @@ vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_STR(Rect<T, 
 		vector<T> tempVector;
 		//int difference = maxPoint[i] - minPoint[i];
 		T temp = minPoint[i];
-		for (int j = 0; j <= difference[i]; j++)
+		for (long j = 0; j <= difference[i]; j++)
 		{
 			tempVector.push_back(temp + j);
 		}
@@ -578,23 +578,25 @@ vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_STR(Rect<T, 
 
 	Point<T, nDims> point;
 
-	long tmp = para[nDims] - 1;
+	long long tmp = para[nDims] - 1;
 	SFCConversion<nDims, mBits> sfc;
 	OutputSchema<nDims, mBits> trans;
 	Point<long, mBits> pt;
 	
-	int size = tmp + 1;
+	long long size = tmp + 1;
 
 	string val;
 	vector<string> result;	
 
-	for (int count = tmp; count >= 0; count--)
-	{
-		long offset = count;
+	for (long long count = tmp; count >= 0; count--)
+	{ 
+		//cout << count << endl;
+
+		long long offset = count;
 		for (int j = nDims - 1; j >= 0; j--)
 		{
-			long div = para[j];
-			int n = offset / div;
+			long long div = para[j];
+			long n = offset / div;
 			offset = offset % div;
 			point[j] = queryVector[j][n];
 		}

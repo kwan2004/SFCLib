@@ -26,10 +26,10 @@ public:
 	}
 
 public:
-	long BitSequence2Value(Point<long, mBits> ptBits)
+	long long BitSequence2Value(Point<long, mBits> ptBits)
 	{
 		if (mBits * nDims >= 64) return 0;
-		long result = 0;
+		long long result = 0;
 		for (int i = 0; i < mBits; i++)
 		{
 			result |= (ptBits[i] << (mBits - i - 1)*nDims);
@@ -37,12 +37,12 @@ public:
 		return result;
 	}
 
-	Point<long, mBits> Value2BitSequence(long value)
+	Point<long, mBits> Value2BitSequence(long long value)
 	{
 		Point<long, mBits> ptOutput;
 		if (mBits * nDims >= 64) return ptOutput;
 
-		long mask = ((long)1 << nDims - 1);
+		long long mask = ((long long)1 << nDims - 1);
 		for (int i = 0; i < mBits; i++)
 		{
 			ptOutput[mBits - i - 1] = (value >> (i*nDims)) & mask;

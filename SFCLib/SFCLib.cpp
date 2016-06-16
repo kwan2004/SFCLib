@@ -28,7 +28,7 @@ void print_bits(unsigned int x)
 	//printf("\n");
 }
 
-void print_ranges(char * str, vector<long>& ranges)
+void print_ranges(char * str, vector<long long>& ranges)
 {
 	if (str == NULL) return;
 
@@ -37,7 +37,7 @@ void print_ranges(char * str, vector<long>& ranges)
 	{
 		//printf("\n");
 
-		printf("%ld---%ld\n", ranges[i], ranges[i + 1]);
+		printf("%lld---%lld\n", ranges[i], ranges[i + 1]);
 
 	}
 }
@@ -62,8 +62,8 @@ int main(int argc, char* argv[])
 	if (argc == 1) return 0;
 	//if (argc % 2 != 1) return 0; //attribute pair plus exe_name
 
-	const int ndims = 2;
-	const int mbits = 20;
+	const int ndims = 4;
+	const int mbits = 22;
 
 #ifdef PARALLEL_PIPELINE
 	int nparallel = 0;
@@ -521,7 +521,7 @@ int main(int argc, char* argv[])
 	/////////////////////////////////////////////////////
 	////query
 	Rect<long, ndims> rec(MinPt2, MaxPt2);
-	QueryBySFC<long, ndims, mbits> querytest;
+	QueryBySFC<long , ndims, mbits> querytest;
 
 	FILE* output_file = NULL;
 	if (szoutput != NULL && strlen(szoutput) != 0)
@@ -539,14 +539,14 @@ int main(int argc, char* argv[])
 
 	if (nencode_type == 0) //number
 	{
-		//vector<long> vec_res = querytest.RangeQueryByBruteforce_LNG(rec, (SFCType)nsfc_type);
+		//vector<long long> vec_res = querytest.RangeQueryByBruteforce_LNG(rec, (SFCType)nsfc_type);
 		//print_ranges("hilbert 2d brute force", vec_res);
 
-		vector<long> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, (SFCType)nsfc_type);
+		vector<long long> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, (SFCType)nsfc_type);
 		//print_ranges("hilbert 2d recursive", vec_res2);
 		for (int i = 0; i < vec_res2.size(); i = i + 2)
 		{
-			fprintf(output_file, "%ld,%ld\n", vec_res2[i], vec_res2[i + 1]);
+			fprintf(output_file, "%lld,%lld\n", vec_res2[i], vec_res2[i + 1]);
 		}
 	}
 	else //string BASE32 BASE64
