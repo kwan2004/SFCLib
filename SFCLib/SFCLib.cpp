@@ -300,10 +300,10 @@ int main(int argc, char* argv[])
 	Point<long, 2> MaxPoint(Point2);
 	Rect<long, 2> rec(MinPoint, MaxPoint);
 	QueryBySFC<long, 2, 3> querytest;
-	vector<long> vec_res = querytest.RangeQueryByBruteforce_LNG(rec, Hilbert);
+	vector<long long> vec_res = querytest.RangeQueryByBruteforce_LNG(rec, Hilbert);
 	print_ranges("hilbert 2d brute force", vec_res);
 
-	vector<long> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, Hilbert);
+	vector<long long> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, Hilbert);
 	print_ranges("hilbert 2d recursive", vec_res2);
 
 	vector<string> vec_res5 = querytest.RangeQueryByBruteforce_STR(rec, Hilbert, Base64);
@@ -322,10 +322,10 @@ int main(int argc, char* argv[])
 	Rect<long, 3> rec3(MinPoint3, MaxPoint3);
 
 	QueryBySFC<long, 3, 10> querytest3;
-	vector<long> vec_res3 = querytest3.RangeQueryByBruteforce_LNG(rec3, Morton);
+	vector<long long> vec_res3 = querytest3.RangeQueryByBruteforce_LNG(rec3, Morton);
 	print_ranges("morton 3d brute force", vec_res3);
 
-	vector<long> vec_res4 = querytest3.RangeQueryByRecursive_LNG(rec3, Morton);
+	vector<long long> vec_res4 = querytest3.RangeQueryByRecursive_LNG(rec3, Morton);
 	print_ranges("morton 3d recursive", vec_res4);
 
 	vector<string> vec_res7 = querytest3.RangeQueryByBruteforce_STR(rec3, Hilbert, Base64);

@@ -9,12 +9,15 @@
 #include "SFCConversion.h"
 #include <iostream>
 #include <vector>
-
+#include <tuple>
+#include <queue>
 #include <algorithm>
 
 #include <time.h>
 
 using namespace std;
+
+#define RETURN_RANGES 40
 
 typedef enum
 {
@@ -137,6 +140,7 @@ private:
 	//vector<Point<T, nDims>> getAllPoints(Rect<T, nDims> queryRect);
 	
 	void query_approximate(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode);
+	void query_approximate2(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode);
 	int  iscontinuous(string& str1, string& str2);
 
 public:
@@ -256,6 +260,137 @@ void QueryBySFC<T, nDims, mBits>::query_approximate(TreeNode<T, nDims> nd, Rect<
 	}
 }
 
+template<typename T, int nDims, int mBits>
+void QueryBySFC<T, nDims, mBits>::query_approximate2(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode)
+{
+	int nary_num = 1 << nDims;  //max count: 2^nDims
+
+	typedef tuple<TreeNode<T, nDims>, Rect<T, nDims>> NRTuple;
+	queue<NRTuple> query_queue;
+
+	TreeNode<T, nDims> nchild;
+	int res, last_level;
+	///////////////////////////////////////////
+	//queue the root node
+	query_queue.push(NRTuple(nd, queryrect));	
+	last_level = 0;
+
+	for (; !query_queue.empty(); query_queue.pop()) 
+	{
+		NRTuple currenttuple = query_queue.front();
+
+		TreeNode<T, nDims> currentNode = std::get<0>(currenttuple);
+		Rect<T, nDims> qrt = std::get<1>(currenttuple);
+
+		//////////////////////////////////////////////////////
+		//check the level and numbers of results
+		if (last_level != currentNode.level && resultTNode.size() > RETURN_RANGES) //we are in the new level and full
+		{
+			break; //now
+		}
+
+		/////////////////////////////////////////////////////////////////////
+		////get all children nodes till equal or intersect, if contain, continue to get children nodes
+		do
+		{
+			for (int i = 0; i < nary_num; i++)
+			{
+				nchild = currentNode.GetChildNode(i);
+				if (nchild.Spatialrelationship(qrt) == 0)  //equal: stop
+				{
+					resultTNode.push_back(nchild);
+					res = 1;
+					break; //break for and while ---to continue queue iteration
+				}
+				else if (nchild.Spatialrelationship(qrt) == 2)  //intersect: divide queryrectangle
+				{
+					res = 2;
+					break;  //break for and while ---divide queryrectangle
+				}
+				else  if (nchild.Spatialrelationship(qrt) == 1)//contain: go down to the next level untill equal or intersect
+				{
+					res = 0;
+					currentNode = nchild;
+					break; //break for but to continue while
+				}
+			}//end for nary children
+		} while (!res);
+
+		if (res == 1) continue; //here break to continue for (queue iteration)
+				
+		//divide the input query rectangle into even parts, e.g. 2 or 4 parts
+		//0~3 for 2d; upper 2|3----10|11;----- YX for 2D, ZYX for 3D, TZYX for 4D--each dim one bit
+		//0~3 for 2d; lower 0|1----00|01 ------one dim: less = 0; greater = 1		
+		vector<Rect<T, nDims>> qrtcut(nary_num);  //2^nDims parts
+		vector<int> qrtpos(nary_num);  //the qrtcut corresponds to treenode
+
+		for (int i = 0; i < nary_num; i++)
+		{
+			qrtpos[i] = 0;
+		}
+
+		vector<int> mid(nDims);  //middle cut line--dim number
+		for (int i = 0; i < nDims; i++)
+		{
+			mid[i] = (currentNode.minPoint[i] + currentNode.maxPoint[i]) / 2;
+		}
+
+		int ncount = 1;
+		qrtcut[0] = qrt;
+
+		Point<T, nDims> pttmp;  //temporary point or corner
+		for (int i = 0; i < nDims; i++)  //dimension iteration
+		{
+			int newadd = 0;
+			for (int j = 0; j < ncount; j++)
+			{
+				if (qrtcut[j].minPoint[i] < mid[i] && qrtcut[j].maxPoint[i] > mid[i])
+				{
+					Rect<T, nDims> rtnew = qrtcut[j];
+					pttmp = rtnew.minPoint;
+					pttmp[i] = mid[i];
+					rtnew.SetMinPoint(pttmp);
+
+					pttmp = qrtcut[j].maxPoint;
+					pttmp[i] = mid[i];
+					qrtcut[j].SetMaxPoint(pttmp);
+
+					qrtpos[ncount + newadd] = (1 << i) + qrtpos[j];
+					qrtcut[ncount + newadd] = rtnew;
+
+					newadd++;
+				}
+
+				if (qrtcut[j].minPoint[i] >= mid[i])  //all bigger than the middle line
+				{
+					qrtpos[j] |= 1 << i;  //just update its position---put 1 on the dimension bit
+				}
+			}//end for rect count
+
+			ncount += newadd;  //update all rectangle count
+		}//end for dimension
+
+		for (int i = 0; i < ncount; i++)   //final rect number 
+		{
+			TreeNode<T, nDims> cNode = currentNode.GetChildNode(qrtpos[i]);
+			int rec = cNode.Spatialrelationship(qrtcut[i]);
+			if (rec == 0)
+			{
+				resultTNode.push_back(cNode);  //equal
+			}
+			else if (rec == -1)
+			{
+			}
+			else
+			{
+				//query_approximate(cNode, qrtcut[i], resultTNode);  //recursive query
+				query_queue.push(NRTuple(cNode, qrtcut[i]));
+			}		
+		}//end for rect division check
+
+	}///end for queue iteration
+}
+
 template< typename T, int nDims, int mBits>
 vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type)
 {
@@ -276,7 +411,7 @@ vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T
 	}
 	if (res == 1)  //contain
 	{
-		query_approximate(root, queryrect, resultTNode);
+		query_approximate2(root, queryrect, resultTNode);
 	}
 
 	vector<vector<Point<T, nDims>>> resultPoints;  //get all cell corner points
@@ -473,7 +608,7 @@ vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_STR(Rect<T, n
 	}
 	if (res == 1)  //contain
 	{
-		query_approximate(root, queryrect, resultTNode);
+		query_approximate2(root, queryrect, resultTNode);
 	}
 
 	vector<vector<Point<T, nDims>>> resultPoints;  //get all cell corner points
