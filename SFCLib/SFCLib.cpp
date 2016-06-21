@@ -66,6 +66,7 @@ int main(int argc, char* argv[])
 	const int mbits = 22;
 
 #ifdef PARALLEL_PIPELINE
+	//-p 0 -s 1 -e 2 -t ct.txt -l 10 -i ahn2.txt -o ee.txt
 	int nparallel = 0;
 
 	int nsfc_type = 0;
@@ -353,6 +354,7 @@ int main(int argc, char* argv[])
 #endif
 
 #ifdef SFC_QUERY
+	//-i 80500.0/80501.0/438000.0/438001.0/0/1/6/7 -s 1 -e 2 -t ct.txt -n 10000 -o qq.sql
 	int nsfc_type = 0;
 	int nencode_type = 0;
 
@@ -360,6 +362,7 @@ int main(int argc, char* argv[])
 
 	bool bislod = false;
 	int lod_levels = 0;
+	int nranges = 0; //if nranges =0; means search to the bottom level
 
 	char szinput[1024] = { 0 };//1.xyz
 	char szoutput[256] = { 0 };
@@ -399,6 +402,12 @@ int main(int argc, char* argv[])
 		{
 			i++;
 			strcpy(sztransfile, argv[i]);
+			continue;
+		}
+		if (strcmp(argv[i], "-n") == 0)//number of return ranges
+		{
+			i++;
+			nranges = atoi(argv[i]);
 			continue;
 		}
 	}
@@ -542,7 +551,7 @@ int main(int argc, char* argv[])
 		//vector<long long> vec_res = querytest.RangeQueryByBruteforce_LNG(rec, (SFCType)nsfc_type);
 		//print_ranges("hilbert 2d brute force", vec_res);
 
-		vector<long long> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, (SFCType)nsfc_type);
+		vector<long long> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, (SFCType)nsfc_type, nranges);
 		//print_ranges("hilbert 2d recursive", vec_res2);
 		for (int i = 0; i < vec_res2.size(); i = i + 2)
 		{
@@ -554,7 +563,7 @@ int main(int argc, char* argv[])
 		//vector<string> vec_res5 = querytest.RangeQueryByBruteforce_STR(rec, (SFCType)nsfc_type, (StringType)(nencode_type - 1));
 		//print_ranges_str("hilbert 2d brute force", vec_res5);
 
-		vector<string> vec_res6 = querytest.RangeQueryByRecursive_STR(rec, (SFCType)nsfc_type, (StringType)(nencode_type - 1));
+		vector<string> vec_res6 = querytest.RangeQueryByRecursive_STR(rec, (SFCType)nsfc_type, (StringType)(nencode_type - 1), nranges);
 		//print_ranges_str("hilbert 2d recursive", vec_res6);
 
 		for (int i = 0; i < vec_res6.size(); i = i + 2)

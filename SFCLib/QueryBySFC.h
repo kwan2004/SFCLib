@@ -17,7 +17,7 @@
 
 using namespace std;
 
-#define RETURN_RANGES 40
+//#define RETURN_RANGES 40
 
 typedef enum
 {
@@ -140,15 +140,15 @@ private:
 	//vector<Point<T, nDims>> getAllPoints(Rect<T, nDims> queryRect);
 	
 	void query_approximate(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode);
-	void query_approximate2(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode);
+	void query_approximate2(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode, int nranges);
 	int  iscontinuous(string& str1, string& str2);
 
 public:
 	vector<long long>  RangeQueryByBruteforce_LNG(Rect<T, nDims> queryRect, SFCType sfc_type);
-	vector<long long>  RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type);
+	vector<long long>  RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges);
 
 	vector<string>  RangeQueryByBruteforce_STR(Rect<T, nDims> queryRect, SFCType sfc_type, StringType encode_type);
-	vector<string>  RangeQueryByRecursive_STR(Rect<T, nDims> queryrect, SFCType sfc_type, StringType encode_type);
+	vector<string>  RangeQueryByRecursive_STR(Rect<T, nDims> queryrect, SFCType sfc_type, StringType encode_type, int nranges);
 };
 
 
@@ -261,7 +261,7 @@ void QueryBySFC<T, nDims, mBits>::query_approximate(TreeNode<T, nDims> nd, Rect<
 }
 
 template<typename T, int nDims, int mBits>
-void QueryBySFC<T, nDims, mBits>::query_approximate2(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode)
+void QueryBySFC<T, nDims, mBits>::query_approximate2(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode, int nranges)
 {
 	int nary_num = 1 << nDims;  //max count: 2^nDims
 
@@ -284,7 +284,7 @@ void QueryBySFC<T, nDims, mBits>::query_approximate2(TreeNode<T, nDims> nd, Rect
 
 		//////////////////////////////////////////////////////
 		//check the level and numbers of results
-		if (last_level != currentNode.level && resultTNode.size() > RETURN_RANGES) //we are in the new level and full
+		if ( (last_level != currentNode.level) && (nranges != 0) && (resultTNode.size() >  nranges)) //we are in the new level and full
 		{
 			break; //now
 		}
@@ -392,7 +392,7 @@ void QueryBySFC<T, nDims, mBits>::query_approximate2(TreeNode<T, nDims> nd, Rect
 }
 
 template< typename T, int nDims, int mBits>
-vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type)
+vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges)
 {
 	vector<TreeNode<T, nDims>> resultTNode;  //tree nodes correspond to queryRectangle
 	TreeNode<T, nDims> root;  //root node
@@ -411,7 +411,7 @@ vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T
 	}
 	if (res == 1)  //contain
 	{
-		query_approximate2(root, queryrect, resultTNode);
+		query_approximate2(root, queryrect, resultTNode, nranges);
 	}
 
 	vector<vector<Point<T, nDims>>> resultPoints;  //get all cell corner points
@@ -589,7 +589,7 @@ int QueryBySFC<T, nDims, mBits>::iscontinuous(string& str1, string& str2)
 
 
 template< typename T, int nDims, int mBits>
-vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_STR(Rect<T, nDims> queryrect, SFCType sfc_type, StringType encode_type)
+vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_STR(Rect<T, nDims> queryrect, SFCType sfc_type, StringType encode_type, int nranges)
 {
 	vector<TreeNode<T, nDims>> resultTNode;  //tree nodes correspond to queryRectangle
 	TreeNode<T, nDims> root;  //root node
@@ -608,7 +608,7 @@ vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_STR(Rect<T, n
 	}
 	if (res == 1)  //contain
 	{
-		query_approximate2(root, queryrect, resultTNode);
+		query_approximate2(root, queryrect, resultTNode, nranges);
 	}
 
 	vector<vector<Point<T, nDims>>> resultPoints;  //get all cell corner points
