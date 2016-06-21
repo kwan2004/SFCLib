@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
 	//if (argc % 2 != 1) return 0; //attribute pair plus exe_name
 
 	const int ndims = 4;
-	const int mbits = 22;
+	const int mbits = 30;
 
 #ifdef PARALLEL_PIPELINE
 	//-p 0 -s 1 -e 2 -t ct.txt -l 10 -i ahn2.txt -o ee.txt
@@ -243,13 +243,17 @@ int main(int argc, char* argv[])
 	pt1[3] = 9;//1101
 
 	Point<double, 4> pt2;
-	pt2[0] = 85224.3;//1010
-	pt2[1] = 447071.86;//1011
-	pt2[2] = 0.4; //0011
+	//pt2[0] = 85224.3;//1010
+	//pt2[1] = 447071.86;//1011
+	//pt2[2] = 0.4; //0011
+	//pt2[3] = 9;//1101
+	pt2[0] = 85098.38;//1010
+	pt2[1] = 446440.06;//1011
+	pt2[2] = 18.34; //0011
 	pt2[3] = 9;//1101
 
 	double delta[4] = { 80000.00, 437500.00, -20.0, 0.0 }; // 526000, 4333000, 300
-	long  scale[4] = { 1000, 1000, 100, 1 }; //100, 100, 1000
+	long  scale[4] = { 100, 100, 100, 1 }; //100, 100, 1000
 
 	CoordTransform<double, long, ndims> cotrans;
 	cotrans.SetTransform(delta, scale);
@@ -273,6 +277,14 @@ int main(int argc, char* argv[])
 	Point<long, 30> ptbts2;
 	ptbts2 = sfctest.ptBits;
 	cout << transtest.BitSequence2String(ptbts2, Base64).c_str() << endl;
+
+	string res("+++++++MZcZE4Sxf+BdL");//85098.38 446440.06 18.34
+
+	Point<long, 30> ptbts3 = transtest.String2BitSequence(res, Base64);
+	sfctest.ptBits = ptbts3;
+	sfctest.HilbertDecode();
+	Point<long, 4> Pt3 =  sfctest.ptCoord;
+
 	
 
 	///////////////////////////////////////
@@ -393,7 +405,7 @@ int main(int argc, char* argv[])
 #endif
 
 #ifdef SFC_QUERY
-	//-i 80500.0/80501.0/438000.0/438001.0/0/1/6/7 -s 1 -e 2 -t ct.txt -n 10000 -o qq.sql
+	//-i 85098.0/85099.0/446444.0/446445.0/12/13/6/9 -s 1 -e 2 -t ct.txt -n 10000 -o qq.sql
 	int nsfc_type = 0;
 	int nencode_type = 0;
 
