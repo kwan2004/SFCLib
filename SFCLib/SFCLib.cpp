@@ -236,6 +236,45 @@ int main(int argc, char* argv[])
 #endif
 	///////////////////////
 #ifdef SFC_GEN_QUERY
+	Point<double, 4> pt1;
+	pt1[0] = 85224.3;//1010
+	pt1[1] = 447071.86;//1011
+	pt1[2] = 0.39; //0011
+	pt1[3] = 9;//1101
+
+	Point<double, 4> pt2;
+	pt2[0] = 85224.3;//1010
+	pt2[1] = 447071.86;//1011
+	pt2[2] = 0.4; //0011
+	pt2[3] = 9;//1101
+
+	double delta[4] = { 80000.00, 437500.00, -20.0, 0.0 }; // 526000, 4333000, 300
+	long  scale[4] = { 1000, 1000, 100, 1 }; //100, 100, 1000
+
+	CoordTransform<double, long, ndims> cotrans;
+	cotrans.SetTransform(delta, scale);
+
+	Point<long, 4> MinPt2 = cotrans.Transform(pt1);
+	Point<long, 4> MaxPt2 = cotrans.Transform(pt2);
+
+	SFCConversion<4, 30> sfctest;
+	OutputSchema<4, 30> transtest;
+
+	sfctest.ptCoord = MinPt2;
+	//sfc.MortonEncode();
+	sfctest.HilbertEncode();
+	Point<long, 30> ptbts1; 
+	ptbts1 = sfctest.ptBits;
+	cout << transtest.BitSequence2String(ptbts1, Base64).c_str() << endl;
+
+	sfctest.ptCoord = MaxPt2;
+	//sfc.MortonEncode();
+	sfctest.HilbertEncode();
+	Point<long, 30> ptbts2;
+	ptbts2 = sfctest.ptBits;
+	cout << transtest.BitSequence2String(ptbts2, Base64).c_str() << endl;
+	
+
 	///////////////////////////////////////
 	////2D case 8*8, i.e n=2, m=3
 	Point<long, 2> ptCoord; //SFC coordinates n=2
@@ -304,13 +343,13 @@ int main(int argc, char* argv[])
 	vector<long long> vec_res = querytest.RangeQueryByBruteforce_LNG(rec, Hilbert);
 	print_ranges("hilbert 2d brute force", vec_res);
 
-	vector<long long> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, Hilbert);
+	vector<long long> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, Hilbert,0);
 	print_ranges("hilbert 2d recursive", vec_res2);
 
 	vector<string> vec_res5 = querytest.RangeQueryByBruteforce_STR(rec, Hilbert, Base64);
 	print_ranges_str("hilbert 2d brute force", vec_res5);
 
-	vector<string> vec_res6 = querytest.RangeQueryByRecursive_STR(rec, Hilbert, Base64);
+	vector<string> vec_res6 = querytest.RangeQueryByRecursive_STR(rec, Hilbert, Base64,0);
 	print_ranges_str("hilbert 2d recursive", vec_res6);
 
 
@@ -326,13 +365,13 @@ int main(int argc, char* argv[])
 	vector<long long> vec_res3 = querytest3.RangeQueryByBruteforce_LNG(rec3, Morton);
 	print_ranges("morton 3d brute force", vec_res3);
 
-	vector<long long> vec_res4 = querytest3.RangeQueryByRecursive_LNG(rec3, Morton);
+	vector<long long> vec_res4 = querytest3.RangeQueryByRecursive_LNG(rec3, Morton,0);
 	print_ranges("morton 3d recursive", vec_res4);
 
 	vector<string> vec_res7 = querytest3.RangeQueryByBruteforce_STR(rec3, Hilbert, Base64);
 	print_ranges_str("hilbert 2d brute force", vec_res7);
 
-	vector<string> vec_res8 = querytest3.RangeQueryByRecursive_STR(rec3, Hilbert, Base64);
+	vector<string> vec_res8 = querytest3.RangeQueryByRecursive_STR(rec3, Hilbert, Base64,0);
 	print_ranges_str("hilbert 2d recursive", vec_res8);
 
 	//SFCConversion<3, 9> sfc3D;

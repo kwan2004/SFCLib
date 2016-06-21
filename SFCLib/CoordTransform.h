@@ -41,7 +41,10 @@ public:
 		Point<T2, nDims> outPt;
 		for (int i = 0; i < nDims; i++)
 		{
-			outPt[i] = (inPt[i] - _delta[i])*_scale[i];
+			/*double b = (inPt[i] - _delta[i])*_scale[i];
+			outPt[i] = b ;
+			double a = b - outPt[i];*/
+			outPt[i] = lround((inPt[i] - _delta[i])*_scale[i]);
 		}
 		return outPt;
 	}
