@@ -278,12 +278,15 @@ int main(int argc, char* argv[])
 	ptbts2 = sfctest.ptBits;
 	cout << transtest.BitSequence2String(ptbts2, Base64).c_str() << endl;
 
-	string res("+++++++MZcZE4Sxf+BdL");//85098.38 446440.06 18.34
+	string res("+++++++MZcZE4Sxf+BdL");//85098.38 446440.06 18.34 9
 
-	Point<long, 30> ptbts3 = transtest.String2BitSequence(res, Base64);
-	sfctest.ptBits = ptbts3;
-	sfctest.HilbertDecode();
-	Point<long, 4> Pt3 =  sfctest.ptCoord;
+	SFCConversion<4, 30> sfctest2;
+	OutputSchema<4, 30> transtest2;
+
+	Point<long, 30> ptbts3 = transtest2.String2BitSequence(res, Base64);
+	sfctest2.ptBits = ptbts3;
+	sfctest2.HilbertDecode();
+	Point<long, 4> Pt3 = sfctest2.ptCoord;
 
 	
 
@@ -316,8 +319,9 @@ int main(int argc, char* argv[])
 			cout << endl;*/
 			
 			long outval = trans.BitSequence2Value(ptBits);
+			string strout = trans.BitSequence2String(ptBits, Base64);
 
-			cout << i << ", " << j << "====" << outval <<endl;
+			cout << i << ", " << j << "====" << outval << " , " << strout << endl;
 		}
 	}
 
