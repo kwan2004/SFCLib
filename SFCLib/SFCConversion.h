@@ -10,14 +10,14 @@ template< int nDims,  int  mBits>
 class SFCConversion
 {
 private:
-	std::array< long, nDims > g_mask;
+	std::array<unsigned long, nDims > g_mask;
 
-	unsigned int calc_P3(int i, Point<long, mBits> H);
-	unsigned int calc_P2(unsigned int S);
-	unsigned int calc_J(unsigned int P);
-	unsigned int calc_T(unsigned int P);
-	unsigned int calc_tS_tT(unsigned int xJ, unsigned int val);
-	unsigned int calc_tS_tT2(unsigned int xJ, unsigned int val);
+	unsigned long calc_P3(int i, Point<long, mBits> H);
+	unsigned long calc_P2(unsigned long S);
+	unsigned long calc_J(unsigned long P);
+	unsigned long calc_T(unsigned long P);
+	unsigned long calc_tS_tT(unsigned long xJ, unsigned long val);
+	unsigned long calc_tS_tT2(unsigned long xJ, unsigned long val);
 
 public:
 	Point<long, nDims> ptCoord; //n*m
@@ -27,7 +27,7 @@ public:
 	{
 		for (int i = 0; i < nDims; i++)
 		{
-			g_mask[i] = 1 << (nDims - i -1);
+			g_mask[i] = ((unsigned long)1) << (nDims - i - 1);
 		}
 	}
 
@@ -44,7 +44,7 @@ void SFCConversion<nDims, mBits>::MortonEncode() // from n*m to m*n
 	for (int i = 0; i < mBits; i++)//m
 	{
 		ptBits[i] = 0;
-		long mask = 1 << (mBits - i - 1); //move to the ith bit
+		long mask = ((unsigned long)1) << (mBits - i - 1); //move to the ith bit
 
 		for (int j = 0; j < nDims; j++) //get one bit from each nDims
 		{
@@ -52,9 +52,6 @@ void SFCConversion<nDims, mBits>::MortonEncode() // from n*m to m*n
 				ptBits[i] |= 1 << (nDims - j - 1);// push this bit to dim position(xyz...) nDims -----(nDims - j)
 		}//
 	}//m group
-
-	//set the ouput point n;
-	//ptBits.getBitLength(nDims);
 }
 
 
@@ -64,7 +61,7 @@ void SFCConversion<nDims, mBits>::MortonDecode(void)
 	for (int i = 0; i < nDims; i++)//m n-bits
 	{
 		ptCoord[i] = 0;
-		long mask = 1 << (nDims - i - 1);
+		long mask = ((unsigned long)1) << (nDims - i - 1);
 
 		for (int j = 0; j < mBits; j++)
 		{
@@ -75,19 +72,18 @@ void SFCConversion<nDims, mBits>::MortonDecode(void)
 }
 
 
-
 /*===========================================================*/
 /* calc_P ---Get each key part from the input key*/
 /*===========================================================*/
 template< int nDims, int  mBits>
-unsigned int SFCConversion<nDims, mBits>::calc_P3(int i, Point<long, mBits> H)
+unsigned long SFCConversion<nDims, mBits>::calc_P3(int i, Point<long, mBits> H)
 {
-	/*unsigned int mask = ((unsigned int)1 << (mBits+1)) - 1;
-	unsigned int P;//, temp2
+	/*unsigned long mask = ((unsigned long)1 << (mBits+1)) - 1;
+	unsigned long P;//, temp2
 
 	P = ((H.hcode[0] >> i) & mask);*/
 
-	unsigned int P = H[(mBits * nDims - i) / nDims - 1];
+	unsigned long P = H[(mBits * nDims - i) / nDims - 1];
 
 	return P;
 }
@@ -96,10 +92,10 @@ unsigned int SFCConversion<nDims, mBits>::calc_P3(int i, Point<long, mBits> H)
 /* calc_P2 */
 /*===========================================================*/
 template< int nDims, int  mBits>
-unsigned int SFCConversion<nDims, mBits>::calc_P2(unsigned int S)
+unsigned long SFCConversion<nDims, mBits>::calc_P2(unsigned long S)
 {
 	int i;
-	unsigned int P;
+	unsigned long P;
 	P = S & g_mask[0];
 	for (i = 1; i < nDims; i++)
 		if (S & g_mask[i] ^ (P >> 1) & g_mask[i])
@@ -108,10 +104,10 @@ unsigned int SFCConversion<nDims, mBits>::calc_P2(unsigned int S)
 }
 
 template< int nDims, int  mBits>
-unsigned int SFCConversion<nDims, mBits>::calc_J(unsigned int P)
+unsigned long SFCConversion<nDims, mBits>::calc_J(unsigned long P)
 {
 	int i;
-	unsigned int J;
+	unsigned long J;
 	J = nDims;
 	for (i = 1; i < nDims; i++)
 		if ((P >> i & 1) == (P & 1))
@@ -127,7 +123,7 @@ unsigned int SFCConversion<nDims, mBits>::calc_J(unsigned int P)
 /* calc_T */
 /*===========================================================*/
 template< int nDims, int  mBits>
-unsigned int SFCConversion<nDims, mBits>::calc_T(unsigned int P)
+unsigned long SFCConversion<nDims, mBits>::calc_T(unsigned long P)
 {
 	if (P < 3)
 		return 0;
@@ -139,16 +135,16 @@ unsigned int SFCConversion<nDims, mBits>::calc_T(unsigned int P)
 /* calc_tS_tT */
 /*===========================================================*/
 template< int nDims, int  mBits>
-unsigned int SFCConversion<nDims, mBits>::calc_tS_tT(unsigned int xJ, unsigned int val)
+unsigned long SFCConversion<nDims, mBits>::calc_tS_tT(unsigned long xJ, unsigned long val)
 {
-	unsigned int retval, temp1, temp2;
+	unsigned long retval, temp1, temp2;
 	retval = val;
 	if (xJ % nDims != 0)
 	{
 		temp1 = val >> (xJ % nDims);
 		temp2 = val << (nDims - xJ % nDims);
 		retval = temp1 | temp2;
-		retval &= ((unsigned int)1 << nDims) - 1;
+		retval &= ((unsigned long)1 << nDims) - 1;
 	}
 	return retval;
 }
@@ -157,16 +153,16 @@ unsigned int SFCConversion<nDims, mBits>::calc_tS_tT(unsigned int xJ, unsigned i
 /* calc_tS_tT */
 /*===========================================================*/
 template< int nDims, int  mBits>
-unsigned int SFCConversion<nDims, mBits>::calc_tS_tT2(unsigned int xJ, unsigned int val)
+unsigned long SFCConversion<nDims, mBits>::calc_tS_tT2(unsigned long xJ, unsigned long val)
 {
-	unsigned int retval, temp1, temp2;
+	unsigned long retval, temp1, temp2;
 	retval = val;
 	if (xJ % nDims != 0)
 	{
 		temp1 = val << (xJ % nDims);
 		temp2 = val >> (nDims - xJ % nDims);
 		retval = temp1 | temp2;
-		retval &= ((unsigned int)1 << nDims) - 1;
+		retval &= ((unsigned long)1 << nDims) - 1;
 	}
 	return retval;
 }
@@ -175,7 +171,7 @@ unsigned int SFCConversion<nDims, mBits>::calc_tS_tT2(unsigned int xJ, unsigned 
 template< int nDims, int  mBits>
 void SFCConversion<nDims, mBits>::HilbertEncode(void) // from n*m to m*n
 {
-	unsigned int mask = (unsigned int)1 << ( mBits - 1), element,
+	unsigned long mask = ((unsigned long)1) << ( mBits - 1), element,
 		A, W = 0, S, tS, T, tT, J, P = 0, xJ;
 	//Point h = { 0 };
 	int i = mBits * nDims - nDims, j;
@@ -247,7 +243,7 @@ void SFCConversion<nDims, mBits>::HilbertEncode(void) // from n*m to m*n
 template< int nDims, int  mBits>
 void SFCConversion<nDims, mBits>::HilbertDecode(void)
 {
-	unsigned int mask = (unsigned int)1 << mBits - 1,
+	unsigned long mask = ((unsigned long)1) << (mBits - 1),
 		A, W = 0, S, tS, T, tT, J, P = 0, xJ;
 	//Point pt = { 0 };
 	int i = mBits * nDims - nDims, j;

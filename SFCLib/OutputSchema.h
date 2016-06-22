@@ -57,10 +57,20 @@ public:
 
 	Point<long, mBits> Value2BitSequence(long long value)
 	{
-		Point<long, mBits> ptOutput;
+		/*Point<long, mBits> ptOutput;
 		if (mBits * nDims >= 64) return ptOutput;
 
 		long long mask = ((long long)1 << nDims - 1);
+		for (int i = 0; i < mBits; i++)
+		{
+			ptOutput[mBits - i - 1] = (value >> (i*nDims)) & mask;
+		}
+
+		return ptOutput;*/
+
+		Point<long, mBits> ptOutput;
+		if (mBits * nDims >= 64) return ptOutput;
+		long long mask = (((long long)1 << nDims) - 1);
 		for (int i = 0; i < mBits; i++)
 		{
 			ptOutput[mBits - i - 1] = (value >> (i*nDims)) & mask;

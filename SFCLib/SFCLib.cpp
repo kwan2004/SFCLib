@@ -288,8 +288,6 @@ int main(int argc, char* argv[])
 	sfctest2.HilbertDecode();
 	Point<long, 4> Pt3 = sfctest2.ptCoord;
 
-	
-
 	///////////////////////////////////////
 	////2D case 8*8, i.e n=2, m=3
 	Point<long, 2> ptCoord; //SFC coordinates n=2
@@ -297,7 +295,8 @@ int main(int argc, char* argv[])
 
 	SFCConversion<2, 3> sfc;
 	OutputSchema<2, 3> trans;
-		
+	
+	int a, b;
 	for (int i = 0; i < 8; i++)
 	{
 		for (int j = 0; j < 8; j++)
@@ -309,44 +308,52 @@ int main(int argc, char* argv[])
 			//sfc.MortonEncode();
 			sfc.HilbertEncode();
 			ptBits = sfc.ptBits;
-
-			/*cout << i << ", " << j << "---";
-			print_bits(i); cout << " ";
-			print_bits(j); cout << " ---";
-			print_bits(ptBits[0]); cout << " ";
-			print_bits(ptBits[1]); cout << " ";
-			print_bits(ptBits[2]);
-			cout << endl;*/
 			
 			long outval = trans.BitSequence2Value(ptBits);
 			string strout = trans.BitSequence2String(ptBits, Base64);
 
-			cout << i << ", " << j << "====" << outval << " , " << strout << endl;
+			cout << i << ", " << j << "--->" << outval << " , " << strout ; //<< endl
+			
+			//ptBits = trans.Value2BitSequence(i);
+			ptBits = trans.String2BitSequence(strout, Base64);
+			sfc.ptBits = ptBits;
+			sfc.HilbertDecode();
+			Point<long, 2> pt2d = sfc.ptCoord;
+			a = pt2d[0];
+			b = pt2d[1];
+			cout  << "--->" << a << " , " << b << endl;
 		}
 	}
 
-	//
 	//////////////////////////////////
 	/////Butz's sample, n=5; m=4;
-	//Point<long, 5> pt1;
-	//pt1[0] = 10;//1010
-	//pt1[1] = 11;//1011
-	//pt1[2] = 3; //0011
-	//pt1[3] = 13;//1101
-	//pt1[4] = 5; //0101
+	Point<long, 5> pt3;
+	pt3[0] = 10;//1010
+	pt3[1] = 11;//1011
+	pt3[2] = 3; //0011
+	pt3[3] = 13;//1101
+	pt3[4] = 5; //0101
 
-	//Point<long, 4> pt2; //SFC bit sequence m=3
+	Point<long, 6> pt4; //SFC bit sequence m=3
 
-	//SFCConversion<5, 4> sfc2;
-	//OutputSchema<5, 4> trans2;
+	SFCConversion<5, 6> sfc2;
+	OutputSchema<5, 6> trans2;
 
-	//sfc2.ptCoord = pt1;
-	//sfc2.HilbertEncode();
-	//pt2 = sfc2.ptBits;
+	sfc2.ptCoord = pt3;
+	sfc2.HilbertEncode();
+	pt4 = sfc2.ptBits;
 
-	//long val = trans2.BitSequence2Value(pt2);
+	long val = trans2.BitSequence2Value(pt4);
 
-	//print_bits(val);
+	print_bits(val);
+
+	Point<long, 5> pt5;
+	SFCConversion<5, 6> sfc3;
+	sfc2.ptBits = pt4;
+	sfc2.HilbertDecode();
+	pt5 =sfc2.ptCoord;
+
+	//int a = sizeof(unsigned int);
 
 	//
 	////2D sample
