@@ -50,9 +50,9 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;SFC_GEN_QUERY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;SFC_GEN_QUERY2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\projects\tbb44\include;D:\projects\tbb44\examples</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\projects\tbb44\include;D:\projects\tbb44\examples;D:\projects\boost_1_59_0</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
     </ClCompile>
@@ -86,11 +86,13 @@
   <ItemGroup>
     <ClInclude Include="CoordTransform.h" />
     <ClInclude Include="OutputSchema.h" />
+    <ClInclude Include="OutputSchema2.h" />
     <ClInclude Include="Point.h" />
     <ClInclude Include="QueryBySFC.h" />
     <ClInclude Include="RandomLOD.h" />
     <ClInclude Include="Rectangle.h" />
     <ClInclude Include="SFCConversion.h" />
+    <ClInclude Include="SFCConversion2.h" />
     <ClInclude Include="SFCPipeline.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />

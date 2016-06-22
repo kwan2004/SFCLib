@@ -124,6 +124,11 @@ public:
 		return elements_[i];
 	}
 
+	T* getAllElements()
+	{
+		return elements_.data();
+	}
+
 	
 };
 

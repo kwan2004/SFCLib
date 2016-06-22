@@ -1,6 +1,6 @@
 //#pragma once
-#ifndef OUTPUTSCHEMA_H_
-#define OUTPUTSCHEMA_H_
+#ifndef OUTPUTSCHEMA2_H_
+#define OUTPUTSCHEMA2_H_
 
 #include "Point.h"
 #include <iostream>
@@ -11,13 +11,15 @@ typedef enum
 {
 	Base32,
 	Base64,
-} StringType;
+	Dec,
+	Hex
+} OutType;
 
 static const char* const BASE32_TABLE_E2 = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
 static const char* const BASE64_TABLE_E2 = "+/0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz=";
 
 template<int nDims, int  mBits>
-class OutputSchema
+class OutputSchema2
 {
 public:
 	OutputSchema()
@@ -26,60 +28,8 @@ public:
 	}
 
 public:
-	/*
-	least common multiple
-	*/
-	int CalculateLCM(int a, int b)
-	{
-		//find the least common multiple of a and  b( lcm <= a*b)
-		int nlcm = (a > b) ? a : b;
-		while (1)                       /* Always true. */
-		{
-			if (nlcm % a == 0 && nlcm % b == 0)
-			{
-				break;          /* while loop terminates. */
-			}
-			++nlcm;
-		}
-		return nlcm;
-	}
-
-	long long BitSequence2Value(Point<long, mBits> ptBits)
-	{
-		if (mBits * nDims >= 64) return 0;
-		long long result = 0;
-		for (int i = 0; i < mBits; i++)
-		{
-			result |= (ptBits[i] << (mBits - i - 1)*nDims);
-		}
-		return result;
-	}
-
-	Point<long, mBits> Value2BitSequence(long long value)
-	{
-		/*Point<long, mBits> ptOutput;
-		if (mBits * nDims >= 64) return ptOutput;
-
-		long long mask = ((long long)1 << nDims - 1);
-		for (int i = 0; i < mBits; i++)
-		{
-			ptOutput[mBits - i - 1] = (value >> (i*nDims)) & mask;
-		}
-
-		return ptOutput;*/
-
-		Point<long, mBits> ptOutput;
-		if (mBits * nDims >= 64) return ptOutput;
-		long long mask = (((long long)1 << nDims) - 1);
-		for (int i = 0; i < mBits; i++)
-		{
-			ptOutput[mBits - i - 1] = (value >> (i*nDims)) & mask;
-		}
-
-		return ptOutput;
-	}
 	
-	string BitSequence2String(Point<long, mBits> ptBits, StringType str_type)
+	string Value2String(uint256_t val, StringType str_type)
 	{
 		int base = 0;
 		if (str_type == Base32) base = 5;
@@ -96,7 +46,7 @@ public:
 
 		//find the least common multiple of base and  nDims( lcm <= base*n)
 		int nlcm = CalculateLCM(base, nDims);
-		
+
 		//compare m*n with lcm (lcm = t*n), so totalbits(m*n) can be divided into m/t blocks (block=lcm=t*n)
 		int t = nlcm / nDims; //lcm is the bit number in one block; each block has t  nDims = t*n
 		int nblock = (mBits % t) ? (mBits / t + 1) : (mBits / t); // m/t+1 or m/t---one more space for residual
@@ -120,7 +70,7 @@ public:
 
 			//change decimal value to character
 			long ncharnum = (nloops*nDims % base) ? (nloops*nDims / base + 1) : (nloops*nDims / base);
-			
+
 			unsigned int mask = ((unsigned int)1 << base) - 1;
 			int nidx = 0;
 
@@ -139,13 +89,13 @@ public:
 				}
 			}
 		}
-		
+
 		string resultStr(szstr);
 		delete[] szstr;
 		return resultStr;
 	}
-	
-	Point<long, mBits> String2BitSequence(string szCode, StringType str_type)
+
+	uint256_t String2Value(string szCode, StringType str_type)
 	{
 		Point<long, mBits> ptBits;
 
@@ -187,7 +137,7 @@ public:
 		int ntotalbits = codeLength * base;
 
 		//find the least common multiple of base and  nDims( lcm <= base*n)
-		int nlcm = CalculateLCM(base, nDims);		
+		int nlcm = CalculateLCM(base, nDims);
 
 		//compare codeLength*base with lcm (lcm = base*n), so totalbits(codeLength*base) can be divided into codeLengyh/t blocks (block=lcm=t*base)
 		int t = (nlcm / base); //lcm is the bit number in one block; each block has t  nDims = t*n
@@ -204,7 +154,7 @@ public:
 				nloops = codeLength % t;
 			else
 				nloops = t;
-			
+
 			for (int j = 0; j < nloops; j++)
 			{
 				nblkvalue |= codeBits[i*t + j] << ((nloops - 1 - j)*base);
@@ -215,7 +165,7 @@ public:
 			long ncharnum = 0;
 			if (ntotalbits != mBits*nDims && i == nblock - 1)
 			{
-				ncharnum =  nloops*base - (ntotalbits - mBits*nDims) / nDims;
+				ncharnum = nloops*base - (ntotalbits - mBits*nDims) / nDims;
 			}
 			else
 			{
@@ -228,7 +178,7 @@ public:
 			{
 				ptBits[k] = (nblkvalue >> ((ncharnum - j - 1)*nDims)) & mask;
 				k++;
-			}			
+			}
 		}
 		delete[] codeBits;
 		return ptBits;
