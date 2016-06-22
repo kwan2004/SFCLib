@@ -268,7 +268,7 @@ public:
 
 			if (_conv_type == 2)
 			{
-				strcpy(pout_item->out_string + i* nstrlen, outtrans.Value2String(val, Base32).c_str());
+				strcpy(pout_item->out_string + i* nstrlen, outtrans.Value2String(val, Base64).c_str());
 				//pout_item->out_string[i] = "a";//outtrans.BitSequence2String(ptBits, Base64);
 			}
 		}

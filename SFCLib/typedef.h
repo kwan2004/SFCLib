@@ -8,6 +8,8 @@ typedef enum
 {
 	Base32,
 	Base64,
+	DEC,
+	HEX
 } StringType;
 
 static const char* const BASE32_TABLE_E2 = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
