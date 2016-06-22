@@ -2,15 +2,6 @@
 #define SFCCONERSION2_H_
 
 #include "Point.h"
-#include <boost/multiprecision/cpp_int.hpp>
-using namespace boost::multiprecision;
-
-/* define the bitmask_t type as an integer of sufficient size */
-typedef  uint256_t bitmask_t; // unsigned long long
-/* define the halfmask_t type as an integer of 1/2 the size of bitmask_t */
-typedef  uint128_t halfmask_t; //unsigned long
-
-
 
 #define adjust_rotation(rotation,nDims,bits)                            \
 do {                                                                    \
