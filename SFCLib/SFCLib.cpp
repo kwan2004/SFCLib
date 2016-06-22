@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 
 	const int ndims = 4;
 	const int mbits = 30;
-
+	
 #ifdef PARALLEL_PIPELINE
 	//-p 0 -s 1 -e 2 -t ct.txt -l 10 -i ahn2.txt -o ee.txt
 	int nparallel = 0;
@@ -234,8 +234,10 @@ int main(int argc, char* argv[])
 	}
 	
 #endif
+	
 	///////////////////////
 #ifdef SFC_GEN_QUERY
+	
 	Point<double, 4> pt1;
 	pt1[0] = 85224.3;//1010
 	pt1[1] = 447071.86;//1011
@@ -269,14 +271,14 @@ int main(int argc, char* argv[])
 	sfctest.HilbertEncode();
 	Point<long, 30> ptbts1; 
 	ptbts1 = sfctest.ptBits;
-	cout << transtest.BitSequence2String(ptbts1, Base64).c_str() << endl;
+	std::cout << transtest.BitSequence2String(ptbts1, Base64).c_str() << endl;
 
 	sfctest.ptCoord = MaxPt2;
 	//sfc.MortonEncode();
 	sfctest.HilbertEncode();
 	Point<long, 30> ptbts2;
 	ptbts2 = sfctest.ptBits;
-	cout << transtest.BitSequence2String(ptbts2, Base64).c_str() << endl;
+	std::cout << transtest.BitSequence2String(ptbts2, Base64).c_str() << endl;
 
 	string res("+++++++MZcZE4Sxf+BdL");//85098.38 446440.06 18.34
 
@@ -284,7 +286,7 @@ int main(int argc, char* argv[])
 	sfctest.ptBits = ptbts3;
 	sfctest.HilbertDecode();
 	Point<long, 4> Pt3 =  sfctest.ptCoord;
-
+	
 	
 
 	///////////////////////////////////////
@@ -317,7 +319,7 @@ int main(int argc, char* argv[])
 			
 			long outval = trans.BitSequence2Value(ptBits);
 
-			cout << i << ", " << j << "====" << outval <<endl;
+			std::cout << i << ", " << j << "====" << outval <<endl;
 		}
 	}
 

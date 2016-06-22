@@ -26,6 +26,24 @@ public:
 	}
 
 public:
+	/*
+	least common multiple
+	*/
+	int CalculateLCM(int a, int b)
+	{
+		//find the least common multiple of a and  b( lcm <= a*b)
+		int nlcm = (a > b) ? a : b;
+		while (1)                       /* Always true. */
+		{
+			if (nlcm % a == 0 && nlcm % b == 0)
+			{
+				break;          /* while loop terminates. */
+			}
+			++nlcm;
+		}
+		return nlcm;
+	}
+
 	long long BitSequence2Value(Point<long, mBits> ptBits)
 	{
 		if (mBits * nDims >= 64) return 0;
@@ -67,17 +85,9 @@ public:
 
 
 		//find the least common multiple of base and  nDims( lcm <= base*n)
-		int nlcm = (base > nDims) ? base : nDims;
-		while (1)                       /* Always true. */
-		{
-			if (nlcm % base == 0 && nlcm % nDims == 0)
-			{
-				break;          /* while loop terminates. */
-			}
-			++nlcm;
-		}
-
-		//////compare m*n with lcm (lcm = t*n), so totalbits(m*n) can be divided into m/t blocks (block=lcm=t*n)
+		int nlcm = CalculateLCM(base, nDims);
+		
+		//compare m*n with lcm (lcm = t*n), so totalbits(m*n) can be divided into m/t blocks (block=lcm=t*n)
 		int t = nlcm / nDims; //lcm is the bit number in one block; each block has t  nDims = t*n
 		int nblock = (mBits % t) ? (mBits / t + 1) : (mBits / t); // m/t+1 or m/t---one more space for residual
 
@@ -85,7 +95,7 @@ public:
 		int k = 0;
 		for (int i = 0; i < nblock; i++)
 		{
-			///copy t*n to each block and get the decimal value
+			//copy t*n to each block and get the decimal value
 			long nblkvalue = 0;
 			int nloops;
 			if ((mBits % t) && (nblock - 1 == i)) //handle the final block
@@ -95,71 +105,18 @@ public:
 
 			for (int j = 0; j < nloops; j++)
 			{
-				long ttt = ptBits[i*t + j];
-				//nblkvalue |= ptBits[i*t + j] << (j*nDims);
 				nblkvalue |= ptBits[i*t + j] << ((nloops - 1 - j)*nDims);
 			}
 
-			////change decimal value to character
+			//change decimal value to character
 			long ncharnum = (nloops*nDims % base) ? (nloops*nDims / base + 1) : (nloops*nDims / base);
 			
 			unsigned int mask = ((unsigned int)1 << base) - 1;
 			int nidx = 0;
 
-			if (nloops*nDims % base)
-			{
-				int j = 0;
-				for (j = 0; j < ncharnum; j++)
-				{
-					if (j == ncharnum - 1)
-					{
-						mask = ((unsigned int)1 << (nloops*nDims % base)) - 1;
-						nidx = nblkvalue & mask;
-					}
-					else
-					{
-						nidx = (nblkvalue >> ((ncharnum - j - 2)*base) + nloops*nDims % base) & mask;
-					}
-					if (str_type == Base64)
-					{
-						*(szstr + k) = BASE64_TABLE_E2[nidx];
-						k++;
-					}
-					if (str_type == Base32)
-					{
-						*(szstr + k) = BASE32_TABLE_E2[nidx];
-						k++;
-					}
-				}
-			}
-			else
-			{
-				for (int j = 0; j < ncharnum; j++)
-				{
-					nidx = (nblkvalue >> ((ncharnum - j - 1)*base)) & mask;
-					if (str_type == Base64)
-					{
-						*(szstr + k) = BASE64_TABLE_E2[nidx];
-						k++;
-					}
-					if (str_type == Base32)
-					{
-						*(szstr + k) = BASE32_TABLE_E2[nidx];
-						k++;
-					}
-				}
-			}
-			/*
 			for (int j = 0; j < ncharnum; j++)
 			{
-				if (nloops*nDims % base)
-				{
-					nidx = (nblkvalue >> ((ncharnum - j - 2)*base) + nloops*nDims % base) & mask;
-				}
-				else
-				{
-					nidx = (nblkvalue >> ((ncharnum - j - 1)*base)) & mask;
-				}
+				nidx = (nblkvalue >> ((ncharnum - j - 1)*base)) & mask;
 				if (str_type == Base64)
 				{
 					*(szstr + k) = BASE64_TABLE_E2[nidx];
@@ -171,22 +128,13 @@ public:
 					k++;
 				}
 			}
-			*/
 		}
-		/*
-		for (int i = 0; i < nstrlen + 1; i++)
-		{
-		char tt = szstr[i];
-		cout << tt;
-		}
-		*/
+		
 		string resultStr(szstr);
-		//cout << resultStr << endl;
 		delete[] szstr;
-
 		return resultStr;
 	}
-
+	
 	Point<long, mBits> String2BitSequence(string szCode, StringType str_type)
 	{
 		Point<long, mBits> ptBits;
@@ -195,12 +143,10 @@ public:
 		if (str_type == Base32) base = 5;
 		if (str_type == Base64) base = 6;
 
-		int ntotalbits = mBits * nDims;
-		int nstrlen = (ntotalbits % base) ? (ntotalbits / base + 1) : (ntotalbits / base);
-
-		int nnn = nstrlen*base - ntotalbits;
-		int nvalue = 0;
-		for (int i = 0; i < nstrlen; i++)
+		// get value according to string
+		int codeLength = szCode.length();
+		long * codeBits = new long[codeLength];
+		for (int i = 0; i < codeLength; i++)
 		{
 			char tt = szCode.c_str()[i];
 			if (str_type == Base32)
@@ -209,14 +155,7 @@ public:
 				{
 					if (BASE32_TABLE_E2[k] == szCode.c_str()[i])
 					{
-						if (i == nstrlen - 1)
-						{
-							nvalue |= k;
-						}
-						else
-						{
-							nvalue |= k << (nstrlen - i - 1)*base - nnn;
-						}
+						codeBits[i] = k;
 						break;
 					}
 				}
@@ -228,25 +167,51 @@ public:
 				{
 					if (BASE64_TABLE_E2[k] == szCode.c_str()[i])
 					{
-						if (i == nstrlen - 1)
-						{
-							nvalue |= k;
-						}
-						else
-						{
-							nvalue |= k << (nstrlen - i - 1)*base - nnn;
-						}
+						codeBits[i] = k;
 						break;
 					}
 				}
 			}
 		}
 
-		unsigned int mask = ((unsigned int)1 << nDims) - 1;
-		for (int i = 0; i < mBits; i++)
+		int ntotalbits = codeLength * base;
+
+		//find the least common multiple of base and  nDims( lcm <= base*n)
+		int nlcm = CalculateLCM(base, nDims);		
+
+		//compare codeLength*base with lcm (lcm = base*n), so totalbits(codeLength*base) can be divided into codeLengyh/t blocks (block=lcm=t*base)
+		int t = (nlcm / base); //lcm is the bit number in one block; each block has t  nDims = t*n
+		int nblock = (codeLength % t) ? (codeLength / t + 1) : (codeLength / t); // codeLength/t+1 or codeLength/t---one more space for residual
+
+		//array<long, nblock>; //long is 64 bits, base64=6 bits, enough for 10 more dims---to contain t*n (t<=base)		
+		int k = 0;
+		for (int i = 0; i < nblock; i++)
 		{
-			ptBits[i] = (nvalue >> (nDims*(mBits - 1 - i))) & mask;
+			///copy t*n to each block and get the decimal value
+			long nblkvalue = 0;
+			int nloops;
+			if ((codeLength % t) && (nblock - 1 == i)) //handle the final block
+				nloops = codeLength % t;
+			else
+				nloops = t;
+			
+			for (int j = 0; j < nloops; j++)
+			{
+				nblkvalue |= codeBits[i*t + j] << ((nloops - 1 - j)*base);
+			}
+
+			////change decimal value to m*n
+			long ncharnum = nloops*base / nDims;
+
+			unsigned int mask = ((unsigned int)1 << nDims) - 1;
+			int nidx = 0;
+			for (int j = 0; j < ncharnum; j++)
+			{
+				ptBits[k] = (nblkvalue >> ((ncharnum - j - 1)*nDims)) & mask;
+				k++;
+			}			
 		}
+		delete[] codeBits;
 		return ptBits;
 	}
 };
