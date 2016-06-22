@@ -14,6 +14,7 @@
 #include "SFCPipeline.h"
 
 #include "SFCConversion2.h"
+#include "OutputSchema2.h"
 
 #include "RandomLOD.h"
 
@@ -420,53 +421,55 @@ int main(int argc, char* argv[])
 #endif
 
 #ifdef SFC_GEN_QUERY2
-	//Point<double, 4> pt1;
-	//pt1[0] = 85224.3;//1010
-	//pt1[1] = 447071.86;//1011
-	//pt1[2] = 0.39; //0011
-	//pt1[3] = 9;//1101
+	Point<double, 4> pt1;
+	pt1[0] = 85224.3;//1010
+	pt1[1] = 447071.86;//1011
+	pt1[2] = 0.39; //0011
+	pt1[3] = 9;//1101
 
-	//Point<double, 4> pt2;
-	////pt2[0] = 85224.3;//1010
-	////pt2[1] = 447071.86;//1011
-	////pt2[2] = 0.4; //0011
-	////pt2[3] = 9;//1101
-	//pt2[0] = 85098.38;//1010
-	//pt2[1] = 446440.06;//1011
-	//pt2[2] = 18.34; //0011
+	Point<double, 4> pt2;
+	//pt2[0] = 85224.3;//1010
+	//pt2[1] = 447071.86;//1011
+	//pt2[2] = 0.4; //0011
 	//pt2[3] = 9;//1101
+	pt2[0] = 85098.38;//1010
+	pt2[1] = 446440.06;//1011
+	pt2[2] = 18.34; //0011
+	pt2[3] = 9;//1101
 
-	//double delta[4] = { 80000.00, 437500.00, -20.0, 0.0 }; // 526000, 4333000, 300
-	//long  scale[4] = { 100, 100, 100, 1 }; //100, 100, 1000
+	double delta[4] = { 80000.00, 437500.00, -20.0, 0.0 }; // 526000, 4333000, 300
+	long  scale[4] = { 100, 100, 100, 1 }; //100, 100, 1000
 
-	//CoordTransform<double, long, ndims> cotrans;
-	//cotrans.SetTransform(delta, scale);
+	CoordTransform<double, long, ndims> cotrans;
+	cotrans.SetTransform(delta, scale);
 
-	//Point<long, 4> MinPt2 = cotrans.Transform(pt1);
-	//Point<long, 4> MaxPt2 = cotrans.Transform(pt2);
+	Point<long, 4> MinPt2 = cotrans.Transform(pt1);
+	Point<long, 4> MaxPt2 = cotrans.Transform(pt2);
 
-	//SFCConversion2<4, 30> sfctest;
-	////OutputSchema<4, 30> transtest;
+	SFCConversion2<4, 30> sfctest;
+	OutputSchema2<4, 30> transtest;
 
 	//sfctest.ptCoord = MinPt2;
-	////sfc.MortonEncode();
-	//sfctest.HilbertEncode();
+	//sfc.MortonEncode();
+	uint256_t p1 = sfctest.HilbertEncode(MinPt2);
 	//Point<long, 30> ptbts1; 
 	//ptbts1 = sfctest.ptBits;
-	//cout << transtest.BitSequence2String(ptbts1, Base64).c_str() << endl;
+	cout << transtest.Value2String(p1, Base64).c_str() << endl;
 
 	//sfctest.ptCoord = MaxPt2;
-	////sfc.MortonEncode();
-	//sfctest.HilbertEncode();
+	//sfc.MortonEncode();
+	uint256_t p2 = sfctest.HilbertEncode(MaxPt2);
 	//Point<long, 30> ptbts2;
 	//ptbts2 = sfctest.ptBits;
-	//cout << transtest.BitSequence2String(ptbts2, Base64).c_str() << endl;
+	cout << transtest.Value2String(p2, Base64).c_str() << endl;
 
-	//string res("+++++++MZcZE4Sxf+BdL");//85098.38 446440.06 18.34 9
+	string res("+BcR1k1O5+w+qV+D+BcR");//85098.38 446440.06 18.34 9
 
-	//SFCConversion<4, 30> sfctest2;
-	//OutputSchema<4, 30> transtest2;
+	SFCConversion2<4, 30> sfctest2;
+	OutputSchema2<4, 30> transtest2;
 
+	uint256_t p3 = transtest2.String2Value(res, Base64);
+	Point<long, 4> Pt3 = sfctest2.HilbertDecode(p3);
 	//Point<long, 30> ptbts3 = transtest2.String2BitSequence(res, Base64);
 	//sfctest2.ptBits = ptbts3;
 	//sfctest2.HilbertDecode();
@@ -476,20 +479,20 @@ int main(int argc, char* argv[])
 	////2D case 8*8, i.e n=2, m=3
 	Point<long, 2> ptCoord; //SFC coordinates n=2
 
-	SFCConversion2<2, 4> sfc;
-	OutputSchema<2, 4> trans;
+	SFCConversion2<2, 3> sfc;
+	OutputSchema2<2, 3> trans;
 
 	int a, b;
-	for (int i = 0; i < 16; i++)
+	for (int i = 0; i < 8; i++)
 	{
-		for (int j = 0; j < 16; j++)
+		for (int j = 0; j < 8; j++)
 		{
 			ptCoord[0] = i;//i
 			ptCoord[1] = j;//j
 
 			uint256_t outval = sfc.HilbertEncode(ptCoord);
 
-			cout << i << ", " << j << "--->" << outval ; //<< endl
+			cout << i << ", " << j << "--->" << outval << "," << trans.Value2String(outval, Base64); //<< endl
 			
 			Point<long, 2> pt2d = sfc.HilbertDecode(outval);
 

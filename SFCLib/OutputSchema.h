@@ -7,15 +7,6 @@
 #include <bitset>
 using namespace std;
 
-typedef enum
-{
-	Base32,
-	Base64,
-} StringType;
-
-static const char* const BASE32_TABLE_E2 = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
-static const char* const BASE64_TABLE_E2 = "+/0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz=";
-
 template<int nDims, int  mBits>
 class OutputSchema
 {
