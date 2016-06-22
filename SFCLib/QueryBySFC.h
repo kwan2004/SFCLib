@@ -5,8 +5,8 @@
 
 #include "Point.h"
 #include "Rectangle.h"
-#include "OutputSchema.h"
-#include "SFCConversion.h"
+#include "OutputSchema2.h"
+#include "SFCConversion2.h"
 #include <iostream>
 #include <vector>
 #include <tuple>
@@ -144,8 +144,8 @@ private:
 	int  iscontinuous(string& str1, string& str2);
 
 public:
-	vector<long long>  RangeQueryByBruteforce_LNG(Rect<T, nDims> queryRect, SFCType sfc_type);
-	vector<long long>  RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges);
+	//vector<long long>  RangeQueryByBruteforce_LNG(Rect<T, nDims> queryRect, SFCType sfc_type);
+	//vector<long long>  RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges);
 
 	vector<string>  RangeQueryByBruteforce_STR(Rect<T, nDims> queryRect, SFCType sfc_type, StringType encode_type);
 	vector<string>  RangeQueryByRecursive_STR(Rect<T, nDims> queryrect, SFCType sfc_type, StringType encode_type, int nranges);
@@ -391,6 +391,7 @@ void QueryBySFC<T, nDims, mBits>::query_approximate2(TreeNode<T, nDims> nd, Rect
 	}///end for queue iteration
 }
 
+/*
 template< typename T, int nDims, int mBits>
 vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges)
 {
@@ -573,7 +574,7 @@ vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect<
 	delete[]result;
 	return rangevec;
 }
-
+*/
 //////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T, int nDims, int mBits>
@@ -637,23 +638,25 @@ vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_STR(Rect<T, n
 	}
 
 	vector<string> result;
-	string val;
+	string strval;
 
-	Point<long, mBits> pt;
-	SFCConversion<nDims, mBits> sfc;
-	OutputSchema<nDims, mBits> trans;
+	//Point<long, nDims> pt;
+	sfc_bigint intval;
+	//Point<long, mBits> pt;
+	SFCConversion2<nDims, mBits> sfc;
+	OutputSchema2<nDims, mBits> trans;
 
 	for (int i = 0; i < resultPoints.size(); i++)
 	{
 		for (int j = 0; j < resultPoints[i].size(); j++)
 		{
-			sfc.ptCoord = resultPoints[i][j];
-			if (sfc_type == Morton) sfc.MortonEncode();
-			if (sfc_type == Hilbert) sfc.HilbertEncode();
-			pt = sfc.ptBits;
+			//pt = resultPoints[i][j];
+			//if (sfc_type == Morton) sfc.MortonEncode();
+			if (sfc_type == Hilbert) intval = sfc.HilbertEncode(resultPoints[i][j]);
+			//pt = sfc.ptBits;
 
-			val = trans.BitSequence2String(pt, encode_type);
-			result.push_back(val);
+			strval = trans.Value2String(intval, encode_type);
+			result.push_back(strval);
 		}
 	}
 
@@ -714,13 +717,15 @@ vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_STR(Rect<T, 
 	Point<T, nDims> point;
 
 	long long tmp = para[nDims] - 1;
-	SFCConversion<nDims, mBits> sfc;
-	OutputSchema<nDims, mBits> trans;
-	Point<long, mBits> pt;
+	
+	SFCConversion2<nDims, mBits> sfc;
+	OutputSchema2<nDims, mBits> trans;
+	//Point<long, mBits> pt;
 	
 	long long size = tmp + 1;
 
-	string val;
+	string strval;
+	sfc_bigint intval;
 	vector<string> result;	
 
 	for (long long count = tmp; count >= 0; count--)
@@ -736,13 +741,13 @@ vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_STR(Rect<T, 
 			point[j] = queryVector[j][n];
 		}
 
-		sfc.ptCoord = point;
-		if (sfc_type == Morton) sfc.MortonEncode();
-		if (sfc_type == Hilbert)  sfc.HilbertEncode();
-		pt = sfc.ptBits;
+		//sfc.ptCoord = point;
+		//if (sfc_type == Morton) sfc.MortonEncode();
+		if (sfc_type == Hilbert)  intval = sfc.HilbertEncode(point);
+		//pt = sfc.ptBits;
 
-		val = trans.BitSequence2String(pt, encode_type);
-		result.push_back(val);
+		strval = trans.Value2String(intval, encode_type);
+		result.push_back(strval);
 	}
 
 	delete[]para;

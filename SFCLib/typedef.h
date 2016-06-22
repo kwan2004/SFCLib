@@ -38,4 +38,6 @@ typedef  uint256_t bitmask_t; // unsigned long long
 /* define the halfmask_t type as an integer of 1/2 the size of bitmask_t */
 typedef  uint128_t halfmask_t; //unsigned long
 
+typedef  uint256_t sfc_bigint;
+
 #endif

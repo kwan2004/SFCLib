@@ -13,7 +13,7 @@ class OutputSchema2
 {
 public:
 	
-	string Value2String(uint256_t val, StringType str_type)
+	string Value2String(sfc_bigint val, StringType str_type)
 	{
 		long long base = 0; 
 		const char* char_table = NULL;
@@ -47,9 +47,9 @@ public:
 		return string(szstr);
 	}
 
-	uint256_t String2Value(string szCode, StringType str_type)
+	sfc_bigint String2Value(string szCode, StringType str_type)
 	{
-		uint256_t idx = 0;
+		sfc_bigint idx = 0;
 
 		////////////////////
 		long long base = 0;

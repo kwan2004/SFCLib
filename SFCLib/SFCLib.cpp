@@ -451,14 +451,14 @@ int main(int argc, char* argv[])
 
 	//sfctest.ptCoord = MinPt2;
 	//sfc.MortonEncode();
-	uint256_t p1 = sfctest.HilbertEncode(MinPt2);
+	sfc_bigint p1 = sfctest.HilbertEncode(MinPt2);
 	//Point<long, 30> ptbts1; 
 	//ptbts1 = sfctest.ptBits;
 	cout << transtest.Value2String(p1, Base64).c_str() << endl;
 
 	//sfctest.ptCoord = MaxPt2;
 	//sfc.MortonEncode();
-	uint256_t p2 = sfctest.HilbertEncode(MaxPt2);
+	sfc_bigint p2 = sfctest.HilbertEncode(MaxPt2);
 	//Point<long, 30> ptbts2;
 	//ptbts2 = sfctest.ptBits;
 	cout << transtest.Value2String(p2, Base64).c_str() << endl;
@@ -468,7 +468,7 @@ int main(int argc, char* argv[])
 	SFCConversion2<4, 30> sfctest2;
 	OutputSchema2<4, 30> transtest2;
 
-	uint256_t p3 = transtest2.String2Value(res, Base64);
+	sfc_bigint p3 = transtest2.String2Value(res, Base64);
 	Point<long, 4> Pt3 = sfctest2.HilbertDecode(p3);
 	//Point<long, 30> ptbts3 = transtest2.String2BitSequence(res, Base64);
 	//sfctest2.ptBits = ptbts3;
@@ -490,7 +490,7 @@ int main(int argc, char* argv[])
 			ptCoord[0] = i;//i
 			ptCoord[1] = j;//j
 
-			uint256_t outval = sfc.HilbertEncode(ptCoord);
+			sfc_bigint outval = sfc.HilbertEncode(ptCoord);
 
 			cout << i << ", " << j << "--->" << outval << "," << trans.Value2String(outval, Base64); //<< endl
 			
@@ -516,36 +516,36 @@ int main(int argc, char* argv[])
 	SFCConversion2<5, 30> sfc2;
 	//OutputSchema<5, 6> trans2;
 
-	uint256_t val = sfc2.HilbertEncode(pt3);
+	sfc_bigint val = sfc2.HilbertEncode(pt3);
 
 	//print_bits(val);
 
 	Point<long, 5> pt5;
 	SFCConversion2<5, 30> sfc3;
 	//sfc2.ptBits = pt4;
-	pt5 = sfc2.HilbertDecode(val);
+	pt5 = sfc3.HilbertDecode(val);
 
 	int aaa = 0;
 	//
 	////2D sample
-	/*long Point1[2] = { 3, 2};
+	long Point1[2] = { 3, 2};
 	long Point2[2] = { 5, 5 };
 	Point<long, 2> MinPoint(Point1);
 	Point<long, 2> MaxPoint(Point2);
 	Rect<long, 2> rec(MinPoint, MaxPoint);
 	QueryBySFC<long, 2, 3> querytest;
-	vector<long long> vec_res = querytest.RangeQueryByBruteforce_LNG(rec, Hilbert);
+	/*vector<long long> vec_res = querytest.RangeQueryByBruteforce_LNG(rec, Hilbert);
 	print_ranges("hilbert 2d brute force", vec_res);
 
 	vector<long long> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, Hilbert,0);
-	print_ranges("hilbert 2d recursive", vec_res2);
+	print_ranges("hilbert 2d recursive", vec_res2);*/
+
 
 	vector<string> vec_res5 = querytest.RangeQueryByBruteforce_STR(rec, Hilbert, Base64);
 	print_ranges_str("hilbert 2d brute force", vec_res5);
 
 	vector<string> vec_res6 = querytest.RangeQueryByRecursive_STR(rec, Hilbert, Base64,0);
-	print_ranges_str("hilbert 2d recursive", vec_res6);*/
-
+	print_ranges_str("hilbert 2d recursive", vec_res6);
 
 	////3D sample
 	/*long Point31[3] = { 4, 2, 5 };

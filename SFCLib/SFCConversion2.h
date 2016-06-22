@@ -198,14 +198,14 @@ private:
 			return coord[0];
 	}
 public:
-	static uint256_t HilbertEncode(Point<long, nDims> ptCoord)
+	static sfc_bigint HilbertEncode(Point<long, nDims> ptCoord)
 	{	
 		bitmask_t pt[nDims];
 		for (int i = 0; i < nDims; i++) pt[i] = ptCoord[i];
 
 		return hilbert_c2i(pt);
 	}
-	static Point<long, nDims> HilbertDecode(uint256_t idx)
+	static Point<long, nDims> HilbertDecode(sfc_bigint idx)
 	{
 		bitmask_t pt[nDims];
 		hilbert_i2c(idx, pt);

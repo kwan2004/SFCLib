@@ -13,8 +13,8 @@
 
 #include "Point.h"
 #include "CoordTransform.h"
-#include "SFCConversion.h"
-#include "OutputSchema.h"
+#include "SFCConversion2.h"
+#include "OutputSchema2.h"
 
 #include "RandomLOD.h"
 
@@ -225,16 +225,18 @@ public:
 		//////////////////////////////////////////////////////
 		CoordTransform<double, long, nDims> cotrans;
 
-		SFCConversion<nDims, mBits> sfcgen;
-		OutputSchema<nDims, mBits> outtrans;
+		SFCConversion2<nDims, mBits> sfcgen;
+		OutputSchema2<nDims, mBits> outtrans;
 
 		if (_delta != NULL && _scale != NULL)
 		{
 			cotrans.SetTransform(_delta, _scale);
 		}
 
-		////Point<long, nDims> ptSFC;
-		Point<long, mBits> ptBits;
+		Point<long, nDims> ptSFC;
+		//Point<long, mBits> ptBits;
+
+		sfc_bigint val;
 
 		for (int i = 0; i < pin_item->_actual_size; i++)
 		{
@@ -242,31 +244,31 @@ public:
 			if (_sfctype == 0) //morton
 			{
 				sfcgen.ptCoord = cotrans.Transform(input[i]);
-				sfcgen.MortonEncode();
-				ptBits = sfcgen.ptBits;
+				//sfcgen.MortonEncode();
+				//ptBits = sfcgen.ptBits;
 			}
 
 			if (_sfctype == 1) //hilbert
 			{
-				sfcgen.ptCoord = cotrans.Transform(input[i]);
-				sfcgen.HilbertEncode();
-				ptBits = sfcgen.ptBits;
+				ptSFC = cotrans.Transform(input[i]);
+				val = sfcgen.HilbertEncode(ptSFC);
+				//ptBits = sfcgen.ptBits;
 			}
 
 			if (_conv_type == 0)
 			{
-				pout_item->out_value[i]= outtrans.BitSequence2Value(ptBits);
+				//pout_item->out_value[i]= outtrans.BitSequence2Value(ptBits);
 			}
 
 			if (_conv_type == 1)
 			{
-				strcpy(pout_item->out_string + i* nstrlen, outtrans.BitSequence2String(ptBits, Base32).c_str());
+				strcpy(pout_item->out_string + i* nstrlen, outtrans.Value2String(val, Base32).c_str());
 				//pout_item->out_string[i] = "a";//outtrans.BitSequence2String(ptBits, Base32);
 			}
 
 			if (_conv_type == 2)
 			{
-				strcpy(pout_item->out_string + i* nstrlen, outtrans.BitSequence2String(ptBits, Base64).c_str());
+				strcpy(pout_item->out_string + i* nstrlen, outtrans.Value2String(val, Base32).c_str());
 				//pout_item->out_string[i] = "a";//outtrans.BitSequence2String(ptBits, Base64);
 			}
 		}
