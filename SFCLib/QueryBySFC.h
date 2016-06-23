@@ -5,8 +5,10 @@
 
 #include "Point.h"
 #include "Rectangle.h"
+
 #include "OutputSchema2.h"
 #include "SFCConversion2.h"
+
 #include <iostream>
 #include <vector>
 #include <tuple>

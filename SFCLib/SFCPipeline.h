@@ -13,6 +13,7 @@
 
 #include "Point.h"
 #include "CoordTransform.h"
+
 #include "SFCConversion2.h"
 #include "OutputSchema2.h"
 
