@@ -40,8 +40,8 @@ public:
 		int idx = 0;
 		for (int i = 0; i < nstrlen; i++)
 		{
-			idx = (int) val >> i*base;
-			szstr[nstrlen - i - 1] = char_table[idx & mask];
+			idx = int(( val >> i*base)) & mask;
+			szstr[nstrlen - i - 1] = char_table[idx];
 		}
 
 		return string(szstr);
@@ -67,7 +67,7 @@ public:
 		}
 
 		///////////////
-		unsigned int mask = ((unsigned int)1 << base) - 1;
+		//unsigned int mask = ((unsigned int)1 << base) - 1;
 		int nstrlen = szCode.length();
 		const char* p = szCode.c_str();
 

@@ -144,8 +144,8 @@ private:
 	int  iscontinuous(string& str1, string& str2);
 
 public:
-	//vector<long long>  RangeQueryByBruteforce_LNG(Rect<T, nDims> queryRect, SFCType sfc_type);
-	//vector<long long>  RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges);
+	vector<sfc_bigint>  RangeQueryByBruteforce_LNG(Rect<T, nDims> queryRect, SFCType sfc_type);
+	vector<sfc_bigint>  RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges);
 
 	vector<string>  RangeQueryByBruteforce_STR(Rect<T, nDims> queryRect, SFCType sfc_type, StringType encode_type);
 	vector<string>  RangeQueryByRecursive_STR(Rect<T, nDims> queryrect, SFCType sfc_type, StringType encode_type, int nranges);
@@ -391,9 +391,9 @@ void QueryBySFC<T, nDims, mBits>::query_approximate2(TreeNode<T, nDims> nd, Rect
 	}///end for queue iteration
 }
 
-/*
+
 template< typename T, int nDims, int mBits>
-vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges)
+vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges)
 {
 	vector<TreeNode<T, nDims>> resultTNode;  //tree nodes correspond to queryRectangle
 	TreeNode<T, nDims> root;  //root node
@@ -440,23 +440,24 @@ vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T
 		resultPoints.push_back(nodePoints);
 	}
 
-	vector<long long> result;
+	vector<sfc_bigint> result;
 
-	long long val = 0;
-	Point<long, mBits> pt;
-	SFCConversion<nDims, mBits> sfc;
-	OutputSchema<nDims, mBits> trans;
+	//long long val = 0;
+	//Point<long, mBits> pt;
+	SFCConversion2<nDims, mBits> sfc;
+	//OutputSchema2<nDims, mBits> trans;
 
+	sfc_bigint val;
 	for (int i = 0; i < resultPoints.size(); i++)
 	{
 		for (int j = 0; j < resultPoints[i].size(); j++)
 		{
-			sfc.ptCoord = resultPoints[i][j];
-			if (sfc_type == Morton) sfc.MortonEncode();
-			if (sfc_type == Hilbert) sfc.HilbertEncode();
-			pt = sfc.ptBits;
+			//sfc.ptCoord = resultPoints[i][j];
+			//if (sfc_type == Morton) sfc.MortonEncode();
+			if (sfc_type == Hilbert) val = sfc.HilbertEncode(resultPoints[i][j]);
+			//pt = sfc.ptBits;
 
-			val = trans.BitSequence2Value(pt);
+			//val = trans.BitSequence2Value(pt);
 			result.push_back(val);
 		}
 	}
@@ -464,7 +465,7 @@ vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T
 	int size = result.size();
 	std::sort(result.begin(), result.end());
 
-	vector<long long> rangevec;
+	vector<sfc_bigint> rangevec;
 	int nstart = 0;
 	for (int i = 0; i < size - 1; i++)
 	{
@@ -487,7 +488,7 @@ vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T
 }
 
 template< typename T, int nDims, int mBits>
-vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect<T, nDims> queryRect, SFCType sfc_type)
+vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect<T, nDims> queryRect, SFCType sfc_type)
 {
 	Point<T, nDims> minPoint = queryRect.GetMinPoint();
 	Point<T, nDims> maxPoint = queryRect.GetMaxPoint();
@@ -518,13 +519,13 @@ vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect<
 	Point<T, nDims> point;
 
 	long long tmp = para[nDims] - 1;
-	SFCConversion<nDims, mBits> sfc;
-	OutputSchema<nDims, mBits> trans;
+	SFCConversion2<nDims, mBits> sfc;
+	//OutputSchema<nDims, mBits> trans;
 
-	long long val = 0;
+	sfc_bigint val = 0;
 	long long  size = tmp + 1;
-	long long* result = new long long[size];
-	Point<long, mBits> pt;
+	sfc_bigint* result = new sfc_bigint[size];
+	//Point<long, mBits> pt;
 
 	for (long long count = tmp; count >= 0; count--)
 	{
@@ -537,12 +538,12 @@ vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect<
 			point[j] = queryVector[j][n];
 		}
 
-		sfc.ptCoord = point;
-		if (sfc_type == Morton) sfc.MortonEncode();
-		if (sfc_type == Hilbert)  sfc.HilbertEncode();
-		pt = sfc.ptBits;
+		//sfc.ptCoord = point;
+		//if (sfc_type == Morton) sfc.MortonEncode();
+		if (sfc_type == Hilbert)  val = sfc.HilbertEncode(point);
+		//pt = sfc.ptBits;
 
-		val = trans.BitSequence2Value(pt);
+		//val = trans.BitSequence2Value(pt);
 		result[count] = val;
 	}
 
@@ -551,7 +552,7 @@ vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect<
 
 	std::sort(result, result+size);
 
-	vector<long long> rangevec;
+	vector<sfc_bigint> rangevec;
 	int nstart = 0;
 	for (int i = 0; i < size - 1; i++)
 	{
@@ -574,7 +575,7 @@ vector<long long>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect<
 	delete[]result;
 	return rangevec;
 }
-*/
+
 //////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T, int nDims, int mBits>

@@ -243,7 +243,7 @@ public:
 			//ptSFC = cotrans.Transform(input[i]);
 			if (_sfctype == 0) //morton
 			{
-				sfcgen.ptCoord = cotrans.Transform(input[i]);
+				//sfcgen.ptCoord = cotrans.Transform(input[i]);
 				//sfcgen.MortonEncode();
 				//ptBits = sfcgen.ptBits;
 			}

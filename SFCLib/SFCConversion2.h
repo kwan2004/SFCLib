@@ -214,6 +214,23 @@ public:
 		for (int i = 0; i < nDims; i++) newpt[i] = long(pt[i]);
 		return newpt;
 	}
+
+	static sfc_bigint MortnEncode(Point<long, nDims> ptCoord)
+	{
+		bitmask_t pt[nDims];
+		for (int i = 0; i < nDims; i++) pt[i] = ptCoord[i];
+
+		return hilbert_c2i(pt);
+	}
+	static Point<long, nDims> MortnDecode(sfc_bigint idx)
+	{
+		bitmask_t pt[nDims];
+		hilbert_i2c(idx, pt);
+
+		Point<long, nDims> newpt;
+		for (int i = 0; i < nDims; i++) newpt[i] = long(pt[i]);
+		return newpt;
+	}
 };
 
 #endif
