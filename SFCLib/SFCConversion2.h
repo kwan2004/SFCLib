@@ -32,11 +32,11 @@ private:
 
 #define DLOGB_BIT_TRANSPOSE
 	static 	bitmask_t
-		bitTranspose(unsigned nDims, unsigned mBits, bitmask_t inCoords)
+		bitTranspose(unsigned n_Dims, unsigned m_Bits, bitmask_t inCoords)
 #if defined(DLOGB_BIT_TRANSPOSE)
 	{
-		unsigned const nDims1 = nDims - 1;
-		unsigned inB = mBits;
+		unsigned const nDims1 = n_Dims - 1;
+		unsigned inB = m_Bits;
 		unsigned utB;
 		bitmask_t inFieldEnds = 1;
 		bitmask_t inMask = ones(bitmask_t, inB);
@@ -55,7 +55,7 @@ private:
 			{
 				bitmask_t const inFieldStarts = inFieldEnds << (inB - 1);
 				unsigned oddShift = 2 * shiftAmt;
-				for (d = 0; d < nDims; ++d)
+				for (d = 0; d < n_Dims; ++d)
 				{
 					bitmask_t in = inCoords & inMask;
 					inCoords >>= inB;
@@ -67,7 +67,7 @@ private:
 			}
 			else
 			{
-				for (d = 0; d < nDims; ++d)
+				for (d = 0; d < n_Dims; ++d)
 				{
 					bitmask_t in = inCoords & inMask;
 					inCoords >>= inB;
