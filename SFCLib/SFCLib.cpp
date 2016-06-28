@@ -571,10 +571,10 @@ int main(int argc, char* argv[])
 	print_ranges("morton 3d recursive", vec_res4);*/
 
 	vector<string> vec_res7 = querytest3.RangeQueryByBruteforce_STR(rec3, Hilbert, Base64);
-	print_ranges_str("hilbert 2d brute force", vec_res7);
+	print_ranges_str("hilbert 3d brute force", vec_res7);
 
 	vector<string> vec_res8 = querytest3.RangeQueryByRecursive_STR(rec3, Hilbert, Base64,0);
-	print_ranges_str("hilbert 2d recursive", vec_res8);
+	print_ranges_str("hilbert 3d recursive", vec_res8);
 
 	//SFCConversion<3, 9> sfc3D;
 	//OutputSchema<3, 9> trans3D;
@@ -598,7 +598,7 @@ int main(int argc, char* argv[])
 	const int ndims = 4;
 	const int mbits = 30;
 
-	//-i 85098.0/85099.0/446444.0/446445.0/12/13/6/9 -s 1 -e 2 -t ct.txt -n 10000 -o qq.sql
+	//-i 85810.0/85811.0/447070.0/447071.0/5/6/8/10 -s 1 -e 2 -t ct.txt -n 10000 -o qq.sql
 	int nsfc_type = 0;
 	int nencode_type = 0;
 

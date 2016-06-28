@@ -17,6 +17,8 @@
 
 #include <time.h>
 
+#include "tbb/parallel_sort.h"
+
 using namespace std;
 
 //#define RETURN_RANGES 40
@@ -465,7 +467,8 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 	}
 
 	int size = result.size();
-	std::sort(result.begin(), result.end());
+	//std::sort(result.begin(), result.end());
+	tbb::parallel_sort(result.begin(), result.end(), std::less<sfc_bigint>());
 
 	vector<sfc_bigint> rangevec;
 	int nstart = 0;
@@ -552,7 +555,8 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect
 	delete[]para;
 	delete[]difference;
 
-	std::sort(result, result+size);
+	//std::sort(result, result+size);
+	tbb::parallel_sort(result, result + size, std::less<sfc_bigint>());
 
 	vector<sfc_bigint> rangevec;
 	int nstart = 0;
@@ -664,7 +668,8 @@ vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_STR(Rect<T, n
 	}
 
 	int size = result.size();
-	std::sort(result.begin(), result.end());
+	//std::sort(result.begin(), result.end());
+	tbb::parallel_sort(result.begin(), result.end(), std::less<string>());
 
 	vector<string> rangevec2;
 	int nstart = 0;
@@ -756,7 +761,8 @@ vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_STR(Rect<T, 
 	delete[]para;
 	delete[]difference;
 
-	std::sort(result.begin(), result.end());
+	//std::sort(result.begin(), result.end());
+	tbb::parallel_sort(result.begin(), result.end(), std::less<string>());
 
 	vector<string> rangevec2;
 	int nstart = 0;
