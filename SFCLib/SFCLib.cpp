@@ -536,24 +536,24 @@ int main(int argc, char* argv[])
 	int aaa = 0;
 	//
 	////2D sample
-	long Point1[2] = { 3, 2};
-	long Point2[2] = { 5, 5 };
+	long Point1[2] = { 6, 7}; //3, 2 //8, 4
+	long Point2[2] = { 8, 11 };  //5, 5//12, 9
 	Point<long, 2> MinPoint(Point1);
 	Point<long, 2> MaxPoint(Point2);
 	Rect<long, 2> rec(MinPoint, MaxPoint);
-	QueryBySFC<long, 2, 3> querytest;
+	QueryBySFC<long, 2, 4> querytest;
 	vector<sfc_bigint> vec_res = querytest.RangeQueryByBruteforce_LNG(rec, Hilbert);
 	print_ranges("hilbert 2d brute force", vec_res);
 
 	vector<sfc_bigint> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, Hilbert, 0);
 	print_ranges("hilbert 2d recursive", vec_res2);
 
-
 	vector<string> vec_res5 = querytest.RangeQueryByBruteforce_STR(rec, Hilbert, Base64);
 	print_ranges_str("hilbert 2d brute force", vec_res5);
 
-	vector<string> vec_res6 = querytest.RangeQueryByRecursive_STR(rec, Hilbert, Base64,0);
+	vector<string> vec_res6 = querytest.RangeQueryByRecursive_STR(rec, Hilbert, Base64, 0);
 	print_ranges_str("hilbert 2d recursive", vec_res6);
+
 
 	////3D sample
 	long Point31[3] = { 4, 2, 5 };
@@ -564,16 +564,16 @@ int main(int argc, char* argv[])
 	Rect<long, 3> rec3(MinPoint3, MaxPoint3);
 
 	QueryBySFC<long, 3, 10> querytest3;
-	/*vector<long long> vec_res3 = querytest3.RangeQueryByBruteforce_LNG(rec3, Morton);
-	print_ranges("morton 3d brute force", vec_res3);
+	vector<sfc_bigint> vec_res3 = querytest3.RangeQueryByBruteforce_LNG(rec3, Hilbert);
+	print_ranges("Hilbert 3d brute force", vec_res3);
 
-	vector<long long> vec_res4 = querytest3.RangeQueryByRecursive_LNG(rec3, Morton,0);
-	print_ranges("morton 3d recursive", vec_res4);*/
+	vector<sfc_bigint> vec_res4 = querytest3.RangeQueryByRecursive_LNG(rec3, Hilbert, 0);
+	print_ranges("Hilbert 3d recursive", vec_res4);
 
 	vector<string> vec_res7 = querytest3.RangeQueryByBruteforce_STR(rec3, Hilbert, Base64);
 	print_ranges_str("hilbert 3d brute force", vec_res7);
 
-	vector<string> vec_res8 = querytest3.RangeQueryByRecursive_STR(rec3, Hilbert, Base64,0);
+	vector<string> vec_res8 = querytest3.RangeQueryByRecursive_STR(rec3, Hilbert, Base64, 0);
 	print_ranges_str("hilbert 3d recursive", vec_res8);
 
 	//SFCConversion<3, 9> sfc3D;

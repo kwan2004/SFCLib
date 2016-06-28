@@ -14,6 +14,7 @@
 #include <tuple>
 #include <queue>
 #include <algorithm>
+#include <map>
 
 #include <time.h>
 
@@ -145,7 +146,7 @@ private:
 	
 	void query_approximate(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode);
 	void query_approximate2(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode, int nranges);
-	int  iscontinuous(string& str1, string& str2);
+	//int  iscontinuous(string& str1, string& str2);
 
 public:
 	vector<sfc_bigint>  RangeQueryByBruteforce_LNG(Rect<T, nDims> queryRect, SFCType sfc_type);
@@ -153,6 +154,7 @@ public:
 
 	vector<string>  RangeQueryByBruteforce_STR(Rect<T, nDims> queryRect, SFCType sfc_type, StringType encode_type);
 	vector<string>  RangeQueryByRecursive_STR(Rect<T, nDims> queryrect, SFCType sfc_type, StringType encode_type, int nranges);
+
 };
 
 
@@ -418,76 +420,96 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 	{
 		query_approximate2(root, queryrect, resultTNode, nranges);
 	}
+	//cout << resultTNode.size() << endl;
 
-	vector<vector<Point<T, nDims>>> resultPoints;  //get all cell corner points
+	SFCConversion2<nDims, mBits> sfc;
+
+	int ncorners = 1 << nDims; //corner points number
+	vector<Point<T, nDims>> nodePoints(ncorners);
+	vector<sfc_bigint> node_vals(ncorners);
+
+	map<sfc_bigint, sfc_bigint, less<sfc_bigint>> map_range;
+	map<sfc_bigint, sfc_bigint, less<sfc_bigint>>::iterator itr;
+
+	sfc_bigint val;
+	sfc_bigint k1, k2;
 	for (int i = 0; i < resultTNode.size(); i++)
 	{
-		int ncount = 1;
-		vector<Point<T, nDims>> nodePoints;  //cell points on i-th treeNode
-		nodePoints.push_back(resultTNode[i].minPoint);
+		if (resultTNode[i].level == mBits) //leaf node--just one point
+		{
+			if (sfc_type == Hilbert)
+			{ 
+				val = sfc.HilbertEncode(resultTNode[i].minPoint);
+				map_range[val] = val;
+			}
+			continue;
+		}
+
+		nodePoints[0] = resultTNode[i].minPoint;		
 		for (int j = 0; j < nDims; j++)
 		{
-			int newadd = 0;
-			for (int k = 0; k < ncount; k++) //1-->2;2-->4, --->2^Dims
+			int nnow = 1 << j;
+			for (int k = 0; k < nnow; k++) //1-->2;2-->4, --->2^Dims
 			{
 				Point<T, nDims> newPoint = nodePoints[k];
 				newPoint[j] = resultTNode[i].maxPoint[j] - 1;  //get the cordinate from maxpoint in this dimension
-				if (newPoint[j] != nodePoints[k][j])  //if newPoint equals to current points or not
-				{
-					nodePoints.push_back(newPoint);
-					newadd++;
-				}
+				
+				nodePoints[nnow+k] = newPoint;
 			}
-			ncount += newadd;
 		}
 
-		resultPoints.push_back(nodePoints);
-	}
-
-	vector<sfc_bigint> result;
-
-	//long long val = 0;
-	//Point<long, mBits> pt;
-	SFCConversion2<nDims, mBits> sfc;
-	//OutputSchema2<nDims, mBits> trans;
-
-	sfc_bigint val;
-	for (int i = 0; i < resultPoints.size(); i++)
-	{
-		for (int j = 0; j < resultPoints[i].size(); j++)
-		{
-			//sfc.ptCoord = resultPoints[i][j];
-			//if (sfc_type == Morton) sfc.MortonEncode();
-			if (sfc_type == Hilbert) val = sfc.HilbertEncode(resultPoints[i][j]);
-			//pt = sfc.ptBits;
-
-			//val = trans.BitSequence2Value(pt);
-			result.push_back(val);
+		for (int j = 0; j < ncorners; j++)
+		{ 
+			if (sfc_type == Hilbert) node_vals[j] = sfc.HilbertEncode(nodePoints[j]);
 		}
+
+		std::sort(node_vals.begin(), node_vals.end());
+		map_range[node_vals[0]] = node_vals[ncorners-1];
 	}
 
-	int size = result.size();
-	//std::sort(result.begin(), result.end());
-	tbb::parallel_sort(result.begin(), result.end(), std::less<sfc_bigint>());
-
+	//////////////////
 	vector<sfc_bigint> rangevec;
-	int nstart = 0;
-	for (int i = 0; i < size - 1; i++)
+	for (itr = map_range.begin(); itr != map_range.end(); itr++)
 	{
-		if (result[i + 1] != (result[i] + 1))
+		//std::cout << '[' << itr->first << ',' << itr->second << "]\n";
+		if (itr == map_range.begin())
 		{
-			rangevec.push_back(result[nstart]);
-			rangevec.push_back(result[i]);
+			k1 = itr->first; //k1---k2 current range
+			k2 = itr->second;
 
-			nstart = i + 1;
+			continue; //go to the second
 		}
 
-		if (result[i + 1] == (result[i] + 1) && (i + 1) == size - 1)
+		while (1)
 		{
-			rangevec.push_back(result[nstart]);
-			rangevec.push_back(result[i]);
-		}		
-	}
+			//cout << k1  << ',' <<k2 << endl;
+
+			if (itr->first == k2 + 1) // if the next range is continuous to k2
+			{ 
+				k2 = itr->second; //enlarge current range
+				itr++;
+
+				if (itr == map_range.end()) break;
+			}
+			else //if the next range is not continuous to k2---sotre current range and start another search
+			{
+				rangevec.push_back(k1);
+				rangevec.push_back(k2);
+
+				k1 = itr->first;
+				k2 = itr->second;			
+
+				break;
+			}//end if
+		}//end while
+
+		if (itr == map_range.end()) //end now---store current range and exit
+		{
+			rangevec.push_back(k1);
+			rangevec.push_back(k2);
+			break;
+		}
+	}//end for map
 	
 	return rangevec;
 }
@@ -525,12 +547,10 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect
 
 	long long tmp = para[nDims] - 1;
 	SFCConversion2<nDims, mBits> sfc;
-	//OutputSchema<nDims, mBits> trans;
 
 	sfc_bigint val = 0;
 	long long  size = tmp + 1;
 	sfc_bigint* result = new sfc_bigint[size];
-	//Point<long, mBits> pt;
 
 	for (long long count = tmp; count >= 0; count--)
 	{
@@ -543,13 +563,11 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect
 			point[j] = queryVector[j][n];
 		}
 
-		//sfc.ptCoord = point;
-		//if (sfc_type == Morton) sfc.MortonEncode();
 		if (sfc_type == Hilbert)  val = sfc.HilbertEncode(point);
-		//pt = sfc.ptBits;
 
-		//val = trans.BitSequence2Value(pt);
 		result[count] = val;
+
+		//cout << val << ",";
 	}
 
 	delete[]para;
@@ -562,6 +580,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect
 	int nstart = 0;
 	for (int i = 0; i < size - 1; i++)
 	{
+		//cout << result[i] << "," << result[i + 1] << endl;
 		if (result[i + 1] != (result[i] + 1))
 		{
 			rangevec.push_back(result[nstart]);
@@ -573,217 +592,49 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect
 		if (result[i + 1] == (result[i] + 1) && (i + 1) == size - 1)
 		{
 			rangevec.push_back(result[nstart]);
-			rangevec.push_back(result[i]);
+			rangevec.push_back(result[i+1]);
 		}
 	}
-
 
 	delete[]result;
 	return rangevec;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////
-
-template<typename T, int nDims, int mBits>
-int QueryBySFC<T, nDims, mBits>::iscontinuous(string& str1, string& str2)
-{
-	if (str1.size() != str2.size()) return 0;
-	int nsize = str1.size();
-
-	if (str1.c_str()[nsize - 1] - str2.c_str()[nsize - 1] == 1) return 1;
-
-	return 0;
-}
-
-
+///////////////////////////////////////
 template< typename T, int nDims, int mBits>
 vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_STR(Rect<T, nDims> queryrect, SFCType sfc_type, StringType encode_type, int nranges)
 {
-	vector<TreeNode<T, nDims>> resultTNode;  //tree nodes correspond to queryRectangle
-	TreeNode<T, nDims> root;  //root node
-	root.level = 0;
-	for (int i = 0; i < nDims; i++)
-	{
-		root.minPoint[i] = 0;
-		root.maxPoint[i] = 1 << mBits;
-		queryrect.maxPoint[i] += 1;
-	}
-
-	int res = root.Spatialrelationship(queryrect);
-	if (res == 0)  //equal
-	{
-		resultTNode.push_back(root);
-	}
-	if (res == 1)  //contain
-	{
-		query_approximate2(root, queryrect, resultTNode, nranges);
-	}
-
-	vector<vector<Point<T, nDims>>> resultPoints;  //get all cell corner points
-	for (int i = 0; i < resultTNode.size(); i++)
-	{
-		int ncount = 1;
-		vector<Point<T, nDims>> nodePoints;  //cell points on i-th treeNode
-		nodePoints.push_back(resultTNode[i].minPoint);
-		for (int j = 0; j < nDims; j++)
-		{
-			int newadd = 0;
-			for (int k = 0; k < ncount; k++) //1-->2;2-->4, --->2^Dims
-			{
-				Point<T, nDims> newPoint = nodePoints[k];
-				newPoint[j] = resultTNode[i].maxPoint[j] - 1;  //get the cordinate from maxpoint in this dimension
-				if (newPoint[j] != nodePoints[k][j])  //if newPoint equals to current points or not
-				{
-					nodePoints.push_back(newPoint);
-					newadd++;
-				}
-			}
-			ncount += newadd;
-		}
-
-		resultPoints.push_back(nodePoints);
-	}
-
-	vector<string> result;
-	string strval;
-
-	//Point<long, nDims> pt;
-	sfc_bigint intval;
-	//Point<long, mBits> pt;
-	SFCConversion2<nDims, mBits> sfc;
+	vector<string> rangevec;
 	OutputSchema2<nDims, mBits> trans;
+	
+	vector<sfc_bigint> vec_res = RangeQueryByRecursive_LNG(queryrect, sfc_type, nranges);
 
-	for (int i = 0; i < resultPoints.size(); i++)
+	vector<sfc_bigint>::iterator itr;
+	for (itr = vec_res.begin(); itr != vec_res.end(); itr++)
 	{
-		for (int j = 0; j < resultPoints[i].size(); j++)
-		{
-			//pt = resultPoints[i][j];
-			//if (sfc_type == Morton) sfc.MortonEncode();
-			if (sfc_type == Hilbert) intval = sfc.HilbertEncode(resultPoints[i][j]);
-			//pt = sfc.ptBits;
-
-			strval = trans.Value2String(intval, encode_type);
-			result.push_back(strval);
-		}
+		rangevec.push_back(trans.Value2String(*itr, encode_type));
 	}
 
-	int size = result.size();
-	//std::sort(result.begin(), result.end());
-	tbb::parallel_sort(result.begin(), result.end(), std::less<string>());
+	return rangevec;
 
-	vector<string> rangevec2;
-	int nstart = 0;
-	for (int i = 0; i < size - 1; i++)
-	{
-		if (!iscontinuous(result[i + 1], result[i]))
-		{
-			rangevec2.push_back(result[nstart]);
-			rangevec2.push_back(result[i]);
-
-			nstart = i + 1;
-		}
-
-		if (iscontinuous(result[i + 1], result[i]) && (i + 1) == size - 1)
-		{
-			rangevec2.push_back(result[nstart]);
-			rangevec2.push_back(result[i]);
-		}
-	}
-
-	return rangevec2;
 }
 
 template< typename T, int nDims, int mBits>
 vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_STR(Rect<T, nDims> queryRect, SFCType sfc_type, StringType encode_type)
 {
-	Point<T, nDims> minPoint = queryRect.GetMinPoint();
-	Point<T, nDims> maxPoint = queryRect.GetMaxPoint();
-
-	long *difference = new long[nDims];
-	long long *para = new long long[nDims + 1];
-
-	para[0] = 1;
-	for (int i = 0; i < nDims; i++)
-	{
-		difference[i] = maxPoint[i] - minPoint[i] + 1;// for brute force , needs to add 1
-		para[i + 1] = para[i] * difference[i]; //the coordinates are in the cell center
-	}
-
-	vector<vector<T>> queryVector;
-	for (int i = 0; i < nDims; i++)
-	{
-		vector<T> tempVector;
-		//int difference = maxPoint[i] - minPoint[i];
-		T temp = minPoint[i];
-		for (long j = 0; j <= difference[i]; j++)
-		{
-			tempVector.push_back(temp + j);
-		}
-		queryVector.push_back(tempVector);
-	}
-
-	Point<T, nDims> point;
-
-	long long tmp = para[nDims] - 1;
-	
-	SFCConversion2<nDims, mBits> sfc;
+	vector<string> rangevec;
 	OutputSchema2<nDims, mBits> trans;
-	//Point<long, mBits> pt;
-	
-	long long size = tmp + 1;
 
-	string strval;
-	sfc_bigint intval;
-	vector<string> result;	
+	vector<sfc_bigint> vec_res = RangeQueryByBruteforce_LNG(queryRect, sfc_type);
 
-	for (long long count = tmp; count >= 0; count--)
-	{ 
-		//cout << count << endl;
-
-		long long offset = count;
-		for (int j = nDims - 1; j >= 0; j--)
-		{
-			long long div = para[j];
-			long n = offset / div;
-			offset = offset % div;
-			point[j] = queryVector[j][n];
-		}
-
-		//sfc.ptCoord = point;
-		//if (sfc_type == Morton) sfc.MortonEncode();
-		if (sfc_type == Hilbert)  intval = sfc.HilbertEncode(point);
-		//pt = sfc.ptBits;
-
-		strval = trans.Value2String(intval, encode_type);
-		result.push_back(strval);
-	}
-
-	delete[]para;
-	delete[]difference;
-
-	//std::sort(result.begin(), result.end());
-	tbb::parallel_sort(result.begin(), result.end(), std::less<string>());
-
-	vector<string> rangevec2;
-	int nstart = 0;
-	for (int i = 0; i < size - 1; i++)
+	vector<sfc_bigint>::iterator itr;
+	for (itr = vec_res.begin(); itr != vec_res.end(); itr++)
 	{
-		if (!iscontinuous(result[i + 1], result[i]))
-		{
-			rangevec2.push_back(result[nstart]);
-			rangevec2.push_back(result[i]);
-
-			nstart = i + 1;
-		}
-
-		if (iscontinuous(result[i + 1], result[i]) && (i + 1) == size - 1)
-		{
-			rangevec2.push_back(result[nstart]);
-			rangevec2.push_back(result[i]);
-		}
+		rangevec.push_back(trans.Value2String(*itr, encode_type));
 	}
 
-	return rangevec2;
+	return rangevec;
 }
+
 
 #endif
