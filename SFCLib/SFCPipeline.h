@@ -11,6 +11,9 @@
 #include <cctype>
 //#include "common/utility/utility.h"
 
+#include <iostream>
+#include <fstream>
+
 #include "Point.h"
 #include "CoordTransform.h"
 
@@ -42,7 +45,7 @@ class OutputItem
 public:
 	Point<double, nDims>* pPtsArray;
 
-	long* out_value;
+	sfc_bigint* out_value;
 	char* out_string;
 
 	int _pt_alloc_size;
@@ -214,7 +217,7 @@ public:
 		pout_item->_pt_alloc_size = pin_item->_alloc_size;
 		pout_item->_encode_mode = _conv_type;
 		if (_conv_type == 0)
-			pout_item->out_value = (long*)tbb::tbb_allocator<long>().allocate(pin_item->_actual_size);
+			pout_item->out_value = (sfc_bigint*)tbb::tbb_allocator<sfc_bigint>().allocate(pin_item->_actual_size);
 		else
 		{ 
 			pout_item->out_string = (char*)tbb::tbb_allocator<char>().allocate(pin_item->_actual_size * nstrlen);
@@ -254,11 +257,12 @@ public:
 				ptSFC = cotrans.Transform(input[i]);
 				val = sfcgen.HilbertEncode(ptSFC);
 				//ptBits = sfcgen.ptBits;
+				cout << val << endl;
 			}
 
 			if (_conv_type == 0)
 			{
-				//pout_item->out_value[i]= outtrans.BitSequence2Value(ptBits);
+				pout_item->out_value[i] = val;//outtrans.BitSequence2Value(ptBits);
 			}
 
 			if (_conv_type == 1)
@@ -294,16 +298,18 @@ template<int nDims>
 class OutputFilter : public tbb::filter
 {
 private:
-	FILE* output_file;
+	//FILE* output_file;
+	ostream& output_file;
+
 	bool bis_onlysfc;
 
 	//bool bis_lod;
 	//RandomLOD<nDims>*  p_rnd_gen;
 
 public:
-	OutputFilter(FILE* output_file, bool is_onlysfc) :
+	OutputFilter(ostream& output, bool is_onlysfc) : //FILE* output_file
 		tbb::filter(serial_in_order),
-		output_file(output_file),
+		output_file(output),
 		bis_onlysfc(is_onlysfc)/*,
 		bis_lod(false),
 		p_rnd_gen(NULL)*/
@@ -336,13 +342,16 @@ public:
 			for (int i = 0; i < pout_item->_actual_size; i++)
 			{
 				if (pout_item->_encode_mode == 0) ///value type
-					fprintf(output_file, "%lu", pout_item->out_value[i]);
+					//fprintf(output_file, "%lu", pout_item->out_value[i]);
+					output_file << pout_item->out_value[i];
 				else
 				{
-					fprintf(output_file, "%s", pout_item->out_string + i * pout_item->_str_len); //pout_item->out_string[i].c_str()
+					//fprintf(output_file, "%s", pout_item->out_string + i * pout_item->_str_len); //pout_item->out_string[i].c_str()
+					output_file << pout_item->out_string + i * pout_item->_str_len;
 				}
 
-				fprintf(output_file, "\n");
+				//fprintf(output_file, "\n");
+				output_file << endl;
 			}//end for
 		}
 		else
@@ -353,16 +362,20 @@ public:
 				for (int j = 0; j < nDims; j++)
 				{
 					//fwrite(input[i], sizeof(long), 1, my_output_file);
-					fprintf(output_file, "%.6f", pout_item->pPtsArray[i][j]);
-					fprintf(output_file, ",");
+					//fprintf(output_file, "%.6f", pout_item->pPtsArray[i][j]);
+					//fprintf(output_file, ",");
+					output_file << pout_item->pPtsArray[i][j];
+					output_file << ",";
 				}
 
 				// one field for SFC code
 				if (pout_item->_encode_mode == 0) ///value type
-					fprintf(output_file, "%lu", pout_item->out_value[i]);
+					//fprintf(output_file, "%lu", pout_item->out_value[i]);
+					output_file << pout_item->out_value[i];
 				else
 				{
-					fprintf(output_file, "%s", pout_item->out_string + i * pout_item->_str_len); //pout_item->out_string[i].c_str()
+					//fprintf(output_file, "%s", pout_item->out_string + i * pout_item->_str_len); //pout_item->out_string[i].c_str()
+					output_file << pout_item->out_string + i * pout_item->_str_len;
 				}
 
 				////one field for lod value
@@ -371,7 +384,8 @@ public:
 				//	fprintf(output_file, ",%d", p_rnd_gen->RLOD_Gen());
 				//}
 
-				fprintf(output_file, "\n");
+				//fprintf(output_file, "\n");
+				output_file << endl;
 			}///end for
 		}///end if
 
@@ -407,19 +421,30 @@ int run_pipeline(int nthreads, char* InputFileName, char* OutputFileName, \
 		input_file = stdin;
 	}
 	
-	FILE* output_file = NULL;
+	//FILE* output_file = NULL;
+	//if (OutputFileName != NULL && strlen(OutputFileName) != 0)
+	//{
+	//	output_file = fopen(OutputFileName, "w");
+	//	if (!output_file)
+	//	{
+	//		return 0;
+	//	}
+	//}
+	//else
+	//{
+	//	output_file = stdout;
+	//}
+	std::ostream* out_s;
+	std::ofstream of;
 	if (OutputFileName != NULL && strlen(OutputFileName) != 0)
 	{
-		output_file = fopen(OutputFileName, "w");
-		if (!output_file)
-		{
-			return 0;
-		}
+		of.open(OutputFileName);
+		out_s = &of;
 	}
 	else
 	{
-		output_file = stdout;
-	}	
+		out_s = &cout;
+	}
 
 	// Create the pipeline
 	tbb::pipeline pipeline;
@@ -451,7 +476,7 @@ int run_pipeline(int nthreads, char* InputFileName, char* OutputFileName, \
 	pipeline.add_filter(nsfcgen_filter);
 
 	// Create file-writing stage and add it to the pipeline
-	OutputFilter<nDims> output_filter(output_file, onlysfc);//, nlodlevels, 20
+	OutputFilter<nDims> output_filter(*out_s, onlysfc);//, nlodlevels, 20 //output_file
 	pipeline.add_filter(output_filter);
 
 	// Run the pipeline
@@ -461,8 +486,10 @@ int run_pipeline(int nthreads, char* InputFileName, char* OutputFileName, \
 	pipeline.run(nthreads * 4);//
 	tbb::tick_count t1 = tbb::tick_count::now();
 
-	fclose(output_file);
+	//fclose(output_file);
 	fclose(input_file);
+	of.close();
+
 
 	if (strlen(OutputFileName) != 0) printf("time = %g\n", (t1 - t0).seconds());
 

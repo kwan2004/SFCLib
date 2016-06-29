@@ -6,8 +6,6 @@
 #include "Point.h"
 #include "Rectangle.h"
 
-//
-
 //#include "SFCConversion.h"
 //#include "OutputSchema.h"
 #include "QueryBySFC.h"
@@ -22,6 +20,7 @@
 //#include "tbb/task_scheduler_init.h"
 
 #include <iostream>
+#include <fstream>
 using namespace std;
 
 void print_bits(unsigned int x)
@@ -556,25 +555,25 @@ int main(int argc, char* argv[])
 
 
 	////3D sample
-	long Point31[3] = { 4, 2, 5 };
-	long Point32[3] = { 5, 4, 7 };
-	Point<long, 3> MinPoint3(Point31);
-	Point<long, 3> MaxPoint3(Point32);
+	long Point31[4] = { 6, 2, 5 ,6};
+	long Point32[4] = { 15, 8, 17,8 };
+	Point<long, 4> MinPoint3(Point31);
+	Point<long, 4> MaxPoint3(Point32);
 
-	Rect<long, 3> rec3(MinPoint3, MaxPoint3);
+	Rect<long, 4> rec3(MinPoint3, MaxPoint3);
 
-	QueryBySFC<long, 3, 10> querytest3;
+	QueryBySFC<long, 4, 10> querytest3;
 	vector<sfc_bigint> vec_res3 = querytest3.RangeQueryByBruteforce_LNG(rec3, Hilbert);
 	print_ranges("Hilbert 3d brute force", vec_res3);
 
 	vector<sfc_bigint> vec_res4 = querytest3.RangeQueryByRecursive_LNG(rec3, Hilbert, 0);
 	print_ranges("Hilbert 3d recursive", vec_res4);
 
-	vector<string> vec_res7 = querytest3.RangeQueryByBruteforce_STR(rec3, Hilbert, Base64);
+	/*vector<string> vec_res7 = querytest3.RangeQueryByBruteforce_STR(rec3, Hilbert, Base64);
 	print_ranges_str("hilbert 3d brute force", vec_res7);
 
 	vector<string> vec_res8 = querytest3.RangeQueryByRecursive_STR(rec3, Hilbert, Base64, 0);
-	print_ranges_str("hilbert 3d recursive", vec_res8);
+	print_ranges_str("hilbert 3d recursive", vec_res8);*/
 
 	//SFCConversion<3, 9> sfc3D;
 	//OutputSchema<3, 9> trans3D;
@@ -598,7 +597,7 @@ int main(int argc, char* argv[])
 	const int ndims = 4;
 	const int mbits = 30;
 
-	//-i 85810.0/85811.0/447070.0/447071.0/5/6/8/10 -s 1 -e 2 -t ct.txt -n 10000 -o qq.sql
+	//-i 85810.0/85811.0/447070.0/447071.0/5/6/8/10 -s 1 -e 0 -t ct.txt -n 1000 -o qq3.sql
 	int nsfc_type = 0;
 	int nencode_type = 0;
 
@@ -776,31 +775,25 @@ int main(int argc, char* argv[])
 	Rect<long, ndims> rec(MinPt2, MaxPt2);
 	QueryBySFC<long , ndims, mbits> querytest;
 
-	FILE* output_file = NULL;
-	if (szoutput != NULL && strlen(szoutput) != 0)
+	ofstream range_file;
+	if (strlen(szoutput) != 0)
 	{
-		output_file = fopen(szoutput, "w");
-		if (!output_file)
-		{
-			return 0;
-		}
-	}
-	else
-	{
-		output_file = stdout;
+		range_file.open(szoutput);
 	}
 
 	if (nencode_type == 0) //number
 	{
-		//vector<long long> vec_res = querytest.RangeQueryByBruteforce_LNG(rec, (SFCType)nsfc_type);
-		//print_ranges("hilbert 2d brute force", vec_res);
+		/*vector<long long> vec_res = querytest.RangeQueryByBruteforce_LNG(rec, (SFCType)nsfc_type);
+		print_ranges("hilbert 2d brute force", vec_res);*/
 
-		//vector<long long> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, (SFCType)nsfc_type, nranges);
+		vector<sfc_bigint> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, (SFCType)nsfc_type, nranges);
 		//print_ranges("hilbert 2d recursive", vec_res2);
-		/*for (int i = 0; i < vec_res2.size(); i = i + 2)
+
+		for (int i = 0; i < vec_res2.size(); i = i + 2)
 		{
-			fprintf(output_file, "%lld,%lld\n", vec_res2[i], vec_res2[i + 1]);
-		}*/
+			//fprintf(output_file, "%lld,%lld\n", vec_res2[i], vec_res2[i + 1]);
+			range_file << vec_res2[i] << "," << vec_res2[i + 1] << endl;
+		}
 	}
 	else //string BASE32 BASE64
 	{
@@ -812,11 +805,13 @@ int main(int argc, char* argv[])
 
 		for (int i = 0; i < vec_res6.size(); i = i + 2)
 		{
-			fprintf(output_file, "%s,%s\n", vec_res6[i].c_str(), vec_res6[i + 1].c_str());
+			//fprintf(output_file, "%s,%s\n", vec_res6[i].c_str(), vec_res6[i + 1].c_str());
+			range_file << vec_res6[i] << "," << vec_res6[i + 1] << endl;
 		}
 	}
 	
-	if (output_file != NULL) fclose(output_file);
+	//if (output_file != NULL) fclose(output_file);
+	range_file.close();
 #endif
 
 
