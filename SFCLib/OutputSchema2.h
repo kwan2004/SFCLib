@@ -15,7 +15,7 @@ public:
 	
 	string Value2String(sfc_bigint val, StringType str_type)
 	{
-		long long base = 0; 
+		int base = 0; 
 		const char* char_table = NULL;
 		
 		if (str_type == Base32) 
@@ -52,7 +52,7 @@ public:
 		sfc_bigint idx = 0;
 
 		////////////////////
-		long long base = 0;
+		int base = 0;
 		const unsigned char* char_table = NULL;
 
 		if (str_type == Base32)
@@ -73,8 +73,11 @@ public:
 
 		for (int i = 0; i < nstrlen; i++)
 		{
-			idx |= char_table[*(p + i)] << ((nstrlen - 1 - i)*base);
+			sfc_bigint c = (sfc_bigint)(char_table[*(p + i)]);
+			if (c != 0)
+				idx |= c << ((nstrlen - 1 - i)*base);
 		}
+		
 
 		return idx;
 	}

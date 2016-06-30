@@ -257,7 +257,6 @@ public:
 				ptSFC = cotrans.Transform(input[i]);
 				val = sfcgen.HilbertEncode(ptSFC);
 				//ptBits = sfcgen.ptBits;
-				cout << val << endl;
 			}
 
 			if (_conv_type == 0)

@@ -242,191 +242,13 @@ int main(int argc, char* argv[])
 	
 #endif
 	///////////////////////
-#ifdef SFC_GEN_QUERY
-	Point<double, 4> pt1;
-	pt1[0] = 85224.3;//1010
-	pt1[1] = 447071.86;//1011
-	pt1[2] = 0.39; //0011
-	pt1[3] = 9;//1101
-
-	Point<double, 4> pt2;
-	//pt2[0] = 85224.3;//1010
-	//pt2[1] = 447071.86;//1011
-	//pt2[2] = 0.4; //0011
-	//pt2[3] = 9;//1101
-	pt2[0] = 85098.38;//1010
-	pt2[1] = 446440.06;//1011
-	pt2[2] = 18.34; //0011
-	pt2[3] = 9;//1101
-
-	double delta[4] = { 80000.00, 437500.00, -20.0, 0.0 }; // 526000, 4333000, 300
-	long  scale[4] = { 100, 100, 100, 1 }; //100, 100, 1000
-
-	CoordTransform<double, long, ndims> cotrans;
-	cotrans.SetTransform(delta, scale);
-
-	Point<long, 4> MinPt2 = cotrans.Transform(pt1);
-	Point<long, 4> MaxPt2 = cotrans.Transform(pt2);
-
-	SFCConversion<4, 30> sfctest;
-	OutputSchema<4, 30> transtest;
-
-	sfctest.ptCoord = MinPt2;
-	//sfc.MortonEncode();
-	sfctest.HilbertEncode();
-	Point<long, 30> ptbts1; 
-	ptbts1 = sfctest.ptBits;
-	cout << transtest.BitSequence2String(ptbts1, Base64).c_str() << endl;
-
-	sfctest.ptCoord = MaxPt2;
-	//sfc.MortonEncode();
-	sfctest.HilbertEncode();
-	Point<long, 30> ptbts2;
-	ptbts2 = sfctest.ptBits;
-	cout << transtest.BitSequence2String(ptbts2, Base64).c_str() << endl;
-
-	string res("+++++++MZcZE4Sxf+BdL");//85098.38 446440.06 18.34 9
-
-	SFCConversion<4, 30> sfctest2;
-	OutputSchema<4, 30> transtest2;
-
-	Point<long, 30> ptbts3 = transtest2.String2BitSequence(res, Base64);
-	sfctest2.ptBits = ptbts3;
-	sfctest2.HilbertDecode();
-	Point<long, 4> Pt3 = sfctest2.ptCoord;
-
-	///////////////////////////////////////
-	////2D case 8*8, i.e n=2, m=3
-	Point<long, 2> ptCoord; //SFC coordinates n=2
-	Point<long, 4> ptBits; //SFC bit sequence m=3
-
-	SFCConversion<2, 4> sfc;
-	OutputSchema<2, 4> trans;
-	
-	int a, b;
-	for (int i = 0; i < 16; i++)
-	{
-		for (int j = 0; j < 16; j++)
-		{
-			ptCoord[0] = i;//i
-			ptCoord[1] = j;//j
-
-			sfc.ptCoord = ptCoord;
-			//sfc.MortonEncode();
-			sfc.HilbertEncode();
-			ptBits = sfc.ptBits;
-			
-			long outval = trans.BitSequence2Value(ptBits);
-			string strout = trans.BitSequence2String(ptBits, Base64);
-
-			cout << i << ", " << j << "--->" << outval << " , " << strout ; //<< endl
-			
-			ptBits = trans.Value2BitSequence(outval);
-			//ptBits = trans.String2BitSequence(strout, Base64);
-			sfc.ptBits = ptBits;//
-			sfc.HilbertDecode();
-			Point<long, 2> Pt32 = sfc.ptCoord;
-			//a = Pt32[0];
-			//b = Pt32[1];
-			cout << "--->" << Pt32[0] << " , " << Pt32[1] << endl;
-		}
-	}
-
-	//////////////////////////////////
-	/////Butz's sample, n=5; m=4;
-	Point<long, 5> pt3;
-	pt3[0] = 10;//1010
-	pt3[1] = 11;//1011
-	pt3[2] = 3; //0011
-	pt3[3] = 13;//1101
-	pt3[4] = 5; //0101
-
-	Point<long, 6> pt4; //SFC bit sequence m=3
-
-	SFCConversion<5, 6> sfc2;
-	OutputSchema<5, 6> trans2;
-
-	sfc2.ptCoord = pt3;
-	sfc2.HilbertEncode();
-	pt4 = sfc2.ptBits;
-
-	long val = trans2.BitSequence2Value(pt4);
-
-	print_bits(val);
-
-	Point<long, 5> pt5;
-	SFCConversion<5, 6> sfc3;
-	sfc2.ptBits = pt4;
-	sfc2.HilbertDecode();
-	pt5 =sfc2.ptCoord;
-
-	//int a = sizeof(unsigned int);
-
-	//
-	////2D sample
-	long Point1[2] = { 3, 2};
-	long Point2[2] = { 5, 5 };
-	Point<long, 2> MinPoint(Point1);
-	Point<long, 2> MaxPoint(Point2);
-	Rect<long, 2> rec(MinPoint, MaxPoint);
-	QueryBySFC<long, 2, 3> querytest;
-	vector<long long> vec_res = querytest.RangeQueryByBruteforce_LNG(rec, Hilbert);
-	print_ranges("hilbert 2d brute force", vec_res);
-
-	vector<long long> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, Hilbert,0);
-	print_ranges("hilbert 2d recursive", vec_res2);
-
-	vector<string> vec_res5 = querytest.RangeQueryByBruteforce_STR(rec, Hilbert, Base64);
-	print_ranges_str("hilbert 2d brute force", vec_res5);
-
-	vector<string> vec_res6 = querytest.RangeQueryByRecursive_STR(rec, Hilbert, Base64,0);
-	print_ranges_str("hilbert 2d recursive", vec_res6);
-
-
-	////3D sample
-	long Point31[3] = { 4, 2, 5 };
-	long Point32[3] = { 5, 4, 7 };
-	Point<long, 3> MinPoint3(Point31);
-	Point<long, 3> MaxPoint3(Point32);
-
-	Rect<long, 3> rec3(MinPoint3, MaxPoint3);
-
-	QueryBySFC<long, 3, 10> querytest3;
-	vector<long long> vec_res3 = querytest3.RangeQueryByBruteforce_LNG(rec3, Morton);
-	print_ranges("morton 3d brute force", vec_res3);
-
-	vector<long long> vec_res4 = querytest3.RangeQueryByRecursive_LNG(rec3, Morton,0);
-	print_ranges("morton 3d recursive", vec_res4);
-
-	vector<string> vec_res7 = querytest3.RangeQueryByBruteforce_STR(rec3, Hilbert, Base64);
-	print_ranges_str("hilbert 2d brute force", vec_res7);
-
-	vector<string> vec_res8 = querytest3.RangeQueryByRecursive_STR(rec3, Hilbert, Base64,0);
-	print_ranges_str("hilbert 2d recursive", vec_res8);
-
-	//SFCConversion<3, 9> sfc3D;
-	//OutputSchema<3, 9> trans3D;
-	//sfc3D.ptCoord = Point31;
-	//sfc3D.MortonEncode();
-	//string str3D = trans3D.BitSequence2String(sfc3D.ptBits, Base64);
-	//Point<long, 9> mm = trans3D.String2BitSequence(str3D, Base64);
-	////Point<long, 10> pttt = trans3D.String2BitSequence(str3D, Base64);
-
-	//long Point333[3] = { 4, 2, 5 };
-	//SFCConversion<3, 4> sfc3D3;
-	//OutputSchema<3, 4> trans3D3;
-	//sfc3D3.ptCoord = Point333;
-	//sfc3D3.MortonEncode();
-	//string str3D3 = trans3D3.BitSequence2String(sfc3D3.ptBits, Base32);
-	//Point<long, 4> mmm = trans3D3.String2BitSequence(str3D3, Base32);
-
-#endif
 
 #ifdef SFC_GEN_QUERY2
+	///85999.4,446266,-1.65,9,651295384353375995169439
 	Point<double, 4> pt1;
-	pt1[0] = 85224.3;//1010
-	pt1[1] = 447071.86;//1011
-	pt1[2] = 0.39; //0011
+	pt1[0] = 85999.42;//1010
+	pt1[1] = 446266.47;//1011
+	pt1[2] = -1.65; //0011
 	pt1[3] = 9;//1101
 
 	Point<double, 4> pt2;
@@ -454,6 +276,7 @@ int main(int argc, char* argv[])
 	//sfctest.ptCoord = MinPt2;
 	//sfc.MortonEncode();
 	sfc_bigint p1 = sfctest.HilbertEncode(MinPt2);
+	cout << p1 << endl;
 	//Point<long, 30> ptbts1; 
 	//ptbts1 = sfctest.ptBits;
 	cout << transtest.Value2String(p1, Base64).c_str() << endl;
@@ -464,6 +287,7 @@ int main(int argc, char* argv[])
 	//Point<long, 30> ptbts2;
 	//ptbts2 = sfctest.ptBits;
 	string stra = transtest.Value2String(p2, Base64).c_str();
+	cout << p2 << endl;
 	cout << stra << "  "<< p2.str()<< endl;
 
 	string res= stra;//85098.38 446440.06 18.34 9
@@ -472,15 +296,22 @@ int main(int argc, char* argv[])
 	OutputSchema2<4, 30> transtest2;
 
 	sfc_bigint p3 = transtest2.String2Value(res, Base64);
+	cout << p3 << endl;
 	if (p2 == p3)
 	{
 		int a = 0;
 	}
-	Point<long, 4> Pt3 = sfctest2.HilbertDecode(p2);
+	Point<long, 4> Pt3 = sfctest2.HilbertDecode(p3);
 	//Point<long, 30> ptbts3 = transtest2.String2BitSequence(res, Base64);
 	//sfctest2.ptBits = ptbts3;
 	//sfctest2.HilbertDecode();
 	//Point<long, 4> Pt3 = sfctest2.ptCoord;
+
+	long long aq = 2349505055;
+	string aa = transtest.Value2String(aq, Base64);
+	cout << aa << endl;
+	sfc_bigint bq = transtest2.String2Value(aa, Base64);
+	cout << bq << endl;
 
 	///////////////////////////////////////
 	////2D case 8*8, i.e n=2, m=3
@@ -535,7 +366,7 @@ int main(int argc, char* argv[])
 	int aaa = 0;
 	//
 	////2D sample
-	long Point1[2] = { 6, 7}; //3, 2 //8, 4
+	long Point1[2] = { 3, 7}; //3, 2 //8, 4
 	long Point2[2] = { 8, 11 };  //5, 5//12, 9
 	Point<long, 2> MinPoint(Point1);
 	Point<long, 2> MaxPoint(Point2);
@@ -556,7 +387,7 @@ int main(int argc, char* argv[])
 
 	////3D sample
 	long Point31[4] = { 6, 2, 5 ,6};
-	long Point32[4] = { 15, 8, 17,8 };
+	long Point32[4] = { 25, 28, 27, 28 };
 	Point<long, 4> MinPoint3(Point31);
 	Point<long, 4> MaxPoint3(Point32);
 
@@ -597,7 +428,8 @@ int main(int argc, char* argv[])
 	const int ndims = 4;
 	const int mbits = 30;
 
-	//-i 85810.0/85811.0/447070.0/447071.0/5/6/8/10 -s 1 -e 0 -t ct.txt -n 1000 -o qq3.sql
+	//85999.4,446266,-1.65,9,
+	//-i 85999.0/85999.5/446265.5/446266.5/-2.0/-1.5/8/9 -s 1 -e 0 -t ct.txt -n 1000 -o qq3.sql
 	int nsfc_type = 0;
 	int nencode_type = 0;
 
