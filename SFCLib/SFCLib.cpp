@@ -428,8 +428,11 @@ int main(int argc, char* argv[])
 	const int ndims = 4;
 	const int mbits = 30;
 
-	//85999.4,446266,-1.65,9,
-	//-i 85999.0/85999.5/446265.5/446266.5/-2.0/-1.5/8/9 -s 1 -e 0 -t ct.txt -n 1000 -o qq3.sql
+	///85999.42,446266.47,-1.65,9,651295384353375995169439
+	//-i 85999.0/85999.5/446266/446266.5/-2.0/-1.5/8/9 -s 1 -e 0 -t ct.txt -n 1000 -o qq3.sql
+
+	//85999.1,446250.23,-1.69,9,651295397912973650169147
+	//-i 85999.0/85999.5/446250/446250.4/-2.0/-1.5/8/9 -s 1 -e 0 -t ct.txt -n 0 -o qq5.sql
 	int nsfc_type = 0;
 	int nencode_type = 0;
 
@@ -615,8 +618,7 @@ int main(int argc, char* argv[])
 
 	if (nencode_type == 0) //number
 	{
-		/*vector<long long> vec_res = querytest.RangeQueryByBruteforce_LNG(rec, (SFCType)nsfc_type);
-		print_ranges("hilbert 2d brute force", vec_res);*/
+		/*vector<sfc_bigint> vec_res2 = querytest.RangeQueryByBruteforce_LNG(rec, (SFCType)nsfc_type);*/
 
 		vector<sfc_bigint> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, (SFCType)nsfc_type, nranges);
 		//print_ranges("hilbert 2d recursive", vec_res2);

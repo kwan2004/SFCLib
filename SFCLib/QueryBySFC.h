@@ -288,10 +288,17 @@ void QueryBySFC<T, nDims, mBits>::query_approximate2(TreeNode<T, nDims> nd, Rect
 		TreeNode<T, nDims> currentNode = std::get<0>(currenttuple);
 		Rect<T, nDims> qrt = std::get<1>(currenttuple);
 
+		//cout << currentNode.level << endl;
 		//////////////////////////////////////////////////////
 		//check the level and numbers of results
-		if ( (last_level != currentNode.level) && (nranges != 0) && (resultTNode.size() >  nranges)) //we are in the new level and full
+		if ((nranges != 0) && (last_level != currentNode.level) &&  (resultTNode.size() >  nranges)) //we are in the new level and full
 		{
+			///move all the left nodes in the queue to the resuts node vector
+			for (; !query_queue.empty(); query_queue.pop())
+			{
+				resultTNode.push_back(std::get<0>(query_queue.front()));
+			}
+
 			break; //now
 		}
 

@@ -309,27 +309,13 @@ public:
 	OutputFilter(ostream& output, bool is_onlysfc) : //FILE* output_file
 		tbb::filter(serial_in_order),
 		output_file(output),
-		bis_onlysfc(is_onlysfc)/*,
-		bis_lod(false),
-		p_rnd_gen(NULL)*/
+		bis_onlysfc(is_onlysfc)
 	{
 	}
 
-	//OutputFilter(FILE* output_file, bool is_onlysfc, int levels, int levelmax) :
-	//	tbb::filter(serial_in_order),
-	//	output_file(output_file),
-	//	bis_onlysfc(is_onlysfc),
-	//	bis_lod(true)
-	//{
-	//	//p_rnd_gen = new RandomLOD<nDims>(levels, levelmax);
-	//}
 
 	~OutputFilter()
 	{
-		//if (p_rnd_gen == NULL)
-		//{
-		//	delete p_rnd_gen;
-		//}
 	}
 
 	/*override*/void* operator()(void* item)
@@ -363,7 +349,7 @@ public:
 					//fwrite(input[i], sizeof(long), 1, my_output_file);
 					//fprintf(output_file, "%.6f", pout_item->pPtsArray[i][j]);
 					//fprintf(output_file, ",");
-					output_file << pout_item->pPtsArray[i][j];
+					output_file << setprecision(9) << pout_item->pPtsArray[i][j];
 					output_file << ",";
 				}
 
