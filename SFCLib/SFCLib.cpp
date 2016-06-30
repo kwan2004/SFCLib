@@ -610,10 +610,16 @@ int main(int argc, char* argv[])
 	Rect<long, ndims> rec(MinPt2, MaxPt2);
 	QueryBySFC<long , ndims, mbits> querytest;
 
+	std::ostream* out_s;
 	ofstream range_file;
 	if (strlen(szoutput) != 0)
 	{
 		range_file.open(szoutput);
+		out_s = &range_file;
+	}
+	else
+	{ 
+		out_s = &cout;
 	}
 
 	if (nencode_type == 0) //number
@@ -626,7 +632,7 @@ int main(int argc, char* argv[])
 		for (int i = 0; i < vec_res2.size(); i = i + 2)
 		{
 			//fprintf(output_file, "%lld,%lld\n", vec_res2[i], vec_res2[i + 1]);
-			range_file << vec_res2[i] << "," << vec_res2[i + 1] << endl;
+			(*out_s) << vec_res2[i] << "," << vec_res2[i + 1] << endl;
 		}
 	}
 	else //string BASE32 BASE64
@@ -640,7 +646,7 @@ int main(int argc, char* argv[])
 		for (int i = 0; i < vec_res6.size(); i = i + 2)
 		{
 			//fprintf(output_file, "%s,%s\n", vec_res6[i].c_str(), vec_res6[i + 1].c_str());
-			range_file << vec_res6[i] << "," << vec_res6[i + 1] << endl;
+			(*out_s) << vec_res6[i] << "," << vec_res6[i + 1] << endl;
 		}
 	}
 	
