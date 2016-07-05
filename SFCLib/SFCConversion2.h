@@ -220,12 +220,32 @@ public:
 		bitmask_t pt[nDims];
 		for (int i = 0; i < nDims; i++) pt[i] = ptCoord[i];
 
-		return hilbert_c2i(pt);
+		//val |= ((x & ((uint64_t)1 << i)) << 3 * i) | ((y & ((uint64_t)1 << i)) << (3 * i + 1)) | ((z & ((uint64_t)1 << i)) << (3* i + 2));
+		bitmask_t val = 0;
+		for (unsigned int i = 0; i < mBits; i++) 
+		{
+			for (unsigned int j = 0; j < nDims; j++)
+			{
+				val |= (pt[i] & ((bitmask_t)1 << i)) << (nDims * i + j);
+			}			
+		}
+
+		return val;
 	}
 	static Point<long, nDims> MortnDecode(sfc_bigint idx)
 	{
 		bitmask_t pt[nDims];
-		hilbert_i2c(idx, pt);
+		//hilbert_i2c(idx, pt);
+		unsigned int mask = ((unsigned int)1 << nDims) - 1;
+		for (int i = 0; i < mBits; i++)
+		{
+			idx = int((val >> i*nDims)) & mask;
+
+			for (int j = 0; j < nDims; j++)
+			{
+				pt[j] |= ((idx >> j) & 1) << i;
+			}
+		}
 
 		Point<long, nDims> newpt;
 		for (int i = 0; i < nDims; i++) newpt[i] = long(pt[i]);

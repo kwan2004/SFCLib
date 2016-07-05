@@ -73,13 +73,15 @@ int main(int argc, char* argv[])
 	const int ndims = 3;
 	const int mbits = 30;
 
-	//-p 0 -s 1 -e 2 -t ct.txt -l 10 -i ahn2.txt -o ee.txt
+	//-p 0 -s 1 -e 2 -t ct.txt -l 10 -i ahn2.txt -o ee.txt 
 	int nparallel = 0;
 
 	int nsfc_type = 0;
 	int nencode_type = 0;
 
 	bool bisonlysfc = false;
+
+	int nitem_num = 5000;
 
 	bool bislod = false;
 	int lod_levels = 0;
@@ -144,6 +146,13 @@ int main(int argc, char* argv[])
 			i++;
 			bislod = true;
 			lod_levels = atoi(argv[i]);
+			continue;
+		}
+		if (strcmp(argv[i], "-n") == 0)//if points number per chunk during parallel
+		{
+			i++;
+			nitem_num = atoi(argv[i]);
+			continue;
 		}
 	}	 
 
@@ -221,9 +230,9 @@ int main(int argc, char* argv[])
 		tbb::task_scheduler_init init_serial(1);
 		
 		if (bislod)//lod value, one more dimension
-			run_pipeline<ndims+1, mbits>(1, szinput, szoutput, 3000, nsfc_type, nencode_type, delta, scale, bisonlysfc, bislod, lod_levels);
+			run_pipeline<ndims+1, mbits>(1, szinput, szoutput, nitem_num, nsfc_type, nencode_type, delta, scale, bisonlysfc, bislod, lod_levels);
 		else
-			run_pipeline<ndims, mbits>(1, szinput, szoutput, 3000, nsfc_type, nencode_type, delta, scale, bisonlysfc, bislod, lod_levels);
+			run_pipeline<ndims, mbits>(1, szinput, szoutput, nitem_num, nsfc_type, nencode_type, delta, scale, bisonlysfc, bislod, lod_levels);
 
 	}
 
