@@ -29,7 +29,7 @@ public:
 	Point<double, nDims>* pPtsArray;
 	int _actual_size;
 	int _alloc_size;
-
+	
 	InputItem()
 	{
 		_alloc_size = 0;
@@ -74,7 +74,9 @@ private:
 	int _size;
 
 	bool bis_lod;
-	RandomLOD<nDims>*  p_rnd_gen;
+	RandomLOD<nDims-1>*  p_rnd_gen;
+
+	//int ncount[20];
 
 public:
 	InputFilter(FILE* input_file_, int size) :
@@ -84,6 +86,7 @@ public:
 		bis_lod(false),
 		p_rnd_gen(NULL)
 	{
+		///memset(ncount, 0, sizeof(int) * 20);
 	}
 
 	InputFilter(FILE* input_file_, int size,  int levels, int levelmax) :
@@ -93,7 +96,9 @@ public:
 		bis_lod(true)
 
 	{
-		p_rnd_gen = new RandomLOD<nDims>(levels, levelmax);
+		p_rnd_gen = new RandomLOD<nDims-1>(levels, levelmax);
+
+		//memset(ncount, 0, sizeof(int) * 20);
 	}
 
 	~InputFilter()
@@ -102,6 +107,11 @@ public:
 		{
 			delete p_rnd_gen;
 		}
+
+		/*for (int i = 0; i < 20; i++)
+		{
+			cout << i << ":" << ncount[i] << endl;
+		}*/
 	}
 
 
@@ -154,6 +164,9 @@ public:
 			if (bis_lod)
 			{
 				pItem->pPtsArray[i][j] =  p_rnd_gen->RLOD_Gen();
+
+				//int a = pItem->pPtsArray[i][j];
+				//ncount[a]++;
 			}
 
 			i++;

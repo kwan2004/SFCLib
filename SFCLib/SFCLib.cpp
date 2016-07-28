@@ -633,13 +633,13 @@ int main(int argc, char* argv[])
 
 	tbb::task_scheduler_init init(tbb::task_scheduler_init::default_num_threads());
 
-	//tbb::tick_count t0 = tbb::tick_count::now();
+	tbb::tick_count t0 = tbb::tick_count::now();
 
 	if (nencode_type == 0) //number
 	{
 		/*vector<sfc_bigint> vec_res2 = querytest.RangeQueryByBruteforce_LNG(rec, (SFCType)nsfc_type);*/
 
-		vector<sfc_bigint> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, (SFCType)nsfc_type, nranges);
+		vector<sfc_bigint> vec_res2 = querytest.RangeQueryByRecursive_LNG_P(rec, (SFCType)nsfc_type, nranges);
 		//print_ranges("hilbert 2d recursive", vec_res2);
 
 		for (int i = 0; i < vec_res2.size(); i = i + 2)
@@ -666,20 +666,20 @@ int main(int argc, char* argv[])
 	//if (output_file != NULL) fclose(output_file);
 	range_file.close();
 
-	///tbb::tick_count t1 = tbb::tick_count::now();
-	//cout << "time = " <<(t1 - t0).seconds()<<endl;
+	tbb::tick_count t1 = tbb::tick_count::now();
+	cout << "time = " <<(t1 - t0).seconds()<<endl;
 
 #endif
 
 
 #ifdef RANDOM_LOD
 
-	RandomLOD<3> rnd_gen(14,20);
+	RandomLOD<3> rnd_gen(10,20);
 
 	int ncount[14] = { 0 };
 
 	int nlevel=0;
-	for (int i = 0; i < 1000000; i++)
+	for (int i = 0; i < 10000000; i++)
 	{
 		nlevel = rnd_gen.RLOD_Gen();
 

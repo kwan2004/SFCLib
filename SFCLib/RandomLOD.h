@@ -4,6 +4,8 @@
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 
+#include "typedef.h"
+
 template<int nDims>
 class RandomLOD
 {
@@ -26,27 +28,32 @@ public:
 
 		srand(time(NULL));
 
-		unsigned long long* nintervals = new unsigned long long[nLevelMax + 1];//[nLevelMax + 1];
+		sfc_bigint* nintervals = new sfc_bigint[nLevelMax + 1];//[nLevelMax + 1];
 
 		memset(m_pintervals, 0, sizeof(double)*(nLevelMax + 1));
-		memset(nintervals, 0, sizeof(unsigned long long)*(nLevelMax + 1));
+		memset(nintervals, 0, sizeof(sfc_bigint)*(nLevelMax + 1));
 		//long long ntotal = 0;		
 		
 		nintervals[0] = 0;
 		nintervals[1] = 1;
 
 		int i;
+		long long a = ((((long long)1) << nDims) - 1);
 		for (i = 1; i < nLevelMax; i++)
 		{
-			nintervals[i + 1] = nintervals[i] * ( ( ((long long)1) << nDims) - 1);
+			nintervals[i + 1] = nintervals[i] * a;
 
 			///ntotal += nintervals[i + 1];
+			//cout << nintervals[i] << endl;
 		}
+		//cout << nintervals[i] << endl;
+		//cout << endl;
 		
 		m_pintervals[0] = 0;
 		for (i = 1; i <= nLevelMax; i++)
 		{
-			m_pintervals[i] = (double)nintervals[i] / nintervals[nLevelMax] * 100; //ntotal
+			m_pintervals[i] = (double)(nintervals[i]) / (double)(nintervals[nLevelMax])* 100.0; //ntotal
+			//cout << m_pintervals[i] << endl;
 		}
 		
 		delete[] nintervals;
