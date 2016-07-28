@@ -242,10 +242,10 @@ int main(int argc, char* argv[])
 		tbb::task_scheduler_init init_parallel;
 
 		if (bislod)//lod value, one more dimension
-			run_pipeline<ndims+1, mbits>(init_parallel.default_num_threads(), szinput, szoutput, 3000, nsfc_type, \
+			run_pipeline<ndims+1, mbits>(init_parallel.default_num_threads(), szinput, szoutput, nitem_num, nsfc_type, \
 			nencode_type, delta, scale, bisonlysfc, bislod, lod_levels);
 		else
-			run_pipeline<ndims, mbits>(init_parallel.default_num_threads(), szinput, szoutput, 3000, nsfc_type, \
+			run_pipeline<ndims, mbits>(init_parallel.default_num_threads(), szinput, szoutput, nitem_num, nsfc_type, \
 			nencode_type, delta, scale, bisonlysfc, bislod, lod_levels);
 	}
 	
@@ -631,6 +631,10 @@ int main(int argc, char* argv[])
 		out_s = &cout;
 	}
 
+	tbb::task_scheduler_init init(tbb::task_scheduler_init::default_num_threads());
+
+	//tbb::tick_count t0 = tbb::tick_count::now();
+
 	if (nencode_type == 0) //number
 	{
 		/*vector<sfc_bigint> vec_res2 = querytest.RangeQueryByBruteforce_LNG(rec, (SFCType)nsfc_type);*/
@@ -661,6 +665,10 @@ int main(int argc, char* argv[])
 	
 	//if (output_file != NULL) fclose(output_file);
 	range_file.close();
+
+	///tbb::tick_count t1 = tbb::tick_count::now();
+	//cout << "time = " <<(t1 - t0).seconds()<<endl;
+
 #endif
 
 

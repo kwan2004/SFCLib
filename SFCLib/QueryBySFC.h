@@ -19,7 +19,11 @@
 #include <time.h>
 
 #include "tbb/parallel_sort.h"
+#include "tbb/concurrent_hash_map.h"
+#include "tbb/blocked_range.h"
+#include "tbb/parallel_for.h"
 
+using namespace tbb;
 using namespace std;
 
 //#define RETURN_RANGES 40
@@ -151,6 +155,8 @@ private:
 public:
 	vector<sfc_bigint>  RangeQueryByBruteforce_LNG(Rect<T, nDims> queryRect, SFCType sfc_type);
 	vector<sfc_bigint>  RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges);
+
+	vector<sfc_bigint>  RangeQueryByRecursive_LNG_P(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges);
 
 	vector<string>  RangeQueryByBruteforce_STR(Rect<T, nDims> queryRect, SFCType sfc_type, StringType encode_type);
 	vector<string>  RangeQueryByRecursive_STR(Rect<T, nDims> queryrect, SFCType sfc_type, StringType encode_type, int nranges);
@@ -291,7 +297,7 @@ void QueryBySFC<T, nDims, mBits>::query_approximate2(TreeNode<T, nDims> nd, Rect
 		//cout << currentNode.level << endl;
 		//////////////////////////////////////////////////////
 		//check the level and numbers of results
-		if ((nranges != 0) && (last_level != currentNode.level) &&  (resultTNode.size() >  nranges)) //we are in the new level and full
+		if ((nranges != 0) && (last_level != currentNode.level) && (resultTNode.size() + query_queue.size() >  nranges)) //we are in the new level and full
 		{
 			///move all the left nodes in the queue to the resuts node vector
 			for (; !query_queue.empty(); query_queue.pop())
@@ -518,6 +524,156 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 		}
 	}//end for map
 	
+	return rangevec;
+}
+
+typedef concurrent_hash_map<sfc_bigint, sfc_bigint> range_table;
+
+template< typename T, int nDims, int mBits>
+struct node2range
+{
+	range_table&  table;
+	vector<TreeNode<T, nDims>>& vec_nodes;
+	SFCType sfc_type;
+
+	node2range(range_table&  table_, vector<TreeNode<T, nDims>>& nodes_, SFCType type_) : table(table_), vec_nodes(nodes_), sfc_type(type_){}
+
+	void operator( )(const blocked_range<size_t> range)const
+	{
+		SFCConversion2<nDims, mBits> sfc;
+		sfc_bigint val;
+
+		int ncorners = 1 << nDims; //corner points number
+		vector<Point<T, nDims>> nodePoints(ncorners);
+		vector<sfc_bigint> node_vals(ncorners);
+
+		for (size_t i = range.begin(); i != range.end(); ++i)
+		{
+			range_table::accessor a;
+
+			if (vec_nodes[i].level == mBits) //leaf node--just one point
+			{
+				if (sfc_type == Hilbert)
+				{
+					val = sfc.HilbertEncode(vec_nodes[i].minPoint);
+					//map_range[val] = val;
+					table.insert(a, val);
+					a->second = val;
+				}
+				continue;
+			}
+
+			nodePoints[0] = vec_nodes[i].minPoint;
+			for (int j = 0; j < nDims; j++)
+			{
+				int nnow = 1 << j;
+				for (int k = 0; k < nnow; k++) //1-->2;2-->4, --->2^Dims
+				{
+					Point<T, nDims> newPoint = nodePoints[k];
+					newPoint[j] = vec_nodes[i].maxPoint[j] - 1;  //get the cordinate from maxpoint in this dimension
+
+					nodePoints[nnow + k] = newPoint;
+				}
+			}
+
+			for (int j = 0; j < ncorners; j++)
+			{
+				if (sfc_type == Hilbert) node_vals[j] = sfc.HilbertEncode(nodePoints[j]);
+			}
+
+			std::sort(node_vals.begin(), node_vals.end());
+			//map_range[node_vals[0]] = node_vals[ncorners - 1];
+			table.insert(a, node_vals[0]);
+			a->second = node_vals[ncorners - 1];
+		}//end for
+	}//end functioner
+};
+
+
+template< typename T, int nDims, int mBits>
+vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges)
+{
+	vector<TreeNode<T, nDims>> resultTNode;  //tree nodes correspond to queryRectangle
+	TreeNode<T, nDims> root;  //root node
+	root.level = 0;
+	for (int i = 0; i < nDims; i++)
+	{
+		root.minPoint[i] = 0;
+		root.maxPoint[i] = 1 << mBits;
+		queryrect.maxPoint[i] += 1;
+	}
+
+	int res = root.Spatialrelationship(queryrect);
+	if (res == 0)  //equal
+	{
+		resultTNode.push_back(root);
+	}
+	if (res == 1)  //contain
+	{
+		query_approximate2(root, queryrect, resultTNode, nranges);
+	}
+	//cout << resultTNode.size() << endl;
+
+
+	map<sfc_bigint, sfc_bigint, less<sfc_bigint>> map_range;
+	map<sfc_bigint, sfc_bigint, less<sfc_bigint>>::iterator itr;
+
+	//for (int i = 0; i < resultTNode.size(); i++)
+	
+	range_table ranges;
+	parallel_for(blocked_range<size_t>(0, resultTNode.size(),100), node2range<T, nDims, mBits>(ranges, resultTNode, sfc_type));
+	
+	//sort
+	for (range_table::iterator i = ranges.begin(); i != ranges.end(); ++i) 
+	{
+		map_range[i->first] = i->second;
+	}
+
+	//////////////////
+	sfc_bigint k1, k2;
+	vector<sfc_bigint> rangevec;
+	for (itr = map_range.begin(); itr != map_range.end(); itr++)
+	{
+		//std::cout << '[' << itr->first << ',' << itr->second << "]\n";
+		if (itr == map_range.begin())
+		{
+			k1 = itr->first; //k1---k2 current range
+			k2 = itr->second;
+
+			continue; //go to the second
+		}
+
+		while (1)
+		{
+			//cout << k1  << ',' <<k2 << endl;
+
+			if (itr->first == k2 + 1) // if the next range is continuous to k2
+			{
+				k2 = itr->second; //enlarge current range
+				itr++;
+
+				if (itr == map_range.end()) break;
+			}
+			else //if the next range is not continuous to k2---sotre current range and start another search
+			{
+				rangevec.push_back(k1);
+				rangevec.push_back(k2);
+
+				k1 = itr->first;
+				k2 = itr->second;
+
+				break;
+			}//end if
+		}//end while
+
+		if (itr == map_range.end()) //end now---store current range and exit
+		{
+			rangevec.push_back(k1);
+			rangevec.push_back(k2);
+			break;
+		}
+	}//end for map
+
 	return rangevec;
 }
 
