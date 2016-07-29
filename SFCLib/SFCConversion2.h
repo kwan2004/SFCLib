@@ -232,14 +232,14 @@ public:
 
 		return val;
 	}
-	static Point<long, nDims> MortnDecode(sfc_bigint idx)
+	static Point<long, nDims> MortnDecode(sfc_bigint val)
 	{
 		bitmask_t pt[nDims];
 		//hilbert_i2c(idx, pt);
 		unsigned int mask = ((unsigned int)1 << nDims) - 1;
 		for (int i = 0; i < mBits; i++)
 		{
-			idx = int((val >> i*nDims)) & mask;
+			int idx = int((val >> i*nDims)) & mask;
 
 			for (int j = 0; j < nDims; j++)
 			{
