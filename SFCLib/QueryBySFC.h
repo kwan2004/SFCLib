@@ -455,6 +455,11 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 				val = sfc.HilbertEncode(resultTNode[i].minPoint);
 				map_range[val] = val;
 			}
+			if (sfc_type == Morton)
+			{
+				val = sfc.MortnEncode(resultTNode[i].minPoint);
+				map_range[val] = val;
+			}
 			continue;
 		}
 
@@ -474,6 +479,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 		for (int j = 0; j < ncorners; j++)
 		{ 
 			if (sfc_type == Hilbert) node_vals[j] = sfc.HilbertEncode(nodePoints[j]);
+			if (sfc_type == Morton) node_vals[j] = sfc.MortnEncode(nodePoints[j]);
 		}
 
 		std::sort(node_vals.begin(), node_vals.end());
@@ -579,6 +585,7 @@ struct node2range
 			for (int j = 0; j < ncorners; j++)
 			{
 				if (sfc_type == Hilbert) node_vals[j] = sfc.HilbertEncode(nodePoints[j]);
+				if (sfc_type == Morton) node_vals[j] = sfc.MortnEncode(nodePoints[j]);
 			}
 
 			std::sort(node_vals.begin(), node_vals.end());
@@ -727,6 +734,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect
 		}
 
 		if (sfc_type == Hilbert)  val = sfc.HilbertEncode(point);
+		if (sfc_type == Morton)  val = sfc.MortnEncode(point);
 
 		result[count] = val;
 
