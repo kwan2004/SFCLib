@@ -6,7 +6,7 @@
 #include "Point.h"
 #include "Rectangle.h"
 
-//#include "SFCConversion.h"
+#include "SFCConversion.h"
 //#include "OutputSchema.h"
 #include "QueryBySFC.h"
 
@@ -70,6 +70,8 @@ int main(int argc, char* argv[])
 	//if (argc % 2 != 1) return 0; //attribute pair plus exe_name	
 
 #ifdef PARALLEL_PIPELINE
+	//here the SFCGen tool
+
 	const int ndims = 3;
 	const int mbits = 30;
 
@@ -253,7 +255,9 @@ int main(int argc, char* argv[])
 	///////////////////////
 
 #ifdef SFC_GEN_QUERY2
-	///85999.4,446266,-1.65,9,651295384353375995169439
+	///here just for unit tests of SFC code calculation and query
+	/////////////////////////////////////////////////////
+	///true 4D data 85999.4,446266,-1.65,9,651295384353375995169439
 	Point<double, 4> pt1;
 	pt1[0] = 85999.42;//1010
 	pt1[1] = 446266.47;//1011
@@ -261,10 +265,6 @@ int main(int argc, char* argv[])
 	pt1[3] = 9;//1101
 
 	Point<double, 4> pt2;
-	//pt2[0] = 85224.3;//1010
-	//pt2[1] = 447071.86;//1011
-	//pt2[2] = 0.4; //0011
-	//pt2[3] = 9;//1101
 	pt2[0] = 85098.38;//1010
 	pt2[1] = 446440.06;//1011
 	pt2[2] = 18.34; //0011
@@ -279,29 +279,23 @@ int main(int argc, char* argv[])
 	Point<long, 4> MinPt2 = cotrans.Transform(pt1);
 	Point<long, 4> MaxPt2 = cotrans.Transform(pt2);
 
-	SFCConversion2<4, 30> sfctest;
+	SFCConversion<4, 30> sfctest;
 	OutputSchema2<4, 30> transtest;
 
-	//sfctest.ptCoord = MinPt2;
-	//sfc.MortonEncode();
 	sfc_bigint p1 = sfctest.HilbertEncode(MinPt2);
 	cout << p1 << endl;
-	//Point<long, 30> ptbts1; 
-	//ptbts1 = sfctest.ptBits;
 	cout << transtest.Value2String(p1, Base64).c_str() << endl;
 
-	//sfctest.ptCoord = MaxPt2;
-	//sfc.MortonEncode();
+	Point<long, 4> pt0 = sfctest.HilbertDecode(p1);
+
 	sfc_bigint p2 = sfctest.HilbertEncode(MaxPt2);
-	//Point<long, 30> ptbts2;
-	//ptbts2 = sfctest.ptBits;
 	string stra = transtest.Value2String(p2, Base64).c_str();
 	cout << p2 << endl;
 	cout << stra << "  "<< p2.str()<< endl;
 
-	string res= stra;//85098.38 446440.06 18.34 9
+	string res= stra;//85098.38 446440.06 38.34 9
 
-	SFCConversion2<4, 30> sfctest2;
+	SFCConversion<4, 30> sfctest2;
 	OutputSchema2<4, 30> transtest2;
 
 	sfc_bigint p3 = transtest2.String2Value(res, Base64);
@@ -311,10 +305,6 @@ int main(int argc, char* argv[])
 		int a = 0;
 	}
 	Point<long, 4> Pt3 = sfctest2.HilbertDecode(p3);
-	//Point<long, 30> ptbts3 = transtest2.String2BitSequence(res, Base64);
-	//sfctest2.ptBits = ptbts3;
-	//sfctest2.HilbertDecode();
-	//Point<long, 4> Pt3 = sfctest2.ptCoord;
 
 	long long aq = 2349505055;
 	string aa = transtest.Value2String(aq, Base64);
@@ -323,11 +313,14 @@ int main(int argc, char* argv[])
 	cout << bq << endl;
 
 	///////////////////////////////////////
-	////2D case 8*8, i.e n=2, m=3
+	////2D case 16*16, i.e n=2, m=4
 	Point<long, 2> ptCoord; //SFC coordinates n=2
 
 	SFCConversion2<2, 4> sfc;
 	OutputSchema2<2, 4> trans;
+
+	SFCConversion<2, 4> sfc_old;
+	//OutputSchema2<2, 4> trans;
 
 	int a, b;
 	for (int i = 0; i < 16; i++)
@@ -339,15 +332,33 @@ int main(int argc, char* argv[])
 
 			sfc_bigint outval = sfc.HilbertEncode(ptCoord);
 
-			cout << i << ", " << j << "--->" << outval << "," << trans.Value2String(outval, Base64); //<< endl
+			ptCoord[0] = i;//i
+			ptCoord[1] = j;//j
+
+			sfc_bigint outval_old = sfc_old.HilbertEncode(ptCoord);
+
+			cout << i << ", " << j << "---M>" << outval <<  "," << trans.Value2String(outval, Base64); //<< endl
 			
 			Point<long, 2> pt2d = sfc.HilbertDecode(outval);
 
 			a = pt2d[0];
 			b = pt2d[1];
 			cout  << "--->" << a << " , " << b << endl;
+
+			
+			cout << i << ", " << j << "---L>" << outval_old << "," << trans.Value2String(outval_old, Base64); //<< endl
+
+			pt2d = sfc_old.HilbertDecode(outval_old);
+			a = pt2d[0];
+			b = pt2d[1];
+			cout << "--->" << a << " , " << b << endl;
 		}
 	}
+
+	SFCConversion<4, 6> sfc_a;
+	SFCConversion2<4, 6> sfc_b;
+	Point<long, 4> pta = sfc_a.HilbertDecode(476);
+	Point<long, 4> ptb = sfc_b.HilbertDecode(476);
 
 	//////////////////////////////////
 	/////Butz's sample, n=5; m=4;
@@ -360,21 +371,40 @@ int main(int argc, char* argv[])
 
 	//Point<long, 6> pt4; //SFC bit sequence m=3
 
-	SFCConversion2<5, 30> sfc2;
-	//OutputSchema<5, 6> trans2;
-
+	SFCConversion2<5, 22> sfc2;
 	sfc_bigint val = sfc2.HilbertEncode(pt3);
 
+	SFCConversion<5, 22> sfc2_old;
+	sfc_bigint val_old = sfc2_old.HilbertEncode(pt3);
+
+	cout << "butz--" << val << "," << val_old << endl;
 	//print_bits(val);
 
-	Point<long, 5> pt5;
-	SFCConversion2<5, 30> sfc3;
-	//sfc2.ptBits = pt4;
-	pt5 = sfc3.HilbertDecode(val);
+	Point<long, 5> pt4 = sfc2_old.HilbertDecode(val_old);
+	Point<long, 5> pt5 = sfc2.HilbertDecode(val);
 
-	int aaa = 0;
-	//
-	////2D sample
+	///////////////////////////////////////////////////////////////
+	///performance comparison between JKLawder and Doug Moore-- both are based on Butz bits operation
+	///Moore: 272s ; lawders: 14s
+	tbb::tick_count t0 = tbb::tick_count::now();
+
+	for (int i = 0; i < 1000000; i++)
+	{
+		sfc2_old.HilbertEncode(pt3);
+	}
+	tbb::tick_count t1 = tbb::tick_count::now();
+	cout << "Laweder's time = " <<(t1 - t0).seconds()<<endl;
+
+	t0 = tbb::tick_count::now();
+
+	for (int i = 0; i < 1000000; i++)
+	{
+		sfc2.HilbertEncode(pt3);
+	}
+	t1 = tbb::tick_count::now();
+	cout << "Moore's time = " << (t1 - t0).seconds() << endl;
+	///////////////////////////////////
+	////2D sample--range query
 	long Point1[2] = { 3, 7}; //3, 2 //8, 4
 	long Point2[2] = { 8, 11 };  //5, 5//12, 9
 	Point<long, 2> MinPoint(Point1);
@@ -393,8 +423,8 @@ int main(int argc, char* argv[])
 	vector<string> vec_res6 = querytest.RangeQueryByRecursive_STR(rec, Hilbert, Base64, 0);
 	print_ranges_str("hilbert 2d recursive", vec_res6);
 
-
-	////3D sample
+	///////////////////////////////////
+	////3D sample----range query
 	long Point31[4] = { 6, 2, 5 ,6};
 	long Point32[4] = { 25, 28, 27, 28 };
 	Point<long, 4> MinPoint3(Point31);
@@ -408,6 +438,8 @@ int main(int argc, char* argv[])
 
 	vector<sfc_bigint> vec_res4 = querytest3.RangeQueryByRecursive_LNG(rec3, Hilbert, 0);
 	print_ranges("Hilbert 3d recursive", vec_res4);
+
+	
 
 	/*vector<string> vec_res7 = querytest3.RangeQueryByBruteforce_STR(rec3, Hilbert, Base64);
 	print_ranges_str("hilbert 3d brute force", vec_res7);
@@ -430,10 +462,11 @@ int main(int argc, char* argv[])
 	//sfc3D3.MortonEncode();
 	//string str3D3 = trans3D3.BitSequence2String(sfc3D3.ptBits, Base32);
 	//Point<long, 4> mmm = trans3D3.String2BitSequence(str3D3, Base32);
-
+	
 #endif
 
 #ifdef SFC_QUERY
+	//here the SFCQuery tool
 	const int ndims = 4;
 	const int mbits = 30;
 
@@ -667,13 +700,13 @@ int main(int argc, char* argv[])
 	range_file.close();
 
 	tbb::tick_count t1 = tbb::tick_count::now();
-	cout << "time = " <<(t1 - t0).seconds()<<endl;
+	//cout << "time = " <<(t1 - t0).seconds()<<endl;
 
 #endif
 
 
 #ifdef RANDOM_LOD
-
+	// random lod tests here
 	RandomLOD<3> rnd_gen(10,20);
 
 	int ncount[14] = { 0 };

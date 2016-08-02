@@ -20,8 +20,8 @@ private:
 	unsigned long calc_tS_tT2(unsigned long xJ, unsigned long val);
 
 public:
-	Point<long, nDims> ptCoord; //n*m
-	Point<long,  mBits> ptBits; //m*n
+	//Point<long, nDims> ptCoord; //n*m
+	//Point<long,  mBits> ptBits; //m*n
 
 	SFCConversion()
 	{
@@ -31,15 +31,57 @@ public:
 		}
 	}
 
-	void MortonEncode();// from n*m coords to m*n bitsequence
-	void MortonDecode(void); // from m*n bitsequence to n*m coords
+	sfc_bigint MortnEncode(Point<long, nDims> ptCoord);// from n*m coords to m*n bitsequence
+	Point<long, nDims> MortnDecode(sfc_bigint idx);// from m*n bitsequence to n*m coords
 	 
-	void HilbertEncode(void); // from n*m coords to m*n bitsequence
-	void HilbertDecode(void); // from m*n bitsequence to n*m coords
+	sfc_bigint HilbertEncode(Point<long, nDims> ptCoord); // from n*m coords to m*n bitsequence
+	Point<long, nDims> HilbertDecode(sfc_bigint idx); // from m*n bitsequence to n*m coords
+
+private:
+	sfc_bigint BitSequence2Value(Point<long, mBits> ptBits)
+	{
+		//if (mBits * nDims >= 64) return 0;
+		sfc_bigint  result = 0;
+		for (int i = 0; i < mBits; i++)
+		{
+			if (ptBits[i])
+			{
+				sfc_bigint a = (((sfc_bigint)ptBits[i]) << (mBits - i - 1)*nDims);
+				result |= a;
+			}
+				
+		}
+		return result;
+	}
+
+	Point<long, mBits> Value2BitSequence(sfc_bigint value)
+	{
+		/*Point<long, mBits> ptOutput;
+		if (mBits * nDims >= 64) return ptOutput;
+
+		long long mask = ((long long)1 << nDims - 1);
+		for (int i = 0; i < mBits; i++)
+		{
+		ptOutput[mBits - i - 1] = (value >> (i*nDims)) & mask;
+		}
+
+		return ptOutput;*/
+
+		Point<long, mBits> ptOutput;
+		//if (mBits * nDims >= 64) return ptOutput;
+
+		long mask = (((long)1 << nDims) - 1);
+		for (int i = 0; i < mBits; i++)
+		{
+			ptOutput[mBits - i - 1] = (long)((value >> (i*nDims)) & mask);
+		}
+
+		return ptOutput;
+	}
 };
 
 template< int nDims, int  mBits>
-void SFCConversion<nDims, mBits>::MortonEncode() // from n*m to m*n
+sfc_bigint SFCConversion<nDims, mBits>::MortnEncode(Point<long, nDims> ptCoord)// from n*m to m*n
 {
 	for (int i = 0; i < mBits; i++)//m
 	{
@@ -56,7 +98,7 @@ void SFCConversion<nDims, mBits>::MortonEncode() // from n*m to m*n
 
 
 template< int nDims, int  mBits>
-void SFCConversion<nDims, mBits>::MortonDecode(void)
+Point<long, nDims> SFCConversion<nDims, mBits>::MortnDecode(sfc_bigint idx)
 {
 	for (int i = 0; i < nDims; i++)//m n-bits
 	{
@@ -78,11 +120,6 @@ void SFCConversion<nDims, mBits>::MortonDecode(void)
 template< int nDims, int  mBits>
 unsigned long SFCConversion<nDims, mBits>::calc_P3(int i, Point<long, mBits> H)
 {
-	/*unsigned long mask = ((unsigned long)1 << (mBits+1)) - 1;
-	unsigned long P;//, temp2
-
-	P = ((H.hcode[0] >> i) & mask);*/
-
 	unsigned long P = H[(mBits * nDims - i) / nDims - 1];
 
 	return P;
@@ -169,8 +206,10 @@ unsigned long SFCConversion<nDims, mBits>::calc_tS_tT2(unsigned long xJ, unsigne
 
 
 template< int nDims, int  mBits>
-void SFCConversion<nDims, mBits>::HilbertEncode(void) // from n*m to m*n
+sfc_bigint SFCConversion<nDims, mBits>::HilbertEncode(Point<long, nDims> ptCoord) // from n*m to m*n
 {
+	Point<long, mBits> ptBits;
+
 	unsigned long mask = ((unsigned long)1) << ( mBits - 1), element,
 		A, W = 0, S, tS, T, tT, J, P = 0, xJ;
 	//Point h = { 0 };
@@ -184,20 +223,9 @@ void SFCConversion<nDims, mBits>::HilbertEncode(void) // from n*m to m*n
 	}
 	S = tS = A;
 	P = calc_P2(S);
-	/* add in nDims bits to hcode */
-	//element = i / mBits;
-
-	/*if (i % mBits > mBits - nDims)
-	{
-	h.hcode[element] |= P << (i % mBits);
-	h.hcode[element + 1] |= P >> (mBits - i % mBits);
-	}
-	else
-	h.hcode[element] |= P << (i - element * mBits);*/
 
 	element = (mBits * nDims - i) / nDims - 1;
 	ptBits[element] = P;
-	///h.hcode[0] |= P << i;
 
 	J = calc_J(P);
 	xJ = J - 1;
@@ -215,20 +243,10 @@ void SFCConversion<nDims, mBits>::HilbertEncode(void) // from n*m to m*n
 		tS = A ^ W;
 		S = calc_tS_tT2(xJ, tS);
 		P = calc_P2(S);
-		/* add in nDims bits to hcode */
-		//element = i / mBits;
-		/*if (i % mBits > mBits - nDims)
-		{
-		h.hcode[element] |= P << (i % mBits);
-		h.hcode[element + 1] |= P >> (mBits - i % mBits);
-		}
-		else
-		h.hcode[element] |= P << (i - element * mBits);*/
-
+	
 		element = (mBits * nDims - i) / nDims - 1;
 		ptBits[element] = P;
-		//h.hcode[0] |= P << i;
-
+		
 		if (i > 0)
 		{
 			T = calc_T(P);
@@ -237,12 +255,17 @@ void SFCConversion<nDims, mBits>::HilbertEncode(void) // from n*m to m*n
 			xJ += J - 1;
 		}
 	}
-	//return h;
+
+	sfc_bigint idx = BitSequence2Value(ptBits);
+	return idx;
 }
 
 template< int nDims, int  mBits>
-void SFCConversion<nDims, mBits>::HilbertDecode(void)
+Point<long, nDims> SFCConversion<nDims, mBits>::HilbertDecode(sfc_bigint idx)
 {
+	Point<long, nDims> ptCoord; //n*m
+	Point<long, mBits> ptBits = Value2BitSequence(idx); //m*n
+
 	unsigned long mask = ((unsigned long)1) << (mBits - 1),
 		A, W = 0, S, tS, T, tT, J, P = 0, xJ;
 	//Point pt = { 0 };
@@ -282,13 +305,13 @@ void SFCConversion<nDims, mBits>::HilbertDecode(void)
 		if (i >= 0)
 		{
 			T = calc_T(P);
-			tT = calc_tS_tT(xJ, T);
+			tT = calc_tS_tT2(xJ, T);
 			J = calc_J(P);
 			xJ += J - 1;
 		}
 	}
 
-	//return pt;	
+	return ptCoord;
 }
 
 
