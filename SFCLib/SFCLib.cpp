@@ -258,7 +258,7 @@ int main(int argc, char* argv[])
 #endif
 	///////////////////////
 
-#ifdef SFC_GEN_TEST2
+#ifdef SFC_GEN_TEST
 	///here just for unit tests of SFC code calculation and query
 	///3D case
 	Point<long, 3> pt3d; //SFC coordinates n=2
@@ -279,7 +279,7 @@ int main(int argc, char* argv[])
 
 				sfc_bigint outval = sfc3d.HilbertEncode(pt3d);	
 				pt3d = sfc3d.HilbertDecode(outval);
-				//cout << i << ", " << j << ", " << k << "---M-->" << outval << "----->" << pt3d[0] << ", " << pt3d[1] << ", " <<  pt3d[2]<<endl; //
+				cout << i << ", " << j << ", " << k << "---M-->" << outval << "----->" << pt3d[0] << ", " << pt3d[1] << ", " <<  pt3d[2]<<endl; //
 			}
 		}
 	}
@@ -296,13 +296,12 @@ int main(int argc, char* argv[])
 
 				sfc_bigint outval_old = sfc3d_old.HilbertEncode(pt3d);
 				pt3d = sfc3d_old.HilbertDecode(outval_old);
-				//cout << i << ", " << j << ", " << k << "---L-->" << outval_old << "----->" << pt3d[0] << ", " << pt3d[1] << ", " << pt3d[2] << endl;
+				cout << i << ", " << j << ", " << k << "---L-->" << outval_old << "----->" << pt3d[0] << ", " << pt3d[1] << ", " << pt3d[2] << endl;
 			}
 		}
 	}
 
 	pt3d = sfc3d_old.HilbertDecode(511);
-
 	long long  aaaaa = (long long)sfc3d_old.HilbertEncode(pt3d);
 
 	/////////////////////////////////////////////////////
@@ -395,12 +394,12 @@ int main(int argc, char* argv[])
 			cout  << "--->" << a << " , " << b << endl;*/
 
 			
-			//cout << i << ", " << j << "---L-->" << outval_old << "  ,  " << trans.Value2String(outval_old, Base64); //<< endl
+			cout << i << ", " << j << "---L-->" << outval_old << "  ,  " << trans.Value2String(outval_old, Base64); //<< endl
 
 			Point<long, 2>  pt2d = sfc_old.HilbertDecode(outval_old);
 			a = pt2d[0];
 			b = pt2d[1];
-			//cout << "--->" << a << " , " << b << endl;
+			cout << "--->" << a << " , " << b << endl;
 		}
 	}
 
@@ -440,7 +439,7 @@ int main(int argc, char* argv[])
 	///////////////////////////////////////////////////////////////
 	///performance comparison between JKLawder and Doug Moore-- both are based on Butz bits operation
 	///Moore: 272s ; lawders: 14s
-	/*tbb::tick_count t0 = tbb::tick_count::now();
+	tbb::tick_count t0 = tbb::tick_count::now();
 
 	for (int i = 0; i < 10000; i++)
 	{
@@ -456,7 +455,7 @@ int main(int argc, char* argv[])
 		sfc2.HilbertEncode(pt3);
 	}
 	t1 = tbb::tick_count::now();
-	cout << "Moore's time = " << (t1 - t0).seconds() << endl;*/
+	cout << "Moore's time = " << (t1 - t0).seconds() << endl;
 #endif
 #ifdef SFC_QUERY_TEST
 	///////////////////////////////////
