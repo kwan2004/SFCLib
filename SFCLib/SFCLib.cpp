@@ -35,6 +35,7 @@ void print_bits(unsigned int x)
 
 void print_ranges(char * str, vector<sfc_bigint>& ranges)
 {
+	long long ntotal_len = 0;
 	if (str == NULL) return;
 
 	//printf("%s \n", str);
@@ -44,9 +45,12 @@ void print_ranges(char * str, vector<sfc_bigint>& ranges)
 		//printf("\n");
 
 		//printf("%lld---%lld\n", ranges[i], ranges[i + 1]);
-		cout << ranges[i] << "----" << ranges[i + 1]<<endl;
+		cout << ranges[i] << "----" << ranges[i + 1] <<endl;
 
+		//ntotal_len += (long long )(ranges[i + 1] - ranges[i] + 1);		
 	}
+
+	//cout << "total len:  " << ntotal_len << endl;
 }
 
 void print_ranges_str(char * str, vector<string>& ranges)
@@ -66,7 +70,7 @@ void print_ranges_str(char * str, vector<string>& ranges)
 int main(int argc, char* argv[])
 {
 	
-	if (argc == 1) return 0;
+	//if (argc == 1) return 0;
 	//if (argc % 2 != 1) return 0; //attribute pair plus exe_name	
 
 #ifdef PARALLEL_PIPELINE
@@ -254,8 +258,53 @@ int main(int argc, char* argv[])
 #endif
 	///////////////////////
 
-#ifdef SFC_GEN_QUERY2
+#ifdef SFC_GEN_TEST2
 	///here just for unit tests of SFC code calculation and query
+	///3D case
+	Point<long, 3> pt3d; //SFC coordinates n=2
+
+	SFCConversion2<3, 3> sfc3d;
+	SFCConversion<3, 3> sfc3d_old;
+	//OutputSchema2<2, 4> trans;
+
+	for (int i = 0; i < 8; i++)
+	{
+		for (int j = 0; j < 8; j++)
+		{
+			for (int k = 0; k < 8; k++)
+			{
+				pt3d[0] = i;//i
+				pt3d[1] = j;//j
+				pt3d[2] = k;//k
+
+				sfc_bigint outval = sfc3d.HilbertEncode(pt3d);	
+				pt3d = sfc3d.HilbertDecode(outval);
+				//cout << i << ", " << j << ", " << k << "---M-->" << outval << "----->" << pt3d[0] << ", " << pt3d[1] << ", " <<  pt3d[2]<<endl; //
+			}
+		}
+	}
+	cout << "-----------------------------------" << endl;
+	for (int i = 0; i < 8; i++)
+	{
+		for (int j = 0; j < 8; j++)
+		{
+			for (int k = 0; k < 8; k++)
+			{
+				pt3d[0] = i;//i
+				pt3d[1] = j;//j
+				pt3d[2] = k;//k
+
+				sfc_bigint outval_old = sfc3d_old.HilbertEncode(pt3d);
+				pt3d = sfc3d_old.HilbertDecode(outval_old);
+				//cout << i << ", " << j << ", " << k << "---L-->" << outval_old << "----->" << pt3d[0] << ", " << pt3d[1] << ", " << pt3d[2] << endl;
+			}
+		}
+	}
+
+	pt3d = sfc3d_old.HilbertDecode(511);
+
+	long long  aaaaa = (long long)sfc3d_old.HilbertEncode(pt3d);
+
 	/////////////////////////////////////////////////////
 	///true 4D data 85999.4,446266,-1.65,9,651295384353375995169439
 	Point<double, 4> pt1;
@@ -337,21 +386,21 @@ int main(int argc, char* argv[])
 
 			sfc_bigint outval_old = sfc_old.HilbertEncode(ptCoord);
 
-			cout << i << ", " << j << "---M>" << outval <<  "," << trans.Value2String(outval, Base64); //<< endl
+			/*cout << i << ", " << j << "---M-->" << outval <<  "  ,  " << trans.Value2String(outval, Base64); //<< endl
 			
 			Point<long, 2> pt2d = sfc.HilbertDecode(outval);
 
 			a = pt2d[0];
 			b = pt2d[1];
-			cout  << "--->" << a << " , " << b << endl;
+			cout  << "--->" << a << " , " << b << endl;*/
 
 			
-			cout << i << ", " << j << "---L>" << outval_old << "," << trans.Value2String(outval_old, Base64); //<< endl
+			//cout << i << ", " << j << "---L-->" << outval_old << "  ,  " << trans.Value2String(outval_old, Base64); //<< endl
 
-			pt2d = sfc_old.HilbertDecode(outval_old);
+			Point<long, 2>  pt2d = sfc_old.HilbertDecode(outval_old);
 			a = pt2d[0];
 			b = pt2d[1];
-			cout << "--->" << a << " , " << b << endl;
+			//cout << "--->" << a << " , " << b << endl;
 		}
 	}
 
@@ -369,13 +418,18 @@ int main(int argc, char* argv[])
 	pt3[3] = 13;//1101
 	pt3[4] = 5; //0101
 
+	SFCConversion<5, 4> sfc2_old;
+	sfc_bigint val_old = sfc2_old.HilbertEncode(pt3);
 	//Point<long, 6> pt4; //SFC bit sequence m=3
 
-	SFCConversion2<5, 22> sfc2;
-	sfc_bigint val = sfc2.HilbertEncode(pt3);
+	pt3[0] = 5;//1010
+	pt3[1] = 13;//1011
+	pt3[2] = 3; //0011
+	pt3[3] = 11;//1101
+	pt3[4] = 10; //0101
 
-	SFCConversion<5, 22> sfc2_old;
-	sfc_bigint val_old = sfc2_old.HilbertEncode(pt3);
+	SFCConversion2<5, 4> sfc2;
+	sfc_bigint val = sfc2.HilbertEncode(pt3);	
 
 	cout << "butz--" << val << "," << val_old << endl;
 	//print_bits(val);
@@ -386,9 +440,9 @@ int main(int argc, char* argv[])
 	///////////////////////////////////////////////////////////////
 	///performance comparison between JKLawder and Doug Moore-- both are based on Butz bits operation
 	///Moore: 272s ; lawders: 14s
-	tbb::tick_count t0 = tbb::tick_count::now();
+	/*tbb::tick_count t0 = tbb::tick_count::now();
 
-	for (int i = 0; i < 1000000; i++)
+	for (int i = 0; i < 10000; i++)
 	{
 		sfc2_old.HilbertEncode(pt3);
 	}
@@ -397,16 +451,18 @@ int main(int argc, char* argv[])
 
 	t0 = tbb::tick_count::now();
 
-	for (int i = 0; i < 1000000; i++)
+	for (int i = 0; i < 10000; i++)
 	{
 		sfc2.HilbertEncode(pt3);
 	}
 	t1 = tbb::tick_count::now();
-	cout << "Moore's time = " << (t1 - t0).seconds() << endl;
+	cout << "Moore's time = " << (t1 - t0).seconds() << endl;*/
+#endif
+#ifdef SFC_QUERY_TEST
 	///////////////////////////////////
 	////2D sample--range query
-	long Point1[2] = { 3, 7}; //3, 2 //8, 4
-	long Point2[2] = { 8, 11 };  //5, 5//12, 9
+	long Point1[2] = { 3, 2}; //3, 2 //8, 4
+	long Point2[2] = { 4, 14 };  //5, 5//12, 9
 	Point<long, 2> MinPoint(Point1);
 	Point<long, 2> MaxPoint(Point2);
 	Rect<long, 2> rec(MinPoint, MaxPoint);
@@ -417,28 +473,33 @@ int main(int argc, char* argv[])
 	vector<sfc_bigint> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, Hilbert, 0);
 	print_ranges("hilbert 2d recursive", vec_res2);
 
-	vector<string> vec_res5 = querytest.RangeQueryByBruteforce_STR(rec, Hilbert, Base64);
+	/*vector<string> vec_res5 = querytest.RangeQueryByBruteforce_STR(rec, Hilbert, Base64);
 	print_ranges_str("hilbert 2d brute force", vec_res5);
 
 	vector<string> vec_res6 = querytest.RangeQueryByRecursive_STR(rec, Hilbert, Base64, 0);
-	print_ranges_str("hilbert 2d recursive", vec_res6);
+	print_ranges_str("hilbert 2d recursive", vec_res6);*/
 
 	///////////////////////////////////
 	////3D sample----range query
-	long Point31[4] = { 6, 2, 5 ,6};
-	long Point32[4] = { 25, 28, 27, 28 };
+	long Point31[4] = { 6, 2, 15, 6 };//
+	long Point32[4] = { 35, 38, 17, 28 };//
+
+	//long Point31[3] = { 8, 8, 16 };//,6
+	//long Point32[3] = { 15, 15, 23 };//, 28 
+
+	SFCConversion<4, 18> sfc_3d;
+
 	Point<long, 4> MinPoint3(Point31);
 	Point<long, 4> MaxPoint3(Point32);
 
 	Rect<long, 4> rec3(MinPoint3, MaxPoint3);
 
-	QueryBySFC<long, 4, 10> querytest3;
+	QueryBySFC<long, 4, 8> querytest3;
 	vector<sfc_bigint> vec_res3 = querytest3.RangeQueryByBruteforce_LNG(rec3, Hilbert);
 	print_ranges("Hilbert 3d brute force", vec_res3);
 
 	vector<sfc_bigint> vec_res4 = querytest3.RangeQueryByRecursive_LNG(rec3, Hilbert, 0);
 	print_ranges("Hilbert 3d recursive", vec_res4);
-
 	
 
 	/*vector<string> vec_res7 = querytest3.RangeQueryByBruteforce_STR(rec3, Hilbert, Base64);

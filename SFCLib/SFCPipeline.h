@@ -17,7 +17,8 @@
 #include "Point.h"
 #include "CoordTransform.h"
 
-#include "SFCConversion2.h"
+//#include "SFCConversion2.h"
+#include "SFCConversion.h"
 #include "OutputSchema2.h"
 
 #include "RandomLOD.h"
@@ -242,7 +243,7 @@ public:
 		//////////////////////////////////////////////////////
 		CoordTransform<double, long, nDims> cotrans;
 
-		SFCConversion2<nDims, mBits> sfcgen;
+		SFCConversion<nDims, mBits> sfcgen;
 		OutputSchema2<nDims, mBits> outtrans;
 
 		if (_delta != NULL && _scale != NULL)

@@ -6,8 +6,9 @@
 #include "Point.h"
 #include "Rectangle.h"
 
-#include "OutputSchema2.h"
-#include "SFCConversion2.h"
+//#include "OutputSchema2.h"
+//#include "SFCConversion2.h"
+#include "SFCConversion.h"
 
 #include <iostream>
 #include <vector>
@@ -435,8 +436,6 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 	}
 	//cout << resultTNode.size() << endl;
 
-	SFCConversion2<nDims, mBits> sfc;
-
 	int ncorners = 1 << nDims; //corner points number
 	vector<Point<T, nDims>> nodePoints(ncorners);
 	vector<sfc_bigint> node_vals(ncorners);
@@ -446,10 +445,14 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 
 	sfc_bigint val;
 	sfc_bigint k1, k2;
+
 	for (int i = 0; i < resultTNode.size(); i++)
 	{
+		SFCConversion<nDims, mBits> sfc;
+
 		if (resultTNode[i].level == mBits) //leaf node--just one point
-		{
+		{		
+
 			if (sfc_type == Hilbert)
 			{ 
 				val = sfc.HilbertEncode(resultTNode[i].minPoint);
@@ -460,6 +463,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 				val = sfc.MortnEncode(resultTNode[i].minPoint);
 				map_range[val] = val;
 			}
+
 			continue;
 		}
 
@@ -488,48 +492,37 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 
 	//////////////////
 	vector<sfc_bigint> rangevec;
-	for (itr = map_range.begin(); itr != map_range.end(); itr++)
+	
+	itr = map_range.begin();
+	k1 = itr->first; //k1---k2 current range
+	k2 = itr->second;
+
+	while (1)
 	{
-		//std::cout << '[' << itr->first << ',' << itr->second << "]\n";
-		if (itr == map_range.begin())
-		{
-			k1 = itr->first; //k1---k2 current range
-			k2 = itr->second;
+		itr++; //get next range
+		//cout << k1  << ',' <<k2 << endl;
+		if (itr == map_range.end()) 
+		{ 
+			rangevec.push_back(k1);
+			rangevec.push_back(k2);
 
-			continue; //go to the second
+			break;
+		}			
+
+		if (itr->first == k2 + 1) // if the next range is continuous to k2
+		{
+			k2 = itr->second; //enlarge current range
 		}
-
-		while (1)
-		{
-			//cout << k1  << ',' <<k2 << endl;
-
-			if (itr->first == k2 + 1) // if the next range is continuous to k2
-			{ 
-				k2 = itr->second; //enlarge current range
-				itr++;
-
-				if (itr == map_range.end()) break;
-			}
-			else //if the next range is not continuous to k2---sotre current range and start another search
-			{
-				rangevec.push_back(k1);
-				rangevec.push_back(k2);
-
-				k1 = itr->first;
-				k2 = itr->second;			
-
-				break;
-			}//end if
-		}//end while
-
-		if (itr == map_range.end()) //end now---store current range and exit
+		else //if the next range is not continuous to k2---sotre current range and start another search
 		{
 			rangevec.push_back(k1);
 			rangevec.push_back(k2);
-			break;
-		}
-	}//end for map
-	
+
+			k1 = itr->first;
+			k2 = itr->second;
+		}//end if
+	}//end while	
+
 	return rangevec;
 }
 
@@ -546,7 +539,7 @@ struct node2range
 
 	void operator( )(const blocked_range<size_t> range)const
 	{
-		SFCConversion2<nDims, mBits> sfc;
+		SFCConversion<nDims, mBits> sfc;
 		sfc_bigint val;
 
 		int ncorners = 1 << nDims; //corner points number
@@ -639,47 +632,37 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rec
 	//////////////////
 	sfc_bigint k1, k2;
 	vector<sfc_bigint> rangevec;
-	for (itr = map_range.begin(); itr != map_range.end(); itr++)
+	vector<sfc_bigint> rangevec;
+
+	itr = map_range.begin();
+	k1 = itr->first; //k1---k2 current range
+	k2 = itr->second;
+
+	while (1)
 	{
-		//std::cout << '[' << itr->first << ',' << itr->second << "]\n";
-		if (itr == map_range.begin())
-		{
-			k1 = itr->first; //k1---k2 current range
-			k2 = itr->second;
-
-			continue; //go to the second
-		}
-
-		while (1)
-		{
-			//cout << k1  << ',' <<k2 << endl;
-
-			if (itr->first == k2 + 1) // if the next range is continuous to k2
-			{
-				k2 = itr->second; //enlarge current range
-				itr++;
-
-				if (itr == map_range.end()) break;
-			}
-			else //if the next range is not continuous to k2---sotre current range and start another search
-			{
-				rangevec.push_back(k1);
-				rangevec.push_back(k2);
-
-				k1 = itr->first;
-				k2 = itr->second;
-
-				break;
-			}//end if
-		}//end while
-
-		if (itr == map_range.end()) //end now---store current range and exit
+		itr++; //get next range
+		//cout << k1  << ',' <<k2 << endl;
+		if (itr == map_range.end())
 		{
 			rangevec.push_back(k1);
 			rangevec.push_back(k2);
+
 			break;
 		}
-	}//end for map
+
+		if (itr->first == k2 + 1) // if the next range is continuous to k2
+		{
+			k2 = itr->second; //enlarge current range
+		}
+		else //if the next range is not continuous to k2---sotre current range and start another search
+		{
+			rangevec.push_back(k1);
+			rangevec.push_back(k2);
+
+			k1 = itr->first;
+			k2 = itr->second;
+		}//end if
+	}//end while
 
 	return rangevec;
 }
@@ -716,7 +699,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect
 	Point<T, nDims> point;
 
 	long long tmp = para[nDims] - 1;
-	SFCConversion2<nDims, mBits> sfc;
+	SFCConversion<nDims, mBits> sfc;
 
 	sfc_bigint val = 0;
 	long long  size = tmp + 1;
@@ -749,21 +732,25 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect
 
 	vector<sfc_bigint> rangevec;
 	int nstart = 0;
-	for (int i = 0; i < size - 1; i++)
+	int i = 0; //current pos
+	while (1)
 	{
-		//cout << result[i] << "," << result[i + 1] << endl;
-		if (result[i + 1] != (result[i] + 1))
+		i++;
+		if (i == size)//over the last one
 		{
 			rangevec.push_back(result[nstart]);
-			rangevec.push_back(result[i]);
+			rangevec.push_back(result[i - 1]);
 
-			nstart = i+1;
+			break;
 		}
 
-		if (result[i + 1] == (result[i] + 1) && (i + 1) == size - 1)
+		//cout << result[i] << "," << result[i + 1] << endl;
+		if (result[i] != (result[i-1] + 1)) //discontinuous
 		{
-			rangevec.push_back(result[nstart]);
-			rangevec.push_back(result[i+1]);
+			rangevec.push_back(result[nstart]); 
+			rangevec.push_back(result[i-1]);
+
+			nstart = i ;
 		}
 	}
 

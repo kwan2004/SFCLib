@@ -16,8 +16,8 @@ private:
 	unsigned long calc_P2(unsigned long S);
 	unsigned long calc_J(unsigned long P);
 	unsigned long calc_T(unsigned long P);
-	unsigned long calc_tS_tT(unsigned long xJ, unsigned long val);
-	unsigned long calc_tS_tT2(unsigned long xJ, unsigned long val);
+	unsigned long calc_tS_tT_l(unsigned long xJ, unsigned long val);
+	unsigned long calc_tS_tT_r(unsigned long xJ, unsigned long val);
 
 public:
 	//Point<long, nDims> ptCoord; //n*m
@@ -83,6 +83,8 @@ private:
 template< int nDims, int  mBits>
 sfc_bigint SFCConversion<nDims, mBits>::MortnEncode(Point<long, nDims> ptCoord)// from n*m to m*n
 {
+	Point<long, mBits> ptBits;
+
 	for (int i = 0; i < mBits; i++)//m
 	{
 		ptBits[i] = 0;
@@ -91,15 +93,21 @@ sfc_bigint SFCConversion<nDims, mBits>::MortnEncode(Point<long, nDims> ptCoord)/
 		for (int j = 0; j < nDims; j++) //get one bit from each nDims
 		{
 			if (ptCoord[j] & mask) // both 1
-				ptBits[i] |= 1 << (nDims - j - 1);// push this bit to dim position(xyz...) nDims -----(nDims - j)
+				ptBits[i] |= (long)1 << (nDims - j - 1);// push this bit to dim position(xyz...) nDims -----(nDims - j)
 		}//
 	}//m group
+
+	sfc_bigint idx = BitSequence2Value(ptBits);
+	return idx;
 }
 
 
 template< int nDims, int  mBits>
 Point<long, nDims> SFCConversion<nDims, mBits>::MortnDecode(sfc_bigint idx)
 {
+	Point<long, nDims> ptCoord; //n*m
+	Point<long, mBits> ptBits = Value2BitSequence(idx); //m*n
+
 	for (int i = 0; i < nDims; i++)//m n-bits
 	{
 		ptCoord[i] = 0;
@@ -108,9 +116,11 @@ Point<long, nDims> SFCConversion<nDims, mBits>::MortnDecode(sfc_bigint idx)
 		for (int j = 0; j < mBits; j++)
 		{
 			if (ptBits[j] & mask) //both 1 
-				ptCoord[i] |= 1 << (mBits - j - 1); //get the i-th bit from  j-th bits
+				ptCoord[i] |= (long)1 << (mBits - j - 1); //get the i-th bit from  j-th bits
 		}//
 	}//n nDims
+
+	return ptCoord;
 }
 
 
@@ -169,10 +179,10 @@ unsigned long SFCConversion<nDims, mBits>::calc_T(unsigned long P)
 	return (P - 2) ^ (P - 2) / 2;
 }
 /*===========================================================*/
-/* calc_tS_tT */
+/* calc_tS_tT ---right cirular shift xj*/
 /*===========================================================*/
 template< int nDims, int  mBits>
-unsigned long SFCConversion<nDims, mBits>::calc_tS_tT(unsigned long xJ, unsigned long val)
+unsigned long SFCConversion<nDims, mBits>::calc_tS_tT_r(unsigned long xJ, unsigned long val)
 {
 	unsigned long retval, temp1, temp2;
 	retval = val;
@@ -187,10 +197,10 @@ unsigned long SFCConversion<nDims, mBits>::calc_tS_tT(unsigned long xJ, unsigned
 }
 
 /*===========================================================*/
-/* calc_tS_tT */
+/* calc_tS_tT---left circular shift xj */
 /*===========================================================*/
 template< int nDims, int  mBits>
-unsigned long SFCConversion<nDims, mBits>::calc_tS_tT2(unsigned long xJ, unsigned long val)
+unsigned long SFCConversion<nDims, mBits>::calc_tS_tT_l(unsigned long xJ, unsigned long val)
 {
 	unsigned long retval, temp1, temp2;
 	retval = val;
@@ -241,7 +251,7 @@ sfc_bigint SFCConversion<nDims, mBits>::HilbertEncode(Point<long, nDims> ptCoord
 		}
 		W ^= tT;
 		tS = A ^ W;
-		S = calc_tS_tT2(xJ, tS);
+		S = calc_tS_tT_l(xJ, tS);
 		P = calc_P2(S);
 	
 		element = (mBits * nDims - i) / nDims - 1;
@@ -250,7 +260,7 @@ sfc_bigint SFCConversion<nDims, mBits>::HilbertEncode(Point<long, nDims> ptCoord
 		if (i > 0)
 		{
 			T = calc_T(P);
-			tT = calc_tS_tT2(xJ, T);
+			tT = calc_tS_tT_r(xJ, T);
 			J = calc_J(P);
 			xJ += J - 1;
 		}
@@ -291,7 +301,7 @@ Point<long, nDims> SFCConversion<nDims, mBits>::HilbertDecode(sfc_bigint idx)
 		P = calc_P3(i, ptBits); //get key part from the hilbert key
 
 		S = P ^ P / 2;
-		tS = calc_tS_tT(xJ, S);
+		tS = calc_tS_tT_r(xJ, S);
 		W ^= tT;
 		A = W ^ tS;
 		/*--- distrib bits to coords ---*/
@@ -305,7 +315,7 @@ Point<long, nDims> SFCConversion<nDims, mBits>::HilbertDecode(sfc_bigint idx)
 		if (i >= 0)
 		{
 			T = calc_T(P);
-			tT = calc_tS_tT2(xJ, T);
+			tT = calc_tS_tT_r(xJ, T);
 			J = calc_J(P);
 			xJ += J - 1;
 		}
