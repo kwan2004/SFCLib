@@ -481,7 +481,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 		for (int j = 0; j < ncorners; j++)
 		{ 
 			if (sfc_type == Hilbert) node_vals[j] = sfc.HilbertEncode(nodePoints[j]);
-			if (sfc_type == Morton) node_vals[j] = sfc.MortnEncode(nodePoints[j]);
+			if (sfc_type == Morton) node_vals[j] = sfc.MortonEncode(nodePoints[j]);
 		}
 
 		std::sort(node_vals.begin(), node_vals.end());
@@ -600,7 +600,7 @@ struct node2range
 			for (int j = 0; j < ncorners; j++)
 			{
 				if (sfc_type == Hilbert) node_vals[j] = sfc.HilbertEncode(nodePoints[j]);
-				if (sfc_type == Morton) node_vals[j] = sfc.MortnEncode(nodePoints[j]);
+				if (sfc_type == Morton) node_vals[j] = sfc.MortonEncode(nodePoints[j]);
 			}
 
 			std::sort(node_vals.begin(), node_vals.end());
@@ -670,7 +670,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rec
 		}
 
 		tbb::parallel_sort(vec_dist.begin(), vec_dist.end(), std::greater<long long>());
-		cout << vec_dist[0] << "," << vec_dist[nsize - 2] << endl;
+		//cout << vec_dist[0] << "," << vec_dist[nsize - 2] << endl;
 
 		dmin = vec_dist[nranges - 1];
 	}
@@ -762,7 +762,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect
 		}
 
 		if (sfc_type == Hilbert)  val = sfc.HilbertEncode(point);
-		if (sfc_type == Morton)  val = sfc.MortnEncode(point);
+		if (sfc_type == Morton)  val = sfc.MortonEncode(point);
 
 		result[count] = val;
 
