@@ -31,8 +31,8 @@ public:
 		}
 	}
 
-	sfc_bigint MortnEncode(Point<long, nDims> ptCoord);// from n*m coords to m*n bitsequence
-	Point<long, nDims> MortnDecode(sfc_bigint idx);// from m*n bitsequence to n*m coords
+	sfc_bigint MortonEncode(Point<long, nDims> ptCoord);// from n*m coords to m*n bitsequence
+	Point<long, nDims> MortonDecode(sfc_bigint idx);// from m*n bitsequence to n*m coords
 	 
 	sfc_bigint HilbertEncode(Point<long, nDims> ptCoord); // from n*m coords to m*n bitsequence
 	Point<long, nDims> HilbertDecode(sfc_bigint idx); // from m*n bitsequence to n*m coords
@@ -81,7 +81,7 @@ private:
 };
 
 template< int nDims, int  mBits>
-sfc_bigint SFCConversion<nDims, mBits>::MortnEncode(Point<long, nDims> ptCoord)// from n*m to m*n
+sfc_bigint SFCConversion<nDims, mBits>::MortonEncode(Point<long, nDims> ptCoord)// from n*m to m*n
 {
 	Point<long, mBits> ptBits;
 
@@ -103,7 +103,7 @@ sfc_bigint SFCConversion<nDims, mBits>::MortnEncode(Point<long, nDims> ptCoord)/
 
 
 template< int nDims, int  mBits>
-Point<long, nDims> SFCConversion<nDims, mBits>::MortnDecode(sfc_bigint idx)
+Point<long, nDims> SFCConversion<nDims, mBits>::MortonDecode(sfc_bigint idx)
 {
 	Point<long, nDims> ptCoord; //n*m
 	Point<long, mBits> ptBits = Value2BitSequence(idx); //m*n

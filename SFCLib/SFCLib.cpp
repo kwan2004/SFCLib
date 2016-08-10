@@ -417,7 +417,7 @@ int main(int argc, char* argv[])
 	pt3[3] = 13;//1101
 	pt3[4] = 5; //0101
 
-	SFCConversion<5, 4> sfc2_old;
+	SFCConversion<5, 30> sfc2_old;
 	sfc_bigint val_old = sfc2_old.HilbertEncode(pt3);
 	//Point<long, 6> pt4; //SFC bit sequence m=3
 
@@ -427,7 +427,7 @@ int main(int argc, char* argv[])
 	pt3[3] = 11;//1101
 	pt3[4] = 10; //0101
 
-	SFCConversion2<5, 4> sfc2;
+	SFCConversion2<5, 30> sfc2;
 	sfc_bigint val = sfc2.HilbertEncode(pt3);	
 
 	cout << "butz--" << val << "," << val_old << endl;
