@@ -147,11 +147,8 @@ template<typename T, int nDims = 2, int mBits = 4>
 class QueryBySFC
 {
 private:
-	//vector<Point<T, nDims>> getAllPoints(Rect<T, nDims> queryRect);
-	
 	void query_approximate(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode);
 	void query_approximate2(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode, int nranges);
-	//int  iscontinuous(string& str1, string& str2);
 
 public:
 	vector<sfc_bigint>  RangeQueryByBruteforce_LNG(Rect<T, nDims> queryRect, SFCType sfc_type);
@@ -164,7 +161,7 @@ public:
 
 };
 
-
+///depth-first traversal in the 2^n-ary tree
 template<typename T, int nDims, int mBits>
 void QueryBySFC<T, nDims, mBits>::query_approximate(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode)
 {
@@ -273,6 +270,7 @@ void QueryBySFC<T, nDims, mBits>::query_approximate(TreeNode<T, nDims> nd, Rect<
 	}
 }
 
+///breadth-first traversal in the 2^n-ary tree
 template<typename T, int nDims, int mBits>
 void QueryBySFC<T, nDims, mBits>::query_approximate2(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode, int nranges)
 {
@@ -298,7 +296,7 @@ void QueryBySFC<T, nDims, mBits>::query_approximate2(TreeNode<T, nDims> nd, Rect
 		//cout << currentNode.level << endl;
 		//////////////////////////////////////////////////////
 		//check the level and numbers of results
-		if ((nranges != 0) && (last_level != currentNode.level) && (resultTNode.size() + query_queue.size() >  nranges)) //we are in the new level and full
+		if ((nranges != 0) && (last_level != currentNode.level) && (resultTNode.size() + query_queue.size() > nDims * nranges)) //we are in the new level and full
 		{
 			///move all the left nodes in the queue to the resuts node vector
 			for (; !query_queue.empty(); query_queue.pop())
@@ -444,7 +442,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 	map<sfc_bigint, sfc_bigint, less<sfc_bigint>>::iterator itr;
 
 	sfc_bigint val;
-	sfc_bigint k1, k2;
+	//sfc_bigint k1, k2;
 
 	for (int i = 0; i < resultTNode.size(); i++)
 	{
@@ -489,10 +487,34 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 		std::sort(node_vals.begin(), node_vals.end());
 		map_range[node_vals[0]] = node_vals[ncorners-1];
 	}
-
-	//////////////////
-	vector<sfc_bigint> rangevec;
 	
+	/////////////////////////////////////////////////
+	///merg continuous range--->if nranges=0, gap=1; if nranges !=0 ,find the Nth big gap
+	///find the suitable distance dmin
+	long long dmin = 1;//for full ranges
+	int nsize = map_range.size();
+	if (nranges != 0) //not full ranges---control by nranges N
+	{
+		vector<long long> vec_dist(nsize - 1);
+
+		itr = map_range.begin();
+		sfc_bigint last = itr->second;
+		for (itr++; itr != map_range.end(); itr++)
+		{
+			vec_dist.push_back((long long)(itr->first - last));
+
+			last = itr->second;
+		}
+
+		tbb::parallel_sort(vec_dist.begin(), vec_dist.end(), std::greater<long long>());
+
+		dmin = vec_dist[nranges - 1];
+	}
+
+	//////merge
+	sfc_bigint k1, k2;
+	vector<sfc_bigint> rangevec;
+
 	itr = map_range.begin();
 	k1 = itr->first; //k1---k2 current range
 	k2 = itr->second;
@@ -501,15 +523,15 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 	{
 		itr++; //get next range
 		//cout << k1  << ',' <<k2 << endl;
-		if (itr == map_range.end()) 
-		{ 
+		if (itr == map_range.end())
+		{
 			rangevec.push_back(k1);
 			rangevec.push_back(k2);
 
 			break;
-		}			
+		}
 
-		if (itr->first == k2 + 1) // if the next range is continuous to k2
+		if ((itr->first - k2) <= dmin) // if the next range is continuous to k2 //itr->first == k2 + 1
 		{
 			k2 = itr->second; //enlarge current range
 		}
@@ -621,7 +643,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rec
 	//for (int i = 0; i < resultTNode.size(); i++)
 	
 	range_table ranges;
-	parallel_for(blocked_range<size_t>(0, resultTNode.size(),100), node2range<T, nDims, mBits>(ranges, resultTNode, sfc_type));
+	parallel_for(blocked_range<size_t>(0, resultTNode.size(),200), node2range<T, nDims, mBits>(ranges, resultTNode, sfc_type));
 	
 	//sort
 	for (range_table::iterator i = ranges.begin(); i != ranges.end(); ++i) 
@@ -629,9 +651,32 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rec
 		map_range[i->first] = i->second;
 	}
 
-	//////////////////
+	/////////////////////////////////////////////////
+	///merg continuous range--->if nranges=0, gap=1; if nranges !=0 ,find the Nth big gap
+	///find the suitable distance dmin
+	long long dmin = 1;//for full ranges
+	int nsize = map_range.size();
+	if (nranges != 0) //not full ranges---control by nranges N
+	{		
+		vector<long long> vec_dist(nsize - 1);
+
+		itr = map_range.begin();
+		sfc_bigint last = itr->second;
+		for (itr++; itr != map_range.end(); itr++)
+		{
+			vec_dist.push_back((long long)(itr->first - last));
+
+			last = itr->second;
+		}
+
+		tbb::parallel_sort(vec_dist.begin(), vec_dist.end(), std::greater<long long>());
+		cout << vec_dist[0] << "," << vec_dist[nsize - 2] << endl;
+
+		dmin = vec_dist[nranges - 1];
+	}
+	
+	//////merge
 	sfc_bigint k1, k2;
-	vector<sfc_bigint> rangevec;
 	vector<sfc_bigint> rangevec;
 
 	itr = map_range.begin();
@@ -650,7 +695,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rec
 			break;
 		}
 
-		if (itr->first == k2 + 1) // if the next range is continuous to k2
+		if ((itr->first - k2) <= dmin) // if the next range is continuous to k2 //itr->first == k2 + 1
 		{
 			k2 = itr->second; //enlarge current range
 		}
@@ -662,7 +707,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rec
 			k1 = itr->first;
 			k2 = itr->second;
 		}//end if
-	}//end while
+	}//end while	
 
 	return rangevec;
 }

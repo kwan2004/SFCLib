@@ -482,7 +482,8 @@ int run_pipeline(int nthreads, char* InputFileName, char* OutputFileName, \
 	tbb::tick_count t0 = tbb::tick_count::now();
 	// Need more than one token in flight per thread to keep all threads 
 	// busy; 2-4 works
-	pipeline.run(nthreads * 4);//
+	pipeline.run(nthreads);// * 4
+
 	tbb::tick_count t1 = tbb::tick_count::now();
 
 	//fclose(output_file);

@@ -245,7 +245,7 @@ int main(int argc, char* argv[])
 	if (nparallel == 1)
 	{
 		if (strlen(szoutput) != 0)  printf("parallel run "); //if not stdout ,print sth
-		tbb::task_scheduler_init init_parallel;
+		tbb::task_scheduler_init init_parallel(tbb::task_scheduler_init::automatic);
 
 		if (bislod)//lod value, one more dimension
 			run_pipeline<ndims+1, mbits>(init_parallel.default_num_threads(), szinput, szoutput, nitem_num, nsfc_type, \
@@ -441,7 +441,7 @@ int main(int argc, char* argv[])
 	///Moore: 272s ; lawders: 14s
 	tbb::tick_count t0 = tbb::tick_count::now();
 
-	for (int i = 0; i < 10000; i++)
+	for (int i = 0; i < 1000000; i++)
 	{
 		sfc2_old.HilbertEncode(pt3);
 	}
@@ -450,7 +450,7 @@ int main(int argc, char* argv[])
 
 	t0 = tbb::tick_count::now();
 
-	for (int i = 0; i < 10000; i++)
+	for (int i = 0; i < 1000000; i++)
 	{
 		sfc2.HilbertEncode(pt3);
 	}

@@ -38,7 +38,7 @@ static const unsigned char BASE64_TABLE_D2[] = {
 /* define the bitmask_t type as an integer of sufficient size */
 typedef  uint256_t bitmask_t; // unsigned long long / uint256_t
 /* define the halfmask_t type as an integer of 1/2 the size of bitmask_t */
-typedef  uint128_t halfmask_t; //unsigned long  /uint128_t
+typedef  unsigned int halfmask_t; //unsigned long  /uint128_t
 
 typedef  uint256_t sfc_bigint;
 
