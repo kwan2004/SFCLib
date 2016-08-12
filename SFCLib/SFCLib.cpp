@@ -446,8 +446,19 @@ int main(int argc, char* argv[])
 		sfc2_old.HilbertEncode(pt3);
 	}
 	tbb::tick_count t1 = tbb::tick_count::now();
-	cout << "Laweder's time = " <<(t1 - t0).seconds()<<endl;
+	cout << "Laweder's hilbert time = " <<(t1 - t0).seconds()<<endl;
 
+	//////////
+	t0 = tbb::tick_count::now();
+
+	for (int i = 0; i < 1000000; i++)
+	{
+		sfc2_old.MortonEncode(pt3);
+	}
+	t1 = tbb::tick_count::now();
+	cout << "Laweder's morton time = " << (t1 - t0).seconds() << endl;
+
+	///////////////
 	t0 = tbb::tick_count::now();
 
 	for (int i = 0; i < 1000000; i++)
@@ -679,7 +690,11 @@ int main(int argc, char* argv[])
 		
 		pch = strchr(lastpos, '//');
 		strncpy(ele, lastpos, pch - lastpos);
-		pt1[i] = atof(ele);
+		
+		if (strcmp(ele, "-99999999.0000") != 0)//if "-99999999.0000", not set
+			pt1[i] = atof(ele);
+		else
+			pt1[i] = 0; ///this min value is not set,just assign 0
 
 		lastpos = pch + 1;
 		///////max
@@ -689,13 +704,20 @@ int main(int argc, char* argv[])
 
 			pch = strchr(lastpos, '//');
 			strncpy(ele, lastpos, pch - lastpos);
-			pt2[i] = atof(ele);
+			
+			if (strcmp(ele, "-99999999.0000") != 0) //if "-99999999.0000", not set 
+				pt2[i] = atof(ele);
+			else
+				pt2[i] = 1 << mbits - 1; ///this max value is not set,just assign 2^mbits -1
 
 			lastpos = pch + 1;
 		}
 		else
 		{
-			pt2[i] = atof(lastpos);
+			if (strcmp(lastpos, "-99999999.0000") != 0) //if "-99999999.0000", not set
+				pt2[i] = atof(lastpos);
+			else
+				pt2[i] = 1 << mbits - 1; ///this max value is not set,just assign 2^mbits -1
 		}
 
 	}

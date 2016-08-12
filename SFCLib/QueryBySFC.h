@@ -458,7 +458,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 			}
 			if (sfc_type == Morton)
 			{
-				val = sfc.MortnEncode(resultTNode[i].minPoint);
+				val = sfc.MortonEncode(resultTNode[i].minPoint);
 				map_range[val] = val;
 			}
 
@@ -491,7 +491,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 	/////////////////////////////////////////////////
 	///merg continuous range--->if nranges=0, gap=1; if nranges !=0 ,find the Nth big gap
 	///find the suitable distance dmin
-	long long dmin = 1;//for full ranges
+	long long dmin = 2;//for full ranges
 	int nsize = map_range.size();
 	if (nranges != 0) //not full ranges---control by nranges N
 	{
@@ -531,7 +531,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 			break;
 		}
 
-		if ((itr->first - k2) <= dmin) // if the next range is continuous to k2 //itr->first == k2 + 1
+		if ((itr->first - k2) < dmin) // if the next range is continuous to k2 //itr->first == k2 + 1
 		{
 			k2 = itr->second; //enlarge current range
 		}
@@ -654,7 +654,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rec
 	/////////////////////////////////////////////////
 	///merg continuous range--->if nranges=0, gap=1; if nranges !=0 ,find the Nth big gap
 	///find the suitable distance dmin
-	long long dmin = 1;//for full ranges
+	long long dmin = 2;//for full ranges
 	int nsize = map_range.size();
 	if (nranges != 0) //not full ranges---control by nranges N
 	{		
@@ -695,7 +695,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rec
 			break;
 		}
 
-		if ((itr->first - k2) <= dmin) // if the next range is continuous to k2 //itr->first == k2 + 1
+		if ((itr->first - k2) < dmin) // if the next range is continuous to k2 //itr->first == k2 + 1
 		{
 			k2 = itr->second; //enlarge current range
 		}
