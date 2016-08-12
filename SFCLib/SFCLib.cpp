@@ -546,6 +546,7 @@ int main(int argc, char* argv[])
 
 	//85999.1,446250.23,-1.69,9,651295397912973650169147
 	//-i 85999.0/85999.5/446250/446250.4/-2.0/-1.5/8/9 -s 1 -e 0 -t ct.txt -n 0 -o qq5.sql
+	//-i 85545.3000/85695.3000/446465.6500/446615.6500/-99999999.0000/-99999999.0000/-99999999.0000/-99999999.0000 -s 1 -e 0 -t ct.txt -n 0 -o qq5.sql
 	int nsfc_type = 0;
 	int nencode_type = 0;
 
@@ -623,7 +624,7 @@ int main(int argc, char* argv[])
 			int j;
 			char buf[1024];
 			char * pch, *lastpos;
-			char ele[64];
+			char ele[128];
 
 			//////translation
 			memset(buf, 0, 1024);
@@ -634,7 +635,7 @@ int main(int argc, char* argv[])
 			pch = strchr(buf, ',');
 			while (pch != NULL)
 			{
-				memset(ele, 0, 64);
+				memset(ele, 0, 128);
 				strncpy(ele, lastpos, pch - lastpos);
 				//printf("found at %d\n", pch - str + 1);
 				delta[j] = atof(ele);
@@ -654,7 +655,7 @@ int main(int argc, char* argv[])
 			pch = strchr(buf, ',');
 			while (pch != NULL)
 			{
-				memset(ele, 0, 64);
+				memset(ele, 0, 128);
 				strncpy(ele, lastpos, pch - lastpos);
 				//printf("found at %d\n", pch - str + 1);
 				scale[j] = atoi(ele);
@@ -676,48 +677,66 @@ int main(int argc, char* argv[])
 	double pt1[ndims] = { 0.0f };
 	double pt2[ndims] = { 0.0f };
 
+	unsigned int dim_valid[ndims] = { 0 };
+
 	memset(pt1, 0, sizeof(double)*ndims);
 	memset(pt2, 0, sizeof(double)*ndims);
+	memset(dim_valid, 0, sizeof(unsigned int)*ndims);
 
 	char * pch, *lastpos;
-	char ele[64];
+	char ele[128];
 
 	lastpos = szinput;
 	for (int i = 0; i < ndims; i++)
 	{
 		///////min
-		memset(ele, 0, 64);
+		memset(ele, 0, 128);
 		
 		pch = strchr(lastpos, '//');
 		strncpy(ele, lastpos, pch - lastpos);
 		
 		if (strcmp(ele, "-99999999.0000") != 0)//if "-99999999.0000", not set
+		{
 			pt1[i] = atof(ele);
+			dim_valid[i] = 1;
+		}
 		else
+		{ 
 			pt1[i] = 0; ///this min value is not set,just assign 0
+		}
 
 		lastpos = pch + 1;
 		///////max
 		if (i != ndims - 1)
 		{
-			memset(ele, 0, 64);
+			memset(ele, 0, 128);
 
 			pch = strchr(lastpos, '//');
 			strncpy(ele, lastpos, pch - lastpos);
 			
 			if (strcmp(ele, "-99999999.0000") != 0) //if "-99999999.0000", not set 
+			{
 				pt2[i] = atof(ele);
+				dim_valid[i] = 1;
+			}
 			else
-				pt2[i] = 1 << mbits - 1; ///this max value is not set,just assign 2^mbits -1
+			{
+				pt2[i] = 0; ///this max value is not set,just assign 2^mbits -11 <  < mbits - 1
+			}
 
 			lastpos = pch + 1;
 		}
 		else
 		{
 			if (strcmp(lastpos, "-99999999.0000") != 0) //if "-99999999.0000", not set
+			{ 
 				pt2[i] = atof(lastpos);
+				dim_valid[i] = 1;
+			}
 			else
-				pt2[i] = 1 << mbits - 1; ///this max value is not set,just assign 2^mbits -1
+			{
+				pt2[i] = 0; ///this max value is not set,just assign 2^mbits -1 1 << mbits - 1
+			}
 		}
 
 	}
@@ -728,6 +747,16 @@ int main(int argc, char* argv[])
 
 	Point<long, ndims> MinPt2 = cotrans.Transform(MinPt1);
 	Point<long, ndims> MaxPt2 = cotrans.Transform(MaxPt1);
+
+	///to check if any dim is not set
+	for (int i = 0; i < ndims; i++)
+	{
+		if (dim_valid[i] ==0 )// this dim is not set
+		{
+			MinPt2[i] = 0;
+			MaxPt2[i] = 1 << mbits - 1;
+		}
+	}
 
 	/////////////////////////////////////////////////////
 	////query
