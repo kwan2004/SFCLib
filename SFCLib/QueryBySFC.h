@@ -491,24 +491,31 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 	/////////////////////////////////////////////////
 	///merg continuous range--->if nranges=0, gap=1; if nranges !=0 ,find the Nth big gap
 	///find the suitable distance dmin
-	long long dmin = 2;//for full ranges
+	sfc_bigint dmin = 1;//for full ranges
 	int nsize = map_range.size();
 	if (nranges != 0) //not full ranges---control by nranges N
 	{
-		vector<long long> vec_dist(nsize - 1);
+		vector<sfc_bigint> vec_dist(nsize - 1);
 
 		itr = map_range.begin();
 		sfc_bigint last = itr->second;
 		for (itr++; itr != map_range.end(); itr++)
 		{
-			vec_dist.push_back((long long)(itr->first - last));
+			vec_dist.push_back((itr->first - last));
+
+			//cout << itr->first - last << endl;
 
 			last = itr->second;
 		}
 
-		tbb::parallel_sort(vec_dist.begin(), vec_dist.end(), std::greater<long long>());
+		tbb::parallel_sort(vec_dist.begin(), vec_dist.end(), std::greater<sfc_bigint>());
+
+		//for (int q = 0; q<nsize - 1;q++)
+		//	cout << vec_dist[q]  << endl;
 
 		dmin = vec_dist[nranges - 1];
+
+		//cout << "min gap:" << dmin << endl;
 	}
 
 	//////merge
@@ -519,6 +526,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 	k1 = itr->first; //k1---k2 current range
 	k2 = itr->second;
 
+	//int ncc = 0;
 	while (1)
 	{
 		itr++; //get next range
@@ -531,8 +539,9 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 			break;
 		}
 
-		if ((itr->first - k2) < dmin) // if the next range is continuous to k2 //itr->first == k2 + 1
+		if ((itr->first - k2) <= dmin) // if the next range is continuous to k2 //itr->first == k2 + 1
 		{
+			//ncc++;
 			k2 = itr->second; //enlarge current range
 		}
 		else //if the next range is not continuous to k2---sotre current range and start another search
@@ -544,6 +553,8 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 			k2 = itr->second;
 		}//end if
 	}//end while	
+
+	//cout << rangevec.size();
 
 	return rangevec;
 }
@@ -654,25 +665,31 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rec
 	/////////////////////////////////////////////////
 	///merg continuous range--->if nranges=0, gap=1; if nranges !=0 ,find the Nth big gap
 	///find the suitable distance dmin
-	long long dmin = 2;//for full ranges
+	sfc_bigint dmin = 1;//for full ranges
 	int nsize = map_range.size();
 	if (nranges != 0) //not full ranges---control by nranges N
 	{		
-		vector<long long> vec_dist(nsize - 1);
+		vector<sfc_bigint> vec_dist(nsize - 1);
 
 		itr = map_range.begin();
 		sfc_bigint last = itr->second;
 		for (itr++; itr != map_range.end(); itr++)
 		{
-			vec_dist.push_back((long long)(itr->first - last));
+			vec_dist.push_back((itr->first - last));
+
+			//cout << itr->first - last << endl;
 
 			last = itr->second;
 		}
 
-		tbb::parallel_sort(vec_dist.begin(), vec_dist.end(), std::greater<long long>());
-		//cout << vec_dist[0] << "," << vec_dist[nsize - 2] << endl;
+		tbb::parallel_sort(vec_dist.begin(), vec_dist.end(), std::greater<sfc_bigint>());
+
+		//for (int q = 0; q<nsize - 1;q++)
+		//	cout << vec_dist[q]  << endl;
 
 		dmin = vec_dist[nranges - 1];
+
+		//cout << "min gap:" << dmin << endl;
 	}
 	
 	//////merge
@@ -683,6 +700,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rec
 	k1 = itr->first; //k1---k2 current range
 	k2 = itr->second;
 
+	//int ncc = 0;
 	while (1)
 	{
 		itr++; //get next range
@@ -695,8 +713,9 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rec
 			break;
 		}
 
-		if ((itr->first - k2) < dmin) // if the next range is continuous to k2 //itr->first == k2 + 1
+		if ((itr->first - k2) <= dmin) // if the next range is continuous to k2 //itr->first == k2 + 1
 		{
+			//ncc++;
 			k2 = itr->second; //enlarge current range
 		}
 		else //if the next range is not continuous to k2---sotre current range and start another search
@@ -708,6 +727,8 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rec
 			k2 = itr->second;
 		}//end if
 	}//end while	
+
+	//cout << rangevec.size();
 
 	return rangevec;
 }
