@@ -148,16 +148,16 @@ class QueryBySFC
 {
 private:
 	void query_approximate(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode);
-	void query_approximate2(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode, int nranges);
+	void query_approximate2(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode, int nranges, int ktimes);
 
 public:
 	vector<sfc_bigint>  RangeQueryByBruteforce_LNG(Rect<T, nDims> queryRect, SFCType sfc_type);
-	vector<sfc_bigint>  RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges);
+	vector<sfc_bigint>  RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges, int ktimes);
 
-	vector<sfc_bigint>  RangeQueryByRecursive_LNG_P(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges);
+	vector<sfc_bigint>  RangeQueryByRecursive_LNG_P(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges, int ktimes);
 
 	vector<string>  RangeQueryByBruteforce_STR(Rect<T, nDims> queryRect, SFCType sfc_type, StringType encode_type);
-	vector<string>  RangeQueryByRecursive_STR(Rect<T, nDims> queryrect, SFCType sfc_type, StringType encode_type, int nranges);
+	vector<string>  RangeQueryByRecursive_STR(Rect<T, nDims> queryrect, SFCType sfc_type, StringType encode_type, int nranges, int ktimes);
 
 };
 
@@ -272,7 +272,7 @@ void QueryBySFC<T, nDims, mBits>::query_approximate(TreeNode<T, nDims> nd, Rect<
 
 ///breadth-first traversal in the 2^n-ary tree
 template<typename T, int nDims, int mBits>
-void QueryBySFC<T, nDims, mBits>::query_approximate2(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode, int nranges)
+void QueryBySFC<T, nDims, mBits>::query_approximate2(TreeNode<T, nDims> nd, Rect<T, nDims> queryrect, vector<TreeNode<T, nDims>>& resultTNode, int nranges, int ktimes)
 {
 	int nary_num = 1 << nDims;  //max count: 2^nDims
 
@@ -296,7 +296,7 @@ void QueryBySFC<T, nDims, mBits>::query_approximate2(TreeNode<T, nDims> nd, Rect
 		//cout << currentNode.level << endl;
 		//////////////////////////////////////////////////////
 		//check the level and numbers of results
-		if ((nranges != 0) && (last_level != currentNode.level) && (resultTNode.size() + query_queue.size() > nDims * nranges)) //we are in the new level and full
+		if ((nranges != 0) && (last_level != currentNode.level) && (resultTNode.size() + query_queue.size() > ktimes * nranges)) //we are in the new level and full
 		{
 			///move all the left nodes in the queue to the resuts node vector
 			for (; !query_queue.empty(); query_queue.pop())
@@ -411,7 +411,7 @@ void QueryBySFC<T, nDims, mBits>::query_approximate2(TreeNode<T, nDims> nd, Rect
 
 
 template< typename T, int nDims, int mBits>
-vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges)
+vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges, int ktimes)
 {
 	vector<TreeNode<T, nDims>> resultTNode;  //tree nodes correspond to queryRectangle
 	TreeNode<T, nDims> root;  //root node
@@ -430,7 +430,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 	}
 	if (res == 1)  //contain
 	{
-		query_approximate2(root, queryrect, resultTNode, nranges);
+		query_approximate2(root, queryrect, resultTNode, nranges, ktimes);
 	}
 	//cout << resultTNode.size() << endl;
 
@@ -624,7 +624,7 @@ struct node2range
 
 
 template< typename T, int nDims, int mBits>
-vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges)
+vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rect<T, nDims> queryrect, SFCType sfc_type, int nranges, int ktimes)
 {
 	vector<TreeNode<T, nDims>> resultTNode;  //tree nodes correspond to queryRectangle
 	TreeNode<T, nDims> root;  //root node
@@ -643,7 +643,7 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rec
 	}
 	if (res == 1)  //contain
 	{
-		query_approximate2(root, queryrect, resultTNode, nranges);
+		query_approximate2(root, queryrect, resultTNode, nranges, ktimes);
 	}
 	//cout << resultTNode.size() << endl;
 
@@ -826,12 +826,12 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByBruteforce_LNG(Rect
 
 ///////////////////////////////////////
 template< typename T, int nDims, int mBits>
-vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_STR(Rect<T, nDims> queryrect, SFCType sfc_type, StringType encode_type, int nranges)
+vector<string>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_STR(Rect<T, nDims> queryrect, SFCType sfc_type, StringType encode_type, int nranges, int ktimes)
 {
 	vector<string> rangevec;
 	OutputSchema2<nDims, mBits> trans;
 	
-	vector<sfc_bigint> vec_res = RangeQueryByRecursive_LNG(queryrect, sfc_type, nranges);
+	vector<sfc_bigint> vec_res = RangeQueryByRecursive_LNG(queryrect, sfc_type, nranges, ktimes);
 
 	vector<sfc_bigint>::iterator itr;
 	for (itr = vec_res.begin(); itr != vec_res.end(); itr++)

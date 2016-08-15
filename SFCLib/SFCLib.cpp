@@ -35,22 +35,21 @@ void print_bits(unsigned int x)
 
 void print_ranges(char * str, vector<sfc_bigint>& ranges)
 {
-	long long ntotal_len = 0;
+	sfc_bigint ntotal_len = 0;
 	if (str == NULL) return;
 
-	//printf("%s \n", str);
 	cout << str << endl;
 	for (int i = 0; i < ranges.size(); i = i + 2)
 	{
 		//printf("\n");
 
 		//printf("%lld---%lld\n", ranges[i], ranges[i + 1]);
-		cout << ranges[i] << "----" << ranges[i + 1] <<endl;
+		//cout << ranges[i] << "----" << ranges[i + 1] <<endl;
 
-		//ntotal_len += (long long )(ranges[i + 1] - ranges[i] + 1);		
+		ntotal_len += (ranges[i + 1] - ranges[i] + 1);		
 	}
 
-	//cout << "total len:  " << ntotal_len << endl;
+	cout << "total ranges len:  " << ntotal_len << endl;
 }
 
 void print_ranges_str(char * str, vector<string>& ranges)
@@ -547,15 +546,16 @@ int main(int argc, char* argv[])
 	//85999.1,446250.23,-1.69,9,651295397912973650169147
 	//-i 85999.0/85999.5/446250/446250.4/-2.0/-1.5/8/9 -s 1 -e 0 -t ct.txt -n 0 -o qq5.sql
 	//-i 85545.3000/85695.3000/446465.6500/446615.6500/-99999999.0000/-99999999.0000/-99999999.0000/-99999999.0000 -s 1 -e 0 -t ct.txt -n 0 -o qq5.sql
-	//-i 85545.3000/85695.3000/446465.6500/446615.6500/-2.0000/-1.5000/8.0000/9.0000 -s 1 -e 0 -t ct.txt -n 0 -o qq5.sql
+	//-i 85545.3000/85695.3000/446465.6500/446615.6500/-2.0000/-1.5000/8.0000/9.0000 -s 1 -e 0 -t ct.txt -n 1000 -o qq5.sql
 	int nsfc_type = 0;
 	int nencode_type = 0;
 
-	bool bisonlysfc = false;
+	bool bstat = false; //control statistics
 
-	bool bislod = false;
-	int lod_levels = 0;
+	//bool bislod = false;
+	//int lod_levels = 0;
 	int nranges = 0; //if nranges =0; means search to the bottom level
+	int ktimes = ndims; // the ktimes* nranges is used to control tree traversal depth
 
 	char szinput[1024] = { 0 };//1.xyz
 	char szoutput[256] = { 0 };
@@ -601,6 +601,18 @@ int main(int argc, char* argv[])
 		{
 			i++;
 			nranges = atoi(argv[i]);
+			continue;
+		}
+		if (strcmp(argv[i], "-k") == 0)//k times of returned ranes for gap merge
+		{
+			i++;
+			ktimes = atoi(argv[i]);
+			continue;
+		}
+		if (strcmp(argv[i], "-v") == 0)//k times of returned ranes for gap merge
+		{
+			//i++;
+			bstat = true;
 			continue;
 		}
 	}
@@ -784,21 +796,34 @@ int main(int argc, char* argv[])
 	{
 		/*vector<sfc_bigint> vec_res2 = querytest.RangeQueryByBruteforce_LNG(rec, (SFCType)nsfc_type);*/
 
-		vector<sfc_bigint> vec_res2 = querytest.RangeQueryByRecursive_LNG_P(rec, (SFCType)nsfc_type, nranges);
-		//print_ranges("hilbert 2d recursive", vec_res2);
-
-		for (int i = 0; i < vec_res2.size(); i = i + 2)
+		vector<sfc_bigint> vec_res2 = querytest.RangeQueryByRecursive_LNG_P(rec, (SFCType)nsfc_type, nranges, ktimes);
+		
+		if (bstat == false) //direct output
 		{
-			//fprintf(output_file, "%lld,%lld\n", vec_res2[i], vec_res2[i + 1]);
-			(*out_s) << vec_res2[i] << "," << vec_res2[i + 1] << endl;
+			for (int i = 0; i < vec_res2.size(); i = i + 2)
+			{
+				(*out_s) << vec_res2[i] << "," << vec_res2[i + 1] << endl;
+			}
 		}
+		else
+		{
+			sfc_bigint tot = 1;
+			for (int i = 0; i < ndims; i++)
+			{
+				tot *= (MaxPt2[i] - MinPt2[i]);
+			}
+			print_ranges("hilbert recursive", vec_res2);
+			cout << "total input len:  " << tot << endl;
+			cout << "total ranges:  " << vec_res2.size() / 2 << endl;
+		}
+		
 	}
 	else //string BASE32 BASE64
 	{
 		//vector<string> vec_res5 = querytest.RangeQueryByBruteforce_STR(rec, (SFCType)nsfc_type, (StringType)(nencode_type - 1));
 		//print_ranges_str("hilbert 2d brute force", vec_res5);
 
-		vector<string> vec_res6 = querytest.RangeQueryByRecursive_STR(rec, (SFCType)nsfc_type, (StringType)(nencode_type - 1), nranges);
+		vector<string> vec_res6 = querytest.RangeQueryByRecursive_STR(rec, (SFCType)nsfc_type, (StringType)(nencode_type - 1), nranges, ktimes);
 		//print_ranges_str("hilbert 2d recursive", vec_res6);
 
 		for (int i = 0; i < vec_res6.size(); i = i + 2)
@@ -812,7 +837,9 @@ int main(int argc, char* argv[])
 	range_file.close();
 
 	tbb::tick_count t1 = tbb::tick_count::now();
-	//cout << "time = " <<(t1 - t0).seconds()<<endl;
+	
+	if (bstat)
+		cout << "ranges time = " <<(t1 - t0).seconds()<<endl;
 
 #endif
 
@@ -839,6 +866,6 @@ int main(int argc, char* argv[])
 	cout << "out: " << rnd_gen.ntest << endl;
 #endif
 	//system("pause");
-	return 0;
+ 	return 0;
 }
 
