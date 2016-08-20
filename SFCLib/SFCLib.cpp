@@ -554,6 +554,7 @@ int main(int argc, char* argv[])
 
 	//bool bislod = false;
 	//int lod_levels = 0;
+	int nparallel = 1;
 	int nranges = 0; //if nranges =0; means search to the bottom level
 	int ktimes = ndims; // the ktimes* nranges is used to control tree traversal depth
 
@@ -613,6 +614,12 @@ int main(int argc, char* argv[])
 		{
 			//i++;
 			bstat = true;
+			continue;
+		}
+		if (strcmp(argv[i], "-p") == 0)//if parallel: 0 sequential, 1 max parallel
+		{
+			i++;
+			nparallel = atoi(argv[i]);
 			continue;
 		}
 	}
@@ -794,9 +801,12 @@ int main(int argc, char* argv[])
 
 	if (nencode_type == 0) //number
 	{
-		/*vector<sfc_bigint> vec_res2 = querytest.RangeQueryByBruteforce_LNG(rec, (SFCType)nsfc_type);*/
-
-		vector<sfc_bigint> vec_res2 = querytest.RangeQueryByRecursive_LNG_P(rec, (SFCType)nsfc_type, nranges, ktimes);
+		vector<sfc_bigint> vec_res2; 
+		
+		if (nparallel == 0)
+			vec_res2 = querytest.RangeQueryByBruteforce_LNG(rec, (SFCType)nsfc_type);
+		else 
+			vec_res2 = querytest.RangeQueryByRecursive_LNG_P(rec, (SFCType)nsfc_type, nranges, ktimes);
 		
 		if (bstat == false) //direct output
 		{
