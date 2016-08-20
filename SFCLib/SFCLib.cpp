@@ -804,7 +804,7 @@ int main(int argc, char* argv[])
 		vector<sfc_bigint> vec_res2; 
 		
 		if (nparallel == 0)
-			vec_res2 = querytest.RangeQueryByBruteforce_LNG(rec, (SFCType)nsfc_type);
+			vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, (SFCType)nsfc_type, nranges, ktimes);
 		else 
 			vec_res2 = querytest.RangeQueryByRecursive_LNG_P(rec, (SFCType)nsfc_type, nranges, ktimes);
 		
