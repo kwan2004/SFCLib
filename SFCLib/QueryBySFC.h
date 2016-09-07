@@ -559,16 +559,17 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 	return rangevec;
 }
 
-typedef concurrent_hash_map<sfc_bigint, sfc_bigint> range_table;
+//typedef concurrent_hash_map<sfc_bigint, sfc_bigint> range_table;
 
 template< typename T, int nDims, int mBits>
 struct node2range
 {
-	range_table&  table;
+	//range_table&  table;
+	sfc_bigint* vec_minmax = NULL;
 	vector<TreeNode<T, nDims>>& vec_nodes;
 	SFCType sfc_type;
 
-	node2range(range_table&  table_, vector<TreeNode<T, nDims>>& nodes_, SFCType type_) : table(table_), vec_nodes(nodes_), sfc_type(type_){}
+	node2range(sfc_bigint*  vec_minmax_, vector<TreeNode<T, nDims>>& nodes_, SFCType type_) : vec_minmax(vec_minmax_), vec_nodes(nodes_), sfc_type(type_){}
 
 	void operator( )(const blocked_range<size_t> range)const
 	{
@@ -581,16 +582,19 @@ struct node2range
 
 		for (size_t i = range.begin(); i != range.end(); ++i)
 		{
-			range_table::accessor a;
+			//range_table::accessor a;
 
 			if (vec_nodes[i].level == mBits) //leaf node--just one point
 			{
 				if (sfc_type == Hilbert)
 				{
 					val = sfc.HilbertEncode(vec_nodes[i].minPoint);
+					
 					//map_range[val] = val;
-					table.insert(a, val);
-					a->second = val;
+					//table.insert(a, val);
+					//a->second = val;
+					vec_minmax[2 * i] = val;
+					vec_minmax[2 * i + 1] = val;
 				}
 				continue;
 			}
@@ -615,9 +619,12 @@ struct node2range
 			}
 
 			std::sort(node_vals.begin(), node_vals.end());
+			
 			//map_range[node_vals[0]] = node_vals[ncorners - 1];
-			table.insert(a, node_vals[0]);
-			a->second = node_vals[ncorners - 1];
+			//table.insert(a, node_vals[0]);
+			//a->second = node_vals[ncorners - 1];
+			vec_minmax[2 * i] = node_vals[0];
+			vec_minmax[2 * i + 1] = node_vals[ncorners - 1];
 		}//end for
 	}//end functioner
 };
@@ -652,14 +659,17 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rec
 	map<sfc_bigint, sfc_bigint, less<sfc_bigint>>::iterator itr;
 
 	//for (int i = 0; i < resultTNode.size(); i++)
-	
-	range_table ranges;
-	parallel_for(blocked_range<size_t>(0, resultTNode.size(),200), node2range<T, nDims, mBits>(ranges, resultTNode, sfc_type));
+	size_t node_size = resultTNode.size();
+	sfc_bigint* pvec_minmax = new sfc_bigint[node_size * 2];
+	//range_table ranges;
+	//parallel_for(blocked_range<size_t>(0, resultTNode.size(),200), node2range<T, nDims, mBits>(ranges, resultTNode, sfc_type));
+	parallel_for(blocked_range<size_t>(0, node_size, 200), node2range<T, nDims, mBits>(pvec_minmax, resultTNode, sfc_type));
 	
 	//sort
-	for (range_table::iterator i = ranges.begin(); i != ranges.end(); ++i) 
+	//for (range_table::iterator i = ranges.begin(); i != ranges.end(); ++i) 
+	for (size_t i = 0; i < node_size; ++i)
 	{
-		map_range[i->first] = i->second;
+		map_range[pvec_minmax[2 * i]] = pvec_minmax[2 * i + 1];
 	}
 
 	/////////////////////////////////////////////////

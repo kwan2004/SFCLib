@@ -546,7 +546,7 @@ int main(int argc, char* argv[])
 	//85999.1,446250.23,-1.69,9,651295397912973650169147
 	//-i 85999.0/85999.5/446250/446250.4/-2.0/-1.5/8/9 -s 1 -e 0 -t ct.txt -n 0 -o qq5.sql
 	//-i 85545.3000/85695.3000/446465.6500/446615.6500/-99999999.0000/-99999999.0000/-99999999.0000/-99999999.0000 -s 1 -e 0 -t ct.txt -n 0 -o qq5.sql
-	//-i 85545.3000/85695.3000/446465.6500/446615.6500/-2.0000/-1.5000/8.0000/9.0000 -s 1 -e 0 -t ct.txt -n 1000 -o qq5.sql
+	//-i 85545.3000/85695.3000/446465.6500/446615.6500/-2.0000/-1.5000/8.0000/9.0000 -s 1 -e 0 -t ..\SFCLib\ct.txt -n 5000 -o qq5.sql -v -p 1
 	int nsfc_type = 0;
 	int nencode_type = 0;
 
@@ -823,6 +823,7 @@ int main(int argc, char* argv[])
 				tot *= (MaxPt2[i] - MinPt2[i]);
 			}
 			print_ranges("hilbert recursive", vec_res2);
+			cout << "parallel:  " << nparallel << endl;
 			cout << "total input len:  " << tot << endl;
 			cout << "total ranges:  " << vec_res2.size() / 2 << endl;
 		}
