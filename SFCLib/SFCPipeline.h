@@ -23,6 +23,10 @@
 
 #include "RandomLOD.h"
 
+static double	g_step1_time = 0.0f; //input
+static double	g_step2_time = 0.0f; //encoding
+static double	g_step3_time = 0.0f; //output
+
 template<int nDims>
 class InputItem
 {
@@ -118,6 +122,9 @@ public:
 
 	/*override*/ void* operator()(void*)
 	{
+		tbb::tick_count t0;
+		t0 = tbb::tick_count::now();
+
 		// Read raw points coornidates
 		InputItem<nDims>* pItem = (InputItem<nDims>*)tbb::tbb_allocator<InputItem<nDims>>().allocate(1);
 		pItem->pPtsArray = (Point<double, nDims>*)tbb::tbb_allocator<Point<double, nDims>>().allocate(_size);
@@ -183,6 +190,9 @@ public:
 			return NULL; //read nothing here, terminate
 		}
 
+		tbb::tick_count t1 = tbb::tick_count::now();
+		g_step1_time += (t1 - t0).seconds();
+
 		return pItem;
 	}
 };
@@ -207,6 +217,9 @@ public:
 
 	/*override*/void* operator()(void* item)
 	{
+		tbb::tick_count t0, t1;
+		t0 = tbb::tick_count::now();
+
 		InputItem<nDims>*  pin_item = static_cast<InputItem<nDims>*>(item);
 		Point<double, nDims>*  input = pin_item->pPtsArray;
 		
@@ -294,6 +307,9 @@ public:
 		////////////////
 		tbb::tbb_allocator<InputItem<nDims>>().deallocate((InputItem<nDims>*)pin_item, 1); //only release the inputitem
 
+		t1 = tbb::tick_count::now();
+		g_step2_time += (t1 - t0).seconds();
+
 		return pout_item;
 	}
 
@@ -334,6 +350,9 @@ public:
 
 	/*override*/void* operator()(void* item)
 	{
+		tbb::tick_count t0, t1;
+		t0 = tbb::tick_count::now();
+
 		OutputItem<nDims>*  pout_item = static_cast<OutputItem<nDims>*>(item);
 
 		if (bis_onlysfc) //only output sfc code
@@ -397,6 +416,9 @@ public:
 			tbb::tbb_allocator<char>().deallocate((char*)pout_item->out_string, pout_item->_actual_size * pout_item->_str_len);
 
 		tbb::tbb_allocator<OutputItem<nDims>>().deallocate((OutputItem<nDims>*)pout_item, 1);
+
+		t1 = tbb::tick_count::now();
+		g_step3_time += (t1 - t0).seconds();
 
 		return NULL;
 	}
@@ -491,7 +513,13 @@ int run_pipeline(int nthreads, char* InputFileName, char* OutputFileName, \
 	of.close();
 
 
-	if (strlen(OutputFileName) != 0) printf("time = %g\n", (t1 - t0).seconds());
+	if (strlen(OutputFileName) != 0)
+	{
+		printf("step1 INPUT  time:   %g\n", g_step1_time);
+		printf("step2 SFC_EN  time:   %g\n", g_step2_time);
+		printf("step3 OUTPUT    time:   %g\n", g_step3_time);
+		printf("time = %g\n", (t1 - t0).seconds());
+	}
 
 	delete input_filter;
 	
