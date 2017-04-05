@@ -75,8 +75,8 @@ int main(int argc, char* argv[])
 #ifdef PARALLEL_PIPELINE
 	//here the SFCGen tool
 
-	const int ndims = 3;
-	const int mbits = 30;
+	const int ndims = 5;
+	const int mbits = 18;
 
 	//-p 0 -s 1 -e 2 -t ct.txt -l 10 -i ahn2.txt -o ee.txt 
 	int nparallel = 0;
@@ -537,8 +537,10 @@ int main(int argc, char* argv[])
 
 #ifdef SFC_QUERY
 	//here the SFCQuery tool
-	const int ndims = 4;
-	const int mbits = 30;
+	const int ndims = 5;
+	const int mbits = 18;
+
+	///-i 347068810/347068850/-73.96/-73.91/40.5/41/-73.99/-73.90/40.5/41 -s 1 -e 0 -t ./cttaxi.txt -n 2000 -k 4 -o range.sql
 
 	///85999.42,446266.47,-1.65,9,651295384353375995169439
 	//-i 85999.0/85999.5/446266/446266.5/-2.0/-1.5/8/9 -s 1 -e 0 -t ct.txt -n 1000 -o qq3.sql
