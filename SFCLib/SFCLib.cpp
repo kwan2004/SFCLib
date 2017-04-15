@@ -258,6 +258,43 @@ int main(int argc, char* argv[])
 	///////////////////////
 
 #ifdef SFC_GEN_TEST
+	////////5D taxi tests
+	//347068803,-73.9890213,40.7215385,-73.9889603,40.7216988,16793554232693735
+	Point<double, 5> pt7;
+	pt7[0] = 347068803;//1010
+	pt7[1] = -73.9890213;//1011
+	pt7[2] = 40.7215385; //0011
+	pt7[3] = -73.9889603;//1101
+	pt7[4] = 40.7216988;
+
+	double delta7[5] = { 347068000, -81, 34, -81, 34 }; 
+	long  scale7[5] = { 1, 10000, 10000, 10000, 10000 }; //100, 100, 1000
+
+	CoordTransform<double, long, 5> cotrans7;
+	cotrans7.SetTransform(delta7, scale7);
+
+	Point<long, 5> MinPt7 = cotrans7.Transform(pt7);
+
+	for (int i = 0; i < 5; i++)
+	{
+		cout << MinPt7[i] << endl;
+	}
+
+
+	SFCConversion<5, 30> sfctest7;
+
+	sfc_bigint p7 = sfctest7.HilbertEncode(MinPt7);
+	cout << p7 << endl;
+
+	Point<long, 5> MinPt8 = sfctest7.HilbertDecode(p7);
+
+	for (int i = 0; i < 5; i++)
+	{
+		cout << MinPt8[i] << endl;
+	}
+
+
+
 	///here just for unit tests of SFC code calculation and query
 	///3D case
 	Point<long, 3> pt3d; //SFC coordinates n=2

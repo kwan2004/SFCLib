@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <vector>
+#include <list>
 #include <tuple>
 #include <queue>
 #include <algorithm>
@@ -658,15 +659,12 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG_P(Rec
 	map<sfc_bigint, sfc_bigint, less<sfc_bigint>> map_range;
 	map<sfc_bigint, sfc_bigint, less<sfc_bigint>>::iterator itr;
 
-	//for (int i = 0; i < resultTNode.size(); i++)
+
 	size_t node_size = resultTNode.size();
 	sfc_bigint* pvec_minmax = new sfc_bigint[node_size * 2];
-	//range_table ranges;
-	//parallel_for(blocked_range<size_t>(0, resultTNode.size(),200), node2range<T, nDims, mBits>(ranges, resultTNode, sfc_type));
 	parallel_for(blocked_range<size_t>(0, node_size, 200), node2range<T, nDims, mBits>(pvec_minmax, resultTNode, sfc_type));
 	
 	//sort
-	//for (range_table::iterator i = ranges.begin(); i != ranges.end(); ++i) 
 	for (size_t i = 0; i < node_size; ++i)
 	{
 		map_range[pvec_minmax[2 * i]] = pvec_minmax[2 * i + 1];
