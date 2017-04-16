@@ -254,34 +254,37 @@ public:
 		}
 
 		//////////////////////////////////////////////////////
-		CoordTransform<double, long, nDims> cotrans;
+		const int ex_dim = 0; //exclude defined columns
 
-		SFCConversion<nDims, mBits> sfcgen;
-		OutputSchema2<nDims, mBits> outtrans;
+		CoordTransform<double, long, nDims - ex_dim> cotrans;
+
+		SFCConversion<nDims - ex_dim, mBits> sfcgen;
+		OutputSchema2<nDims - ex_dim, mBits> outtrans;
 
 		if (_delta != NULL && _scale != NULL)
 		{
 			cotrans.SetTransform(_delta, _scale);
 		}
 
-		Point<long, nDims> ptSFC;
-		//Point<long, mBits> ptBits;
-
+		Point<long, nDims - ex_dim> ptSFC;
 		sfc_bigint val;
 
 		for (int i = 0; i < pin_item->_actual_size; i++)
 		{
-			//ptSFC = cotrans.Transform(input[i]);
+			Point<double, nDims - ex_dim> pt_small;//exclude the defined columns
+			for (int q = 0; q < nDims - ex_dim; q++)
+				pt_small[q] = input[i][q];
+
 			if (_sfctype == 0) //morton
 			{
-				ptSFC = cotrans.Transform(input[i]);
+				ptSFC = cotrans.Transform(pt_small); //input[i]
 				val = sfcgen.MortonEncode(ptSFC);
 				//ptBits = sfcgen.ptBits;
 			}
 
 			if (_sfctype == 1) //hilbert
 			{
-				ptSFC = cotrans.Transform(input[i]);
+				ptSFC = cotrans.Transform(pt_small); //input[i]
 				val = sfcgen.HilbertEncode(ptSFC);
 				//ptBits = sfcgen.ptBits;
 			}
