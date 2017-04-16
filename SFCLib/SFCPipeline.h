@@ -254,7 +254,7 @@ public:
 		}
 
 		//////////////////////////////////////////////////////
-		const int ex_dim = 0; //exclude defined columns
+		const int ex_dim = 2; //exclude defined columns
 
 		CoordTransform<double, long, nDims - ex_dim> cotrans;
 
