@@ -203,7 +203,7 @@ template<int nDims, int mBits>
 class NewSFCGenFilter : public tbb::filter
 {
 public:
-	NewSFCGenFilter(int sfctype, int conv_type, double* delta, long* scale) :
+	NewSFCGenFilter(int sfctype, int conv_type, double* delta, double* scale) :
 		tbb::filter(parallel),
 		_sfctype(sfctype),
 		_conv_type(conv_type)
@@ -254,7 +254,7 @@ public:
 		}
 
 		//////////////////////////////////////////////////////
-		const int ex_dim = 2; //exclude defined columns
+		const int ex_dim = 0; //exclude defined columns
 
 		CoordTransform<double, long, nDims - ex_dim> cotrans;
 
@@ -318,7 +318,7 @@ public:
 
 private:
 	double* _delta;
-	long* _scale;
+	double* _scale;
 
 	int _sfctype;
 	int _conv_type;
@@ -429,7 +429,7 @@ public:
 
 template<int nDims, int mBits>
 int run_pipeline(int nthreads, char* InputFileName, char* OutputFileName, \
-	int item_num, int sfc_type, int conv_type, double* delta, long* scale, bool onlysfc, bool bgenlod, int nlodlevels)
+	int item_num, int sfc_type, int conv_type, double* delta, double* scale, bool onlysfc, bool bgenlod, int nlodlevels)
 {
 	FILE* input_file = NULL;
 	if (InputFileName != NULL && strlen(InputFileName) != 0)

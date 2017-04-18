@@ -8,7 +8,7 @@ class CoordTransform
 {
 private:
 	std::array< T1, nDims > _delta;
-	std::array< long, nDims > _scale;
+	std::array< T1, nDims > _scale;
 
 	/*Point<T1, nDims> inPt;
 	Point<T2, nDims> outPt;*/
@@ -24,7 +24,7 @@ public:
 
 	}
 
-	void SetTransform(T1* delta, long* scale)
+	void SetTransform(T1* delta, T1* scale)
 	{
 		if (delta != NULL && scale != NULL)
 		{

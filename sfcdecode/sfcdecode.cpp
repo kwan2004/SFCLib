@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 	///////////////////////////////////////////////////
 	///get the coordinates transfomration file--one more for lod value
 	double delta[ndims + 1] = { 0 }; // 526000, 4333000, 300
-	long  scale[ndims + 1] = { 1 }; //100, 100, 1000
+	double  scale[ndims + 1] = { 1 }; //100, 100, 1000
 
 	for (int i = 1; i < ndims + 1; i++)
 	{
@@ -115,13 +115,13 @@ int main(int argc, char *argv[])
 				memset(ele, 0, 64);
 				strncpy(ele, lastpos, pch - lastpos);
 				//printf("found at %d\n", pch - str + 1);
-				scale[j] = atoi(ele);
+				scale[j] = atof(ele);
 				j++;
 
 				lastpos = pch + 1;
 				pch = strchr(lastpos, ',');
 			}
-			scale[j] = atoi(lastpos); //final part
+			scale[j] = atof(lastpos); //final part
 
 			fclose(input_file);
 		}//end if input_file

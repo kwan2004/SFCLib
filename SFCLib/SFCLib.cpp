@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 	pt7[4] = 40.7216988;
 
 	double delta7[5] = { 347068000, -81, 34, -81, 34 }; 
-	long  scale7[5] = { 1, 10000, 10000, 10000, 10000 }; //100, 100, 1000
+	double  scale7[5] = { 1, 10000, 10000, 10000, 10000 }; //100, 100, 1000
 
 	CoordTransform<double, long, 5> cotrans7;
 	cotrans7.SetTransform(delta7, scale7);
@@ -169,7 +169,7 @@ int main(int argc, char* argv[])
 	pt2[3] = 9;//1101
 
 	double delta[4] = { 80000.00, 437500.00, -20.0, 0.0 }; // 526000, 4333000, 300
-	long  scale[4] = { 100, 100, 100, 1 }; //100, 100, 1000
+	double  scale[4] = { 100, 100, 100, 1 }; //100, 100, 1000
 
 	CoordTransform<double, long, 4> cotrans;
 	cotrans.SetTransform(delta, scale);

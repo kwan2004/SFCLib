@@ -28,8 +28,8 @@ int main(int argc, char* argv[])
 	//if (argc == 1) return 0;
 	//if (argc % 2 != 1) return 0; //attribute pair plus exe_name	
 
-	const int ndims = 5;
-	const int mbits = 18;
+	const int ndims = 3;
+	const int mbits = 16;
 
 	//-p 0 -s 1 -e 2 -t ct.txt -l 10 -i ahn2.txt -o ee.txt 
 	int nparallel = 0;
@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
 	///////////////////////////////////////////////////
 	///get the coordinates transfomration file--one more for lod value
 	double delta[ndims + 1] = { 0 }; // 526000, 4333000, 300
-	long  scale[ndims + 1] = { 1 }; //100, 100, 1000
+	double  scale[ndims + 1] = { 1 }; //100, 100, 1000
 
 	for (int i = 1; i < ndims + 1; i++)
 	{
@@ -151,6 +151,8 @@ int main(int argc, char* argv[])
 				delta[j] = atof(ele);
 				j++;
 
+				//if (j > ndims) break;
+
 				lastpos = pch + 1;
 				pch = strchr(lastpos, ',');
 			}
@@ -168,13 +170,15 @@ int main(int argc, char* argv[])
 				memset(ele, 0, 64);
 				strncpy(ele, lastpos, pch - lastpos);
 				//printf("found at %d\n", pch - str + 1);
-				scale[j] = atoi(ele);
+				scale[j] = atof(ele);
 				j++;
+
+				//if (j > ndims) break;
 
 				lastpos = pch + 1;
 				pch = strchr(lastpos, ',');
 			}
-			scale[j] = atoi(lastpos); //final part
+			scale[j] = atof(lastpos); //final part
 
 			fclose(input_file);
 		}//end if input_file
