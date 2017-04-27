@@ -9,12 +9,17 @@
 #include "SFCConversion.h"
 #include "typedef.h"
 
+#include "SFCDePipe.h"
+
 using namespace std;
 
 int main(int argc, char *argv[])
 {
 	const int ndims = 4;
 	const int mbits = 30;
+
+	int nparallel = 0;
+	int nitem_num = 5000;
 
 	int nsfc_type = 0;
 	int nencode_type = 0;
@@ -25,6 +30,13 @@ int main(int argc, char *argv[])
 
 	for (int i = 1; i < argc; i++)
 	{
+		if (strcmp(argv[i], "-p") == 0)//if parallel: 0 sequential, 1 max parallel
+		{
+			i++;
+			nparallel = atoi(argv[i]);
+			continue;
+		}
+
 		if (strcmp(argv[i], "-i") == 0)//input file path
 		{
 			i++;
@@ -127,79 +139,26 @@ int main(int argc, char *argv[])
 		}//end if input_file
 	}//end if strlen
 
-	///////////////////////////////////////
-	FILE* input_file = NULL;
-	if (szinput != NULL && strlen(szinput) != 0)
+	/////////////////////////////////
+	////pipeline
+	if (nparallel == 0)
 	{
-		input_file = fopen(szinput, "r");
-		if (!input_file)
-		{
-			return 0;
-		}
-	}
-	else
-	{
-		input_file = stdin;
+		if (strlen(szoutput) != 0) printf("serial run   "); //if not stdout ,print sth
+		tbb::task_scheduler_init init_serial(1);
+
+		run_decode_pipeline<ndims, mbits>(1, szinput, szoutput, nitem_num, nsfc_type, nencode_type, delta, scale);
+
 	}
 
-	std::ostream* out_s;
-	std::ofstream of;
-	if (szoutput != NULL && strlen(szoutput) != 0)
+	if (nparallel == 1)
 	{
-		of.open(szoutput);
-		out_s = &of;
+		if (strlen(szoutput) != 0)  printf("parallel run "); //if not stdout ,print sth
+		tbb::task_scheduler_init init_parallel(tbb::task_scheduler_init::automatic);
+
+		run_decode_pipeline<ndims, mbits>(init_parallel.default_num_threads(), szinput, szoutput, nitem_num, nsfc_type, \
+			nencode_type, delta, scale);
 	}
-	else
-	{
-		out_s = &cout;
-	}
-
-	////////////////////////////////////
-	//read
-	SFCConversion<ndims, mbits> sfctest;
-
-	Point<long, ndims> inPt;
-	Point<double, ndims> outPt;
-
-	sfc_bigint val;
-
-	char buf[1024];
-	char buf2[1024];
-	while (1) //always true
-	{
-		memset(buf, 0, 1024);
-		fgets(buf, 1024, input_file);
-
-		if (strlen(buf) == 0) break; // no more data
-
-		memset(buf2, 0, 1024);
-		char* pos = strchr(buf, '\n');
-		if (pos != NULL)
-			strncpy(buf2, buf, pos - buf);//remove newline char
-		else
-			strcpy(buf2, buf);
-
-		val = sfc_bigint(buf2);//buf
-
-		if (nsfc_type == 0)
-			inPt = sfctest.MortonDecode(val);
-		else
-			inPt = sfctest.HilbertDecode(val);
-
-		for (int i = 0; i < ndims; i++)
-		{
-			//outPt[i] = lround((inPt[i] - _delta[i])*_scale[i]);//encoding
-			outPt[i] = ((double)inPt[i]) / scale[i] + delta[i]; //decoding
-
-			(*out_s) << setprecision(9) << outPt[i];
-
-			if (i != ndims - 1) (*out_s) << ",";
-		}
-		(*out_s) << endl;
-	}
-
-	fclose(input_file);
-	of.close();
-
+	//system("pause");
 	return 0;
+
 }

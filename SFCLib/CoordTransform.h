@@ -48,6 +48,17 @@ public:
 		}
 		return outPt;
 	}
+
+	Point<T1, nDims> InverseTransform(Point<T2, nDims> inPt)
+	{
+		Point<T1, nDims> outPt;
+		for (int i = 0; i < nDims; i++)
+		{
+			//outPt[i] = lround((inPt[i] - _delta[i])*_scale[i]);
+			outPt[i] = ((double)inPt[i]) / _scale[i] + _delta[i]; //decoding
+		}
+		return outPt;
+	}
 };
 
 #endif

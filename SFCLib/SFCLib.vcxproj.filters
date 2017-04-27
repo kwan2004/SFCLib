@@ -57,6 +57,9 @@
     <ClInclude Include="typedef.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SFCDePipe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
