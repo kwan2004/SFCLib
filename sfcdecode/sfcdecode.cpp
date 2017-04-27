@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
 		if (strlen(szoutput) != 0) printf("serial run   "); //if not stdout ,print sth
 		tbb::task_scheduler_init init_serial(1);
 
-		run_decode_pipeline<ndims, mbits>(1, szinput, szoutput, nitem_num, nsfc_type, nencode_type, delta, scale);
+		run_decode_pipeline<ndims, mbits, ndims>(1, szinput, szoutput, nitem_num, nsfc_type, nencode_type, delta, scale);
 
 	}
 
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
 		if (strlen(szoutput) != 0)  printf("parallel run "); //if not stdout ,print sth
 		tbb::task_scheduler_init init_parallel(tbb::task_scheduler_init::automatic);
 
-		run_decode_pipeline<ndims, mbits>(init_parallel.default_num_threads(), szinput, szoutput, nitem_num, nsfc_type, \
+		run_decode_pipeline<ndims, mbits, ndims>(init_parallel.default_num_threads(), szinput, szoutput, nitem_num, nsfc_type, \
 			nencode_type, delta, scale);
 	}
 	//system("pause");
