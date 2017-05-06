@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 	//if (argc % 2 != 1) return 0; //attribute pair plus exe_name	
 
 	const int ndims = 3;
-	const int mbits = 16;
+	const int mbits = 13;
 
 	//-p 0 -s 1 -e 2 -t ct.txt -l 10 -i ahn2.txt -o ee.txt 
 	int nparallel = 0;

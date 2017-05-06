@@ -9,7 +9,6 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cctype>
-//#include "common/utility/utility.h"
 
 #include <iostream>
 #include <fstream>
@@ -21,18 +20,16 @@
 #include "SFCConversion.h"
 #include "OutputSchema2.h"
 
-#include "RandomLOD.h"
-
 static double	g_step4_time = 0.0f; //input
 static double	g_step5_time = 0.0f; //decoding
 static double	g_step6_time = 0.0f; //output
 
-template<int nDims>//this dim is for other attributes
+template<int nDimsR>//this dim is for other attributes
 class InputItem
 {
 public:
 	sfc_bigint* pKeys;
-	Point<double, nDims>* pPtsArray;
+	Point<double, nDimsR>* pPtsArray;
 	int _actual_size;
 	int _alloc_size;
 
@@ -53,28 +50,21 @@ public:
 	Point<double, nDimsR>* pPtsArray;
 	Point<double, nDims>* pPtsArrayD; //for decode
 
-	//sfc_bigint* out_value;
-	//char* out_string;
-
 	int _pt_alloc_size;
 	int _actual_size;
 	int _encode_mode;
-	//int _str_len;
 
 	OutputItem()
 	{
 		_actual_size = 0;
 		_encode_mode = 0;
 
-		//_str_len = 0;
-
 		pPtsArray = NULL;
-		//out_value = NULL;
-		//out_string = NULL;
+		pPtsArrayD = NULL;
 	}
 };
 
-template<int nDims>//this dim is for other attributes
+template<int nDimsR>//this dim is for other attributes
 class InputFilterD : public tbb::filter
 {
 private:
@@ -102,9 +92,13 @@ public:
 		//t0 = tbb::tick_count::now();
 
 		// Read raw points coornidates
-		InputItem<nDims>* pItem = (InputItem<nDims>*)tbb::tbb_allocator<InputItem<nDims>>().allocate(1);
+		InputItem<nDimsR>* pItem = (InputItem<nDimsR>*)tbb::tbb_allocator<InputItem<nDimsR>>().allocate(1);
+		
 		pItem->pKeys = (sfc_bigint*)tbb::tbb_allocator<sfc_bigint>().allocate(_size);
-		pItem->pPtsArray = (Point<double, nDims>*)tbb::tbb_allocator<Point<double, nDims>>().allocate(_size);
+
+		if (nDimsR != 0)
+			pItem->pPtsArray = (Point<double, nDimsR>*)tbb::tbb_allocator<Point<double, nDimsR>>().allocate(_size);
+
 		pItem->_alloc_size = _size;
 
 		char buf[1024];
@@ -113,51 +107,75 @@ public:
 
 		int i, j;
 		i = 0;
-		while (1) //always true
+
+		if (nDimsR == 0) //pure keys
 		{
-			if (i == _size) break; //full, maximum _size;
-
-			j = 0;
-			memset(buf, 0, 1024);
-			fgets(buf, 1024, input_file);
-
-			if (strlen(buf) == 0) break; // no more data
-
-			lastpos = buf;
-			pch = strchr(buf, ',');
-			while (pch != NULL)
+			while (1) //always true
 			{
+				if (i == _size) break; //full, maximum _size;
+
+				memset(buf, 0, 1024);
+				fgets(buf, 1024, input_file);
+
+				if (strlen(buf) == 0) break; // no more data
+
 				memset(ele, 0, 64);
-				strncpy(ele, lastpos, pch - lastpos);
-				//printf("found at %d\n", pch - str + 1);
-				if (strlen(ele) != 0)
+				strncpy(ele, buf, strlen(buf) - 1); //remove \n
+
+				pItem->pKeys[i] = sfc_bigint(ele);
+
+				i++;
+			}//end while
+		}
+		else //with other attributes
+		{
+			while (1) //always true
+			{
+				if (i == _size) break; //full, maximum _size;
+
+				j = 0;
+				memset(buf, 0, 1024);
+				fgets(buf, 1024, input_file);
+
+				if (strlen(buf) == 0) break; // no more data
+
+				lastpos = buf;
+				pch = strchr(buf, ',');
+				while (pch != NULL)
 				{
-					pItem->pPtsArray[i][j] = atof(ele);
-					j++;
+					memset(ele, 0, 64);
+					strncpy(ele, lastpos, pch - lastpos);
+					//printf("found at %d\n", pch - str + 1);
+					if (strlen(ele) != 0)
+					{
+						pItem->pPtsArray[i][j] = atof(ele);
+						j++;
+					}
+
+					lastpos = pch + 1;
+					pch = strchr(lastpos, ',');
 				}
 
-				lastpos = pch + 1;
-				pch = strchr(lastpos, ',');
-			}
+				if (strlen(lastpos) != 0 && strcmp(lastpos, "\n") != 0)//final part for key
+				{
+					memset(ele, 0, 64);
+					strncpy(ele, lastpos, strlen(lastpos)-1);
+					pItem->pKeys[i] = sfc_bigint(ele);//buflastpos
+				}
 
-			if (strlen(lastpos) != 0 && strcmp(lastpos, "\n") != 0)//final part for key
-			{
-				//pItem->pPtsArray[i][j] = atof(lastpos);
-				//j++;
-
-				pItem->pKeys[i] = sfc_bigint(lastpos);//buf
-			}
-
-			i++;
-		}
+				i++;
+			}//end while
+		}//end if check pure keys		
 
 		pItem->_actual_size = i;
 
-		if (i == 0)
+		if (i == 0) //no data are read here
 		{
-			tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)pItem->pPtsArray, pItem->_alloc_size);
-			tbb::tbb_allocator<sfc_bigint>().deallocate((sfc_bigint*)pItem, 1);
-			tbb::tbb_allocator<InputItem<nDims>>().deallocate((InputItem<nDims>*)pItem, 1);
+			if (nDimsR != 0)
+				tbb::tbb_allocator<Point<double, nDimsR>>().deallocate((Point<double, nDimsR>*)pItem->pPtsArray, pItem->_alloc_size);
+			tbb::tbb_allocator<sfc_bigint>().deallocate((sfc_bigint*)pItem->pKeys, pItem->_alloc_size);
+			
+			tbb::tbb_allocator<InputItem<nDimsR>>().deallocate((InputItem<nDimsR>*)pItem, 1);
 
 
 			return NULL; //read nothing here, terminate
@@ -165,7 +183,6 @@ public:
 
 		//tbb::tick_count t1 = tbb::tick_count::now();
 		//g_step1_time += (t1 - t0).seconds();
-
 		return pItem;
 	}
 };
@@ -194,7 +211,7 @@ public:
 		//t0 = tbb::tick_count::now();
 
 		InputItem<nDimsR>*  pin_item = static_cast<InputItem<nDimsR>*>(item);
-		Point<double, nDims>*  input = pin_item->pPtsArray;
+		Point<double, nDimsR>*  input = pin_item->pPtsArray;
 
 		//////////////////////////////
 
@@ -235,13 +252,13 @@ public:
 		}
 
 		////////////////
+		tbb::tbb_allocator<sfc_bigint>().deallocate((sfc_bigint*)pin_item->pKeys, pout_item->_pt_alloc_size);
 		tbb::tbb_allocator<InputItem<nDimsR>>().deallocate((InputItem<nDimsR>*)pin_item, 1); //only release the inputitem
 
 		//t1 = tbb::tick_count::now();
 		//g_step2_time += (t1 - t0).seconds();
 
 		return pout_item;
-
 	}
 
 private:
@@ -266,7 +283,7 @@ public:
 		tbb::filter(serial_in_order),
 		output_file(output)
 	{
-		}
+	}
 
 
 	~OutputFilterD()
@@ -280,37 +297,28 @@ public:
 
 		OutputItem<nDims, nDimsR>*  pout_item = static_cast<OutputItem<nDims, nDimsR>*>(item);
 
-
 		///////////////////////
 		for (int i = 0; i < pout_item->_actual_size; i++)
 		{
-			for (int j = 0; j < nDims; j++)
+			for (int j = 0; j < nDimsR; j++)
 			{
-				//fwrite(input[i], sizeof(long), 1, my_output_file);
-				//fprintf(output_file, "%.6f", pout_item->pPtsArray[i][j]);
-				//fprintf(output_file, ",");
-				output_file << setprecision(9) << pout_item->pPtsArrayD[i][j];
-				output_file << ",";
-			}
-
-			for (int j = 0; j < nDimsR-1; j++)
-			{
-				//fwrite(input[i], sizeof(long), 1, my_output_file);
-				//fprintf(output_file, "%.6f", pout_item->pPtsArray[i][j]);
-				//fprintf(output_file, ",");
 				output_file << setprecision(9) << pout_item->pPtsArray[i][j];
 				output_file << ",";
 			}
-			output_file << setprecision(9) << pout_item->pPtsArray[i][nDimsR - 1];
+			for (int j = 0; j < nDims-1; j++)
+			{
+				output_file << setprecision(9) << pout_item->pPtsArrayD[i][j];
+				output_file << ",";
+			}			
+			output_file << setprecision(9) << pout_item->pPtsArrayD[i][nDims - 1] << endl;
 
-			output_file << endl;
 		}///end for
 
 
 		///////////////////////
-		tbb::tbb_allocator<Point<double, nDimsR>>().deallocate((Point<double, nDimsR>*)pout_item->pPtsArray, pout_item->_pt_alloc_size);
+		if (nDimsR != 0)
+			tbb::tbb_allocator<Point<double, nDimsR>>().deallocate((Point<double, nDimsR>*)pout_item->pPtsArray, pout_item->_pt_alloc_size);
 		tbb::tbb_allocator<Point<double, nDims>>().deallocate((Point<double, nDims>*)pout_item->pPtsArrayD, pout_item->_pt_alloc_size);
-
 
 		tbb::tbb_allocator<OutputItem<nDims, nDimsR>>().deallocate((OutputItem<nDims, nDimsR>*)pout_item, 1);
 
@@ -355,8 +363,8 @@ int run_decode_pipeline(int nthreads, char* InputFileName, char* OutputFileName,
 	tbb::pipeline pipeline;
 
 	// Create file-reading writing stage and add it to the pipeline
-	InputFilterD<nDims>* input_filter = NULL;
-	input_filter = new InputFilterD<nDims>(input_file, item_num);
+	InputFilterD<nDimsR>* input_filter = NULL;
+	input_filter = new InputFilterD<nDimsR>(input_file, item_num);
 	pipeline.add_filter(*input_filter);
 
 	DecodeFilter<nDims, mBits, nDimsR> nsfcgen_filter(sfc_type, conv_type, delta, scale);
@@ -378,7 +386,6 @@ int run_decode_pipeline(int nthreads, char* InputFileName, char* OutputFileName,
 	//fclose(output_file);
 	fclose(input_file);
 	of.close();
-
 
 	if (strlen(OutputFileName) != 0)
 	{

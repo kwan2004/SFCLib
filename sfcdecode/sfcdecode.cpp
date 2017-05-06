@@ -15,8 +15,10 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-	const int ndims = 4;
-	const int mbits = 30;
+	const int ndims = 3;//dims for decoding
+	const int mbits = 13;
+
+	const int ndimsR = 3; //dims for other attributes
 
 	int nparallel = 0;
 	int nitem_num = 5000;
@@ -146,7 +148,7 @@ int main(int argc, char *argv[])
 		if (strlen(szoutput) != 0) printf("serial run   "); //if not stdout ,print sth
 		tbb::task_scheduler_init init_serial(1);
 
-		run_decode_pipeline<ndims, mbits, ndims>(1, szinput, szoutput, nitem_num, nsfc_type, nencode_type, delta, scale);
+		run_decode_pipeline<ndims, mbits, ndimsR>(1, szinput, szoutput, nitem_num, nsfc_type, nencode_type, delta, scale);
 
 	}
 
@@ -155,7 +157,7 @@ int main(int argc, char *argv[])
 		if (strlen(szoutput) != 0)  printf("parallel run "); //if not stdout ,print sth
 		tbb::task_scheduler_init init_parallel(tbb::task_scheduler_init::automatic);
 
-		run_decode_pipeline<ndims, mbits, ndims>(init_parallel.default_num_threads(), szinput, szoutput, nitem_num, nsfc_type, \
+		run_decode_pipeline<ndims, mbits, ndimsR>(init_parallel.default_num_threads(), szinput, szoutput, nitem_num, nsfc_type, \
 			nencode_type, delta, scale);
 	}
 	//system("pause");

@@ -215,7 +215,7 @@ public:
 		return newpt;
 	}
 
-	static sfc_bigint MortnEncode(Point<long, nDims> ptCoord)
+	static sfc_bigint MortonEncode(Point<long, nDims> ptCoord)
 	{
 		bitmask_t pt[nDims];
 		for (int i = 0; i < nDims; i++) pt[i] = ptCoord[i];
@@ -226,13 +226,13 @@ public:
 		{
 			for (unsigned int j = 0; j < nDims; j++)
 			{
-				val |= (pt[i] & ((bitmask_t)1 << i)) << (nDims * i + j);
+				val |= (pt[j] & ((bitmask_t)1 << i)) << (nDims * i + j);
 			}			
 		}
 
 		return val;
 	}
-	static Point<long, nDims> MortnDecode(sfc_bigint idx)
+	static Point<long, nDims> MortonDecode(sfc_bigint idx)
 	{
 		bitmask_t pt[nDims];
 		//hilbert_i2c(idx, pt);

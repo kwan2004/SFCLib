@@ -107,8 +107,47 @@ int main(int argc, char* argv[])
 		cout << MinPt8[i] << endl;
 	}
 
+	//////////////////////////////////////////////
+	////////3D taxi tests
+	//347068803,-73.9890213,40.7215385,-73.9889603,40.7216988,16793554232693735
+	Point<double, 3> pt8;
+	pt8[0] = 347068800;//1010
+	pt8[1] = -73.9903717;//1011
+	pt8[2] = 40.7346954; //0011
 
+	double delta8[3] = { 347068000, -75, 40 };
+	double  scale8[3] = { 0.00333, 1500, 1500 }; //100, 100, 1000
 
+	CoordTransform<double, long, 3> cotrans8;
+	cotrans8.SetTransform(delta8, scale8);
+
+	Point<long, 3> MinPt9 = cotrans8.Transform(pt8);
+
+	for (int i = 0; i < 3; i++)
+	{
+		cout << MinPt9[i] << endl;
+	}
+	
+	SFCConversion<3, 13> sfctest8;
+	sfc_bigint p8 = sfctest8.HilbertEncode(MinPt9);
+	cout << p8 << endl;
+
+	//SFCConversion<3, 10> sfctest9;
+	Point<long, 3> MinPt10 = sfctest8.HilbertDecode(p8);//
+
+	for (int i = 0; i < 3; i++)
+	{
+		cout << MinPt10[i] << endl;
+	}
+
+	Point<double, 3> pt10 = cotrans8.InverseTransform(MinPt10);//
+
+	for (int i = 0; i < 3; i++)
+	{
+		cout << pt10[i] << endl;
+	}
+
+	/////////////////////////////////////////////////////////
 	///here just for unit tests of SFC code calculation and query
 	///3D case
 	Point<long, 3> pt3d; //SFC coordinates n=2
