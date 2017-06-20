@@ -379,7 +379,7 @@ int run_decode_pipeline(int nthreads, char* InputFileName, char* OutputFileName,
 	tbb::tick_count t0 = tbb::tick_count::now();
 	// Need more than one token in flight per thread to keep all threads 
 	// busy; 2-4 works
-	pipeline.run(nthreads);// * 4
+	pipeline.run(nthreads* 4);// 
 
 	tbb::tick_count t1 = tbb::tick_count::now();
 
@@ -392,7 +392,7 @@ int run_decode_pipeline(int nthreads, char* InputFileName, char* OutputFileName,
 		//printf("step1 INPUT  time:   %g\n", g_step1_time);
 		//printf("step2 SFC_EN  time:   %g\n", g_step2_time);
 		//printf("step3 OUTPUT    time:   %g\n", g_step3_time);
-		printf("time = %g\n", (t1 - t0).seconds());
+		printf("thread: %d ; time = %g\n", nthreads, (t1 - t0).seconds());
 	}
 
 	delete input_filter;

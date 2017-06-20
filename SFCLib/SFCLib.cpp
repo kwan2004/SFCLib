@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
 		cout << MinPt9[i] << endl;
 	}
 	
-	SFCConversion<3, 13> sfctest8;
+	SFCConversion<3, 18> sfctest8;
 	sfc_bigint p8 = sfctest8.HilbertEncode(MinPt9);
 	cout << p8 << endl;
 
@@ -146,6 +146,15 @@ int main(int argc, char* argv[])
 	{
 		cout << pt10[i] << endl;
 	}
+
+	tbb::tick_count t6 = tbb::tick_count::now();
+
+	for (int i = 0; i < 1000000; i++)
+	{
+		MinPt10 = sfctest8.HilbertDecode(p8);
+	}
+	tbb::tick_count t7 = tbb::tick_count::now();
+	cout << "hilbert decode time = " << (t7 - t6).seconds() << endl;
 
 	/////////////////////////////////////////////////////////
 	///here just for unit tests of SFC code calculation and query

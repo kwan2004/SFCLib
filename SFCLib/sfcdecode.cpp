@@ -1,27 +1,15 @@
-// sfcdecode.cpp : Defines the entry point for the console application.
-//
-
-#include "stdafx.h"
-
 #include <iostream>
 #include <fstream>
 
 #include "SFCConversion.h"
 #include "typedef.h"
 
-#include "SFCDePipe.h"
-
 using namespace std;
 
 int main(int argc, char *argv[])
 {
-	const int ndims = 3;//dims for decoding
-	const int mbits = 18;
-
-	const int ndimsR = 1; //dims for other attributes
-
-	int nparallel = 0;
-	int nitem_num = 10000;
+	const int ndims = 4;
+	const int mbits = 30;
 
 	int nsfc_type = 0;
 	int nencode_type = 0;
@@ -32,13 +20,6 @@ int main(int argc, char *argv[])
 
 	for (int i = 1; i < argc; i++)
 	{
-		if (strcmp(argv[i], "-p") == 0)//if parallel: 0 sequential, 1 max parallel
-		{
-			i++;
-			nparallel = atoi(argv[i]);
-			continue;
-		}
-
 		if (strcmp(argv[i], "-i") == 0)//input file path
 		{
 			i++;
@@ -78,7 +59,7 @@ int main(int argc, char *argv[])
 	///////////////////////////////////////////////////
 	///get the coordinates transfomration file--one more for lod value
 	double delta[ndims + 1] = { 0 }; // 526000, 4333000, 300
-	double  scale[ndims + 1] = { 1 }; //100, 100, 1000
+	long  scale[ndims + 1] = { 1 }; //100, 100, 1000
 
 	for (int i = 1; i < ndims + 1; i++)
 	{
@@ -129,38 +110,91 @@ int main(int argc, char *argv[])
 				memset(ele, 0, 64);
 				strncpy(ele, lastpos, pch - lastpos);
 				//printf("found at %d\n", pch - str + 1);
-				scale[j] = atof(ele);
+				scale[j] = atoi(ele);
 				j++;
 
 				lastpos = pch + 1;
 				pch = strchr(lastpos, ',');
 			}
-			scale[j] = atof(lastpos); //final part
+			scale[j] = atoi(lastpos); //final part
 
 			fclose(input_file);
 		}//end if input_file
 	}//end if strlen
 
-	/////////////////////////////////
-	////pipeline
-	if (nparallel == 0)
+	///////////////////////////////////////
+	FILE* input_file = NULL;
+	if (szinput != NULL && strlen(szinput) != 0)
 	{
-		if (strlen(szoutput) != 0) printf("serial run   "); //if not stdout ,print sth
-		tbb::task_scheduler_init init_serial(1);
-
-		run_decode_pipeline<ndims, mbits, ndimsR>(1, szinput, szoutput, nitem_num, nsfc_type, nencode_type, delta, scale);
-
+		input_file = fopen(szinput, "r");
+		if (!input_file)
+		{
+			return 0;
+		}
+	}
+	else
+	{
+		input_file = stdin;
 	}
 
-	if (nparallel == 1)
+	std::ostream* out_s;
+	std::ofstream of;
+	if (szoutput != NULL && strlen(szoutput) != 0)
 	{
-		if (strlen(szoutput) != 0)  printf("parallel run "); //if not stdout ,print sth
-		tbb::task_scheduler_init init_parallel(tbb::task_scheduler_init::automatic);
-
-		run_decode_pipeline<ndims, mbits, ndimsR>(init_parallel.default_num_threads(), szinput, szoutput, nitem_num, nsfc_type, \
-			nencode_type, delta, scale);
+		of.open(szoutput);
+		out_s = &of;
 	}
-	//system("pause");
+	else
+	{
+		out_s = &cout;
+	}
+
+	////////////////////////////////////
+	//read
+	SFCConversion<ndims, mbits> sfctest;
+
+	Point<long, ndims> inPt;
+	Point<double, ndims> outPt;
+
+	sfc_bigint val;
+
+	char buf[1024];
+	char buf2[1024];
+	while (1) //always true
+	{
+		memset(buf, 0, 1024);
+		fgets(buf, 1024, input_file);
+
+		if (strlen(buf) == 0) break; // no more data
+
+		memset(buf2, 0, 1024);
+		char* pos = strchr(buf, '\n');
+		if (pos != NULL)
+			strncpy(buf2, buf, pos - buf);//remove newline char
+		else
+			strcpy(buf2, buf);
+
+		val = sfc_bigint(buf2);//buf
+
+		if (nsfc_type == 0)
+			inPt = sfctest.MortonDecode(val);
+		else
+			inPt = sfctest.HilbertDecode(val);
+
+		for (int i = 0; i < ndims; i++)
+		{
+			//outPt[i] = lround((inPt[i] - _delta[i])*_scale[i]);//encoding
+			outPt[i] = ((double)inPt[i]) / scale[i] + delta[i]; //decoding
+
+			(*out_s) << setprecision(9) << outPt[i];
+
+			if (i != ndims - 1) (*out_s) << ",";
+		}
+		(*out_s) << endl;
+	}
+
+	fclose(input_file);
+	of.close();
+
 	return 0;
-
 }
