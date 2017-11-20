@@ -280,7 +280,7 @@ private:
 
 public:
 	OutputFilterD(ostream& output) : //FILE* output_file
-		tbb::filter(serial_in_order),
+		tbb::filter(serial_in_order), //parallel
 		output_file(output)
 	{
 	}

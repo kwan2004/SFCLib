@@ -442,51 +442,66 @@ vector<sfc_bigint>  QueryBySFC<T, nDims, mBits>::RangeQueryByRecursive_LNG(Rect<
 	map<sfc_bigint, sfc_bigint, less<sfc_bigint>> map_range;
 	map<sfc_bigint, sfc_bigint, less<sfc_bigint>>::iterator itr;
 
-	sfc_bigint val;
+	sfc_bigint val, r_start, r_end;
 	//sfc_bigint k1, k2;
 
 	for (int i = 0; i < resultTNode.size(); i++)
 	{
 		SFCConversion<nDims, mBits> sfc;
 
-		if (resultTNode[i].level == mBits) //leaf node--just one point
-		{		
+		long long node_width = 1 << nDims* (mBits - resultTNode[i].level);//2^(n*(m-l))
 
-			if (sfc_type == Hilbert)
-			{ 
-				val = sfc.HilbertEncode(resultTNode[i].minPoint);
-				map_range[val] = val;
-			}
-			if (sfc_type == Morton)
-			{
-				val = sfc.MortonEncode(resultTNode[i].minPoint);
-				map_range[val] = val;
-			}
-
-			continue;
-		}
-
-		nodePoints[0] = resultTNode[i].minPoint;		
-		for (int j = 0; j < nDims; j++)
+		if (sfc_type == Hilbert) //encoding minPoint
 		{
-			int nnow = 1 << j;
-			for (int k = 0; k < nnow; k++) //1-->2;2-->4, --->2^Dims
-			{
-				Point<T, nDims> newPoint = nodePoints[k];
-				newPoint[j] = resultTNode[i].maxPoint[j] - 1;  //get the cordinate from maxpoint in this dimension
-				
-				nodePoints[nnow+k] = newPoint;
-			}
+			val = sfc.HilbertEncode(resultTNode[i].minPoint);
+		}
+		if (sfc_type == Morton)
+		{
+			val = sfc.MortonEncode(resultTNode[i].minPoint);
 		}
 
-		for (int j = 0; j < ncorners; j++)
-		{ 
-			if (sfc_type == Hilbert) node_vals[j] = sfc.HilbertEncode(nodePoints[j]);
-			if (sfc_type == Morton) node_vals[j] = sfc.MortonEncode(nodePoints[j]);
-		}
+		r_start = val - val % node_width;
+		r_end = r_start + node_width - 1;
+		map_range[r_start] = r_end;
 
-		std::sort(node_vals.begin(), node_vals.end());
-		map_range[node_vals[0]] = node_vals[ncorners-1];
+		//if (resultTNode[i].level == mBits) //leaf node--just one point
+		//{		
+
+		//	if (sfc_type == Hilbert)
+		//	{ 
+		//		val = sfc.HilbertEncode(resultTNode[i].minPoint);
+		//		map_range[val] = val;
+		//	}
+		//	if (sfc_type == Morton)
+		//	{
+		//		val = sfc.MortonEncode(resultTNode[i].minPoint);
+		//		map_range[val] = val;
+		//	}
+
+		//	continue;
+		//}
+
+		//nodePoints[0] = resultTNode[i].minPoint;		
+		//for (int j = 0; j < nDims; j++)
+		//{
+		//	int nnow = 1 << j;
+		//	for (int k = 0; k < nnow; k++) //1-->2;2-->4, --->2^Dims
+		//	{
+		//		Point<T, nDims> newPoint = nodePoints[k];
+		//		newPoint[j] = resultTNode[i].maxPoint[j] - 1;  //get the cordinate from maxpoint in this dimension
+		//		
+		//		nodePoints[nnow+k] = newPoint;
+		//	}
+		//}
+
+		//for (int j = 0; j < ncorners; j++)
+		//{ 
+		//	if (sfc_type == Hilbert) node_vals[j] = sfc.HilbertEncode(nodePoints[j]);
+		//	if (sfc_type == Morton) node_vals[j] = sfc.MortonEncode(nodePoints[j]);
+		//}
+
+		//std::sort(node_vals.begin(), node_vals.end());
+		//map_range[node_vals[0]] = node_vals[ncorners-1];
 	}
 	
 	/////////////////////////////////////////////////
@@ -583,49 +598,62 @@ struct node2range
 
 		for (size_t i = range.begin(); i != range.end(); ++i)
 		{
+			long long node_width = 1 << nDims* (mBits - vec_nodes[i].level);//2^(n*(m-l))
+
+			if (sfc_type == Hilbert) //encoding minPoint
+			{
+				val = sfc.HilbertEncode(vec_nodes[i].minPoint);
+			}
+			if (sfc_type == Morton)
+			{
+				val = sfc.MortonEncode(vec_nodes[i].minPoint);
+			}
+
+			vec_minmax[2 * i] = val - val % node_width;
+			vec_minmax[2 * i + 1] = val - val % node_width + node_width - 1;
 			//range_table::accessor a;
 
-			if (vec_nodes[i].level == mBits) //leaf node--just one point
-			{
-				if (sfc_type == Hilbert)
-				{
-					val = sfc.HilbertEncode(vec_nodes[i].minPoint);
-					
-					//map_range[val] = val;
-					//table.insert(a, val);
-					//a->second = val;
-					vec_minmax[2 * i] = val;
-					vec_minmax[2 * i + 1] = val;
-				}
-				continue;
-			}
+			//if (vec_nodes[i].level == mBits) //leaf node--just one point
+			//{
+			//	if (sfc_type == Hilbert)
+			//	{
+			//		val = sfc.HilbertEncode(vec_nodes[i].minPoint);
+			//		
+			//		//map_range[val] = val;
+			//		//table.insert(a, val);
+			//		//a->second = val;
+			//		vec_minmax[2 * i] = val;
+			//		vec_minmax[2 * i + 1] = val;
+			//	}
+			//	continue;
+			//}
 
-			nodePoints[0] = vec_nodes[i].minPoint;
-			for (int j = 0; j < nDims; j++)
-			{
-				int nnow = 1 << j;
-				for (int k = 0; k < nnow; k++) //1-->2;2-->4, --->2^Dims
-				{
-					Point<T, nDims> newPoint = nodePoints[k];
-					newPoint[j] = vec_nodes[i].maxPoint[j] - 1;  //get the cordinate from maxpoint in this dimension
+			//nodePoints[0] = vec_nodes[i].minPoint;
+			//for (int j = 0; j < nDims; j++)
+			//{
+			//	int nnow = 1 << j;
+			//	for (int k = 0; k < nnow; k++) //1-->2;2-->4, --->2^Dims
+			//	{
+			//		Point<T, nDims> newPoint = nodePoints[k];
+			//		newPoint[j] = vec_nodes[i].maxPoint[j] - 1;  //get the cordinate from maxpoint in this dimension
 
-					nodePoints[nnow + k] = newPoint;
-				}
-			}
+			//		nodePoints[nnow + k] = newPoint;
+			//	}
+			//}
 
-			for (int j = 0; j < ncorners; j++)
-			{
-				if (sfc_type == Hilbert) node_vals[j] = sfc.HilbertEncode(nodePoints[j]);
-				if (sfc_type == Morton) node_vals[j] = sfc.MortonEncode(nodePoints[j]);
-			}
+			//for (int j = 0; j < ncorners; j++)
+			//{
+			//	if (sfc_type == Hilbert) node_vals[j] = sfc.HilbertEncode(nodePoints[j]);
+			//	if (sfc_type == Morton) node_vals[j] = sfc.MortonEncode(nodePoints[j]);
+			//}
 
-			std::sort(node_vals.begin(), node_vals.end());
-			
-			//map_range[node_vals[0]] = node_vals[ncorners - 1];
-			//table.insert(a, node_vals[0]);
-			//a->second = node_vals[ncorners - 1];
-			vec_minmax[2 * i] = node_vals[0];
-			vec_minmax[2 * i + 1] = node_vals[ncorners - 1];
+			//std::sort(node_vals.begin(), node_vals.end());
+			//
+			////map_range[node_vals[0]] = node_vals[ncorners - 1];
+			////table.insert(a, node_vals[0]);
+			////a->second = node_vals[ncorners - 1];
+			//vec_minmax[2 * i] = node_vals[0];
+			//vec_minmax[2 * i + 1] = node_vals[ncorners - 1];
 		}//end for
 	}//end functioner
 };

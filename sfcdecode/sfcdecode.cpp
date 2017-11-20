@@ -16,12 +16,12 @@ using namespace std;
 int main(int argc, char *argv[])
 {
 	const int ndims = 3;//dims for decoding
-	const int mbits = 18;
+	const int mbits = 13;
 
-	const int ndimsR = 1; //dims for other attributes
+	const int ndimsR = 0; //dims for other attributes
 
 	int nparallel = 0;
-	int nitem_num = 10000;
+	int nitem_num = 5000;
 
 	int nsfc_type = 0;
 	int nencode_type = 0;

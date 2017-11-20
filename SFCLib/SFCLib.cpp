@@ -41,10 +41,10 @@ void print_ranges(char * str, vector<sfc_bigint>& ranges)
 	cout << str << endl;
 	for (int i = 0; i < ranges.size(); i = i + 2)
 	{
-		//printf("\n");
+		printf("\n");
 
-		//printf("%lld---%lld\n", ranges[i], ranges[i + 1]);
-		//cout << ranges[i] << "----" << ranges[i + 1] <<endl;
+		printf("%lld---%lld\n", ranges[i], ranges[i + 1]);
+		cout << ranges[i] << "----" << ranges[i + 1] <<endl;
 
 		ntotal_len += (ranges[i + 1] - ranges[i] + 1);		
 	}
@@ -379,7 +379,7 @@ int main(int argc, char* argv[])
 	vector<sfc_bigint> vec_res = querytest.RangeQueryByBruteforce_LNG(rec, Hilbert);
 	print_ranges("hilbert 2d brute force", vec_res);
 
-	vector<sfc_bigint> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, Hilbert, 0);
+	vector<sfc_bigint> vec_res2 = querytest.RangeQueryByRecursive_LNG(rec, Hilbert, 0, 1);
 	print_ranges("hilbert 2d recursive", vec_res2);
 
 	/*vector<string> vec_res5 = querytest.RangeQueryByBruteforce_STR(rec, Hilbert, Base64);
@@ -407,7 +407,7 @@ int main(int argc, char* argv[])
 	vector<sfc_bigint> vec_res3 = querytest3.RangeQueryByBruteforce_LNG(rec3, Hilbert);
 	print_ranges("Hilbert 3d brute force", vec_res3);
 
-	vector<sfc_bigint> vec_res4 = querytest3.RangeQueryByRecursive_LNG(rec3, Hilbert, 0);
+	vector<sfc_bigint> vec_res4 = querytest3.RangeQueryByRecursive_LNG(rec3, Hilbert, 0, 1);
 	print_ranges("Hilbert 3d recursive", vec_res4);
 	
 
